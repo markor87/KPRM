@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir /b \"C:\\\\Users\\\\marko.radovanovic\\\\Desktop\\\\KPRM\\\\app\")",
+      "Bash(php artisan:*)",
+      "Bash(npm run build:*)",
+      "Bash(dir:*)",
+      "Bash(composer require:*)",
+      "Bash(curl:*)",
+      "WebSearch",
+      "WebFetch(domain:tallstackui.com)"
+    ]
+  }
+}
