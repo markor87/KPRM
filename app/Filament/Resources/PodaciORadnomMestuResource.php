@@ -66,26 +66,42 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Naziv radnog mesta')
                             ->maxLength(255)
                             ->columnSpanFull(),
-                        Forms\Components\TextInput::make('vrsta_organa')
+                        Forms\Components\Select::make('vrsta_organa')
                             ->label('Vrsta organa')
-                            ->numeric(),
+                            ->relationship('vrstaOrganaRelation', 'vrsta_organa', fn($query) => $query->orderBy('id', 'asc'))
+                            ->preload()
+                            ->searchable()
+                            ->live(),
                         Forms\Components\Select::make('organ')
                             ->label('Organ')
-                            ->relationship('organRelation', 'organ')
+                            ->options(function (callable $get) {
+                                $vrstaOrganaId = $get('vrsta_organa');
+                                if (!$vrstaOrganaId) {
+                                    return \App\Models\SifarnikOrgani::pluck('organ', 'id');
+                                }
+                                return \App\Models\SifarnikOrgani::where('vrsta_organ_id', $vrstaOrganaId)
+                                    ->pluck('organ', 'id');
+                            })
+                            ->searchable()
+                            ->preload(),
+                        Forms\Components\Select::make('tip_konkursa')
+                            ->label('Tip konkursa')
+                            ->relationship('tipKonkursaRelation', 'tip_konkursa')
                             ->preload()
                             ->searchable(),
-                        Forms\Components\TextInput::make('tip_konkursa')
-                            ->label('Tip konkursa')
-                            ->numeric(),
                         Forms\Components\TextInput::make('broj_izvrsilaca')
                             ->label('Broj izvršilaca')
                             ->numeric(),
-                        Forms\Components\TextInput::make('zvanje')
+                        Forms\Components\Select::make('zvanje')
                             ->label('Zvanje')
-                            ->numeric(),
-                        Forms\Components\TextInput::make('mesto_rada')
+                            ->relationship('zvanjeRelation', 'zvanje', fn($query) => $query->orderBy('id', 'asc'))
+                            ->preload()
+                            ->searchable(),
+                        Forms\Components\Select::make('mesto_rada')
                             ->label('Mesto rada')
-                            ->numeric(),
+                            ->relationship('mestoRadaRelation', 'mesto')
+                            ->preload()
+                            ->searchable(),
                         Forms\Components\TextInput::make('status_konkursa_na_dan_1')
                             ->label('Status konkursa na dan 1')
                             ->numeric(),
@@ -265,9 +281,10 @@ class PodaciORadnomMestuResource extends Resource
                 Tables\Columns\TextColumn::make('id')
                     ->label('ID')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('vrsta_organa')
+                Tables\Columns\TextColumn::make('vrstaOrganaRelation.vrsta_organa')
                     ->label('Vrsta organa')
-                    ->sortable(),
+                    ->sortable()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('organRelation.organ')
                     ->label('Organ')
                     ->sortable()
@@ -277,12 +294,14 @@ class PodaciORadnomMestuResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->wrap(),
-                Tables\Columns\TextColumn::make('zvanje')
+                Tables\Columns\TextColumn::make('zvanjeRelation.zvanje')
                     ->label('Zvanje')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('mesto_rada')
+                    ->sortable()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('mestoRadaRelation.mesto')
                     ->label('Mesto rada')
-                    ->sortable(),
+                    ->sortable()
+                    ->searchable(),
             ])
             ->filters([
                 //

@@ -14,4 +14,12 @@ class SifarnikOrgani extends Model
         'vrsta_organ_id',
         'organ',
     ];
+
+    /**
+     * Relacija sa sifarnik_vrsta_organa tabelom
+     */
+    public function vrstaOrgana()
+    {
+        return $this->belongsTo(SifarnikVrstaOrgana::class, 'vrsta_organ_id');
+    }
 }

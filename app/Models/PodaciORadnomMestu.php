@@ -76,4 +76,36 @@ class PodaciORadnomMestu extends Model
     {
         return $this->belongsTo(SifarnikOrgani::class, 'organ');
     }
+
+    /**
+     * Relacija sa sifarnik_vrsta_organa tabelom
+     */
+    public function vrstaOrganaRelation()
+    {
+        return $this->belongsTo(SifarnikVrstaOrgana::class, 'vrsta_organa');
+    }
+
+    /**
+     * Relacija sa sifarnik_tip_konkursa tabelom
+     */
+    public function tipKonkursaRelation()
+    {
+        return $this->belongsTo(SifarnikTipKonkursa::class, 'tip_konkursa');
+    }
+
+    /**
+     * Relacija sa sifarnik_zvanje tabelom
+     */
+    public function zvanjeRelation()
+    {
+        return $this->belongsTo(SifarnikZvanje::class, 'zvanje');
+    }
+
+    /**
+     * Relacija sa sifarnik_mesta tabelom
+     */
+    public function mestoRadaRelation()
+    {
+        return $this->belongsTo(SifarnikMesta::class, 'mesto_rada');
+    }
 }
