@@ -102,12 +102,16 @@ class PodaciORadnomMestuResource extends Resource
                             ->relationship('mestoRadaRelation', 'mesto')
                             ->preload()
                             ->searchable(),
-                        Forms\Components\TextInput::make('status_konkursa_na_dan_1')
+                        Forms\Components\Select::make('status_konkursa_na_dan_1')
                             ->label('Status konkursa na dan 1')
-                            ->numeric(),
-                        Forms\Components\TextInput::make('status_konkursa_na_dan_2')
+                            ->relationship('statusKonkursaNaDan1Relation', 'status_konkursa', fn($query) => $query->orderBy('id', 'asc'))
+                            ->preload()
+                            ->searchable(),
+                        Forms\Components\Select::make('status_konkursa_na_dan_2')
                             ->label('Status konkursa na dan 2')
-                            ->numeric(),
+                            ->relationship('statusKonkursaNaDan2Relation', 'status_konkursa', fn($query) => $query->orderBy('id', 'asc'))
+                            ->preload()
+                            ->searchable(),
                     ])->columns(3),
 
                 Forms\Components\Section::make('Datumi postupka')

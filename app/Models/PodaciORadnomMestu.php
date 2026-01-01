@@ -108,4 +108,20 @@ class PodaciORadnomMestu extends Model
     {
         return $this->belongsTo(SifarnikMesta::class, 'mesto_rada');
     }
+
+    /**
+     * Relacija sa sifarnik_status_konkursa tabelom - Status na dan 1
+     */
+    public function statusKonkursaNaDan1Relation()
+    {
+        return $this->belongsTo(SifarnikStatusKonkursa::class, 'status_konkursa_na_dan_1');
+    }
+
+    /**
+     * Relacija sa sifarnik_status_konkursa tabelom - Status na dan 2
+     */
+    public function statusKonkursaNaDan2Relation()
+    {
+        return $this->belongsTo(SifarnikStatusKonkursa::class, 'status_konkursa_na_dan_2');
+    }
 }
