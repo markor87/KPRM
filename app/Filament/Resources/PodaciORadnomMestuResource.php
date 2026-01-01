@@ -117,36 +117,50 @@ class PodaciORadnomMestuResource extends Resource
                 Forms\Components\Section::make('Datumi postupka')
                     ->schema([
                         Forms\Components\DatePicker::make('datum_dobijanja_saglasnosti_vlade')
-                            ->label('Datum dobijanja saglasnosti Vlade'),
+                            ->label('Datum dobijanja saglasnosti Vlade')
+                            ->native(true),
                         Forms\Components\DatePicker::make('datum_donosenja_resenja_o_pokretanju_postupka')
-                            ->label('Datum donošenja rešenja o pokretanju postupka'),
+                            ->label('Datum donošenja rešenja o pokretanju postupka')
+                            ->native(true),
                         Forms\Components\DatePicker::make('datum_dobijanja_obavestenja_od_suka')
-                            ->label('Datum dobijanja obaveštenja od SUKa'),
+                            ->label('Datum dobijanja obaveštenja od SUKa')
+                            ->native(true),
                         Forms\Components\DatePicker::make('datum_odrzavanja_prvog_sastanka')
-                            ->label('Datum održavanja prvog sastanka'),
+                            ->label('Datum održavanja prvog sastanka')
+                            ->native(true),
                         Forms\Components\DatePicker::make('datum_oglasavanja')
-                            ->label('Datum oglašavanja'),
+                            ->label('Datum oglašavanja')
+                            ->native(true),
                         Forms\Components\DatePicker::make('datum_pregleda_prijava')
-                            ->label('Datum pregleda prijava'),
+                            ->label('Datum pregleda prijava')
+                            ->native(true),
                         Forms\Components\DatePicker::make('datum_ofk_izvestaja')
                             ->label('Datum OFK izveštaja')
-                            ->helperText('Datum kreiranja izveštaja SUKa'),
+                            ->helperText('Datum kreiranja izveštaja SUKa')
+                            ->native(true),
                         Forms\Components\DatePicker::make('datum_pocetka_provere_pfk')
-                            ->label('Datum početka provere PFK'),
+                            ->label('Datum početka provere PFK')
+                            ->native(true),
                         Forms\Components\DatePicker::make('datum_pk_izvestaja')
                             ->label('Datum PK izveštaja')
-                            ->helperText('Datum kreiranja izveštaja SUKa'),
+                            ->helperText('Datum kreiranja izveštaja SUKa')
+                            ->native(true),
                         Forms\Components\DatePicker::make('datum_predaje_dokumentacije')
-                            ->label('Datum predaje dokumentacije'),
+                            ->label('Datum predaje dokumentacije')
+                            ->native(true),
                         Forms\Components\DatePicker::make('datum_pocetka_sprovodjenja_intervjua')
-                            ->label('Datum početka sprovođenja intervjua'),
+                            ->label('Datum početka sprovođenja intervjua')
+                            ->native(true),
                         Forms\Components\DatePicker::make('datum_dostavljanja_liste_rukovodiocu_organa')
-                            ->label('Datum dostavljanja liste rukovodiocu organa'),
+                            ->label('Datum dostavljanja liste rukovodiocu organa')
+                            ->native(true),
                         Forms\Components\DatePicker::make('datum_donosenja_resenja_o_izabranom_kandidatu')
-                            ->label('Datum donošenja rešenja o izabranom kandidatu'),
+                            ->label('Datum donošenja rešenja o izabranom kandidatu')
+                            ->native(true),
                         Forms\Components\DatePicker::make('datum_stupanja_na_rad')
                             ->label('Datum stupanja na rad')
-                            ->helperText('Datum stupanja na rad prvog izvršioca'),
+                            ->helperText('Datum stupanja na rad prvog izvršioca')
+                            ->native(true),
                     ])->columns(3)->collapsible(),
 
                 Forms\Components\Section::make('Status i žalbe')
