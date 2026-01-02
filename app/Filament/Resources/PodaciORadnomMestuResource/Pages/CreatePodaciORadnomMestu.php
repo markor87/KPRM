@@ -9,4 +9,9 @@ use Filament\Resources\Pages\CreateRecord;
 class CreatePodaciORadnomMestu extends CreateRecord
 {
     protected static string $resource = PodaciORadnomMestuResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }
