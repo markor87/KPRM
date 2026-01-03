@@ -254,40 +254,66 @@ class PodaciORadnomMestuResource extends Resource
 
                 Forms\Components\Section::make('Izabrani kandidat')
                     ->schema([
-                        Forms\Components\TextInput::make('izabrani_kandidat')
+                        Forms\Components\Select::make('izabrani_kandidat')
                             ->label('Izabrani kandidat')
-                            ->numeric(),
-                        Forms\Components\TextInput::make('broj_bodova_izabranog_kandidata_na_ofk')
+                            ->relationship('izabraniKandidatRelation', 'izabrani_kandidat')
+                            ->searchable()
+                            ->preload(),
+                        Forms\Components\Select::make('broj_bodova_izabranog_kandidata_na_ofk')
                             ->label('Broj bodova na OFK')
-                            ->numeric(),
-                        Forms\Components\TextInput::make('broj_bodova_izabranog_kandidata_na_pfk')
+                            ->options([
+                                7 => '7',
+                                8 => '8',
+                                9 => '9',
+                            ]),
+                        Forms\Components\Select::make('broj_bodova_izabranog_kandidata_na_pfk')
                             ->label('Broj bodova na PFK')
-                            ->numeric(),
-                        Forms\Components\TextInput::make('broj_bodova_izabranog_kandidata_na_pk')
+                            ->options(array_merge(
+                                [0 => '0', 3 => '3', 5 => '5', 8 => '8'],
+                                array_combine(range(10, 20), range(10, 20))
+                            )),
+                        Forms\Components\Select::make('broj_bodova_izabranog_kandidata_na_pk')
                             ->label('Broj bodova na PK')
-                            ->numeric(),
-                        Forms\Components\TextInput::make('broj_bodova_izabranog_kandidata_na_zavrsnom_razgovoru')
+                            ->options(array_combine(range(10, 30), range(10, 30))),
+                        Forms\Components\Select::make('broj_bodova_izabranog_kandidata_na_zavrsnom_razgovoru')
                             ->label('Broj bodova na završnom razgovoru')
-                            ->numeric(),
+                            ->options([
+                                2 => '2',
+                                4 => '4',
+                                6 => '6',
+                            ]),
                     ])->columns(3)->collapsible(),
 
                 Forms\Components\Section::make('Drugoplasirani kandidat')
                     ->schema([
-                        Forms\Components\TextInput::make('drugoplasirani_kandidat')
+                        Forms\Components\Select::make('drugoplasirani_kandidat')
                             ->label('Drugoplasirani kandidat')
-                            ->numeric(),
-                        Forms\Components\TextInput::make('broj_bodova_drugplasiranog_kandidata_na_ofk')
+                            ->relationship('drugoplasiraniKandidatRelation', 'izabrani_kandidat')
+                            ->searchable()
+                            ->preload(),
+                        Forms\Components\Select::make('broj_bodova_drugplasiranog_kandidata_na_ofk')
                             ->label('Broj bodova na OFK')
-                            ->numeric(),
-                        Forms\Components\TextInput::make('broj_bodova_drugplasiranog_kandidata_na_pfk')
+                            ->options([
+                                7 => '7',
+                                8 => '8',
+                                9 => '9',
+                            ]),
+                        Forms\Components\Select::make('broj_bodova_drugplasiranog_kandidata_na_pfk')
                             ->label('Broj bodova na PFK')
-                            ->numeric(),
-                        Forms\Components\TextInput::make('broj_bodova_drugplasiranog_kandidata_na_pk')
+                            ->options(array_merge(
+                                [0 => '0', 3 => '3', 5 => '5', 8 => '8'],
+                                array_combine(range(10, 20), range(10, 20))
+                            )),
+                        Forms\Components\Select::make('broj_bodova_drugplasiranog_kandidata_na_pk')
                             ->label('Broj bodova na PK')
-                            ->numeric(),
-                        Forms\Components\TextInput::make('broj_bodova_drugoplasiranog_kandidata_na_zavrsnom_razgovoru')
+                            ->options(array_combine(range(10, 30), range(10, 30))),
+                        Forms\Components\Select::make('broj_bodova_drugoplasiranog_kandidata_na_zavrsnom_razgovoru')
                             ->label('Broj bodova na završnom razgovoru')
-                            ->numeric(),
+                            ->options([
+                                2 => '2',
+                                4 => '4',
+                                6 => '6',
+                            ]),
                     ])->columns(3)->collapsible(),
             ]);
     }

@@ -124,4 +124,20 @@ class PodaciORadnomMestu extends Model
     {
         return $this->belongsTo(SifarnikStatusKonkursa::class, 'status_konkursa_na_dan_2');
     }
+
+    /**
+     * Relacija sa sifarnik_izabrani_kandidat tabelom - Izabrani kandidat
+     */
+    public function izabraniKandidatRelation()
+    {
+        return $this->belongsTo(SifarnikIzabraniKandidat::class, 'izabrani_kandidat');
+    }
+
+    /**
+     * Relacija sa sifarnik_izabrani_kandidat tabelom - Drugoplasirani kandidat
+     */
+    public function drugoplasiraniKandidatRelation()
+    {
+        return $this->belongsTo(SifarnikIzabraniKandidat::class, 'drugoplasirani_kandidat');
+    }
 }
