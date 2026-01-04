@@ -35,25 +35,7 @@ class PodaciORadnomMestuResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery();
-        $user = auth()->user();
-
-        // Super admins see everything (check both is_super_admin field and role)
-        if ($user->is_super_admin || $user->hasRole('Super Admin')) {
-            return $query;
-        }
-
-        // Users with 'view_all_radna_mesta' permission see everything
-        if ($user->can('view_all_radna_mesta')) {
-            return $query;
-        }
-
-        // Other users only see records matching their organ
-        if ($user->organ_id) {
-            return $query->where('organ', $user->organ_id);
-        }
-
-        // If user has no organ assigned, show nothing
-        return $query->whereRaw('1 = 0');
+        return app(\App\Services\OrganFilterService::class)->applyOrganFilter($query, 'organ');
     }
 
     public static function form(Form $form): Form
