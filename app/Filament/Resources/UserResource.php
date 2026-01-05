@@ -29,14 +29,18 @@ class UserResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')
+                    ->label('Име')
                     ->required()
                     ->maxLength(191),
                 Forms\Components\TextInput::make('email')
+                    ->label('Е-пошта')
                     ->email()
                     ->required()
                     ->maxLength(191),
-                Forms\Components\DateTimePicker::make('email_verified_at'),
+                Forms\Components\DateTimePicker::make('email_verified_at')
+                    ->label('Е-пошта верификована'),
                 Forms\Components\TextInput::make('password')
+                    ->label('Лозинка')
                     ->password()
                     ->required()
                     ->maxLength(191)
@@ -44,18 +48,19 @@ class UserResource extends Resource
                     ->dehydrated(fn ($state) => filled($state))
                     ->required(fn (string $context): bool => $context === 'create'),
                 Forms\Components\Select::make('roles')
+                    ->label('Улоге')
                     ->multiple()
                     ->relationship('roles', 'name')
                     ->preload()
                     ->searchable(),
                 Forms\Components\Select::make('organ_id')
-                    ->label('Organ')
+                    ->label('Орган')
                     ->relationship('organ', 'organ')
                     ->preload()
                     ->searchable(),
                 Forms\Components\Toggle::make('is_super_admin')
-                    ->label('Super Admin')
-                    ->helperText('Super admins have access to everything'),
+                    ->label('Супер Администратор')
+                    ->helperText('Супер администратори имају приступ свему'),
             ]);
     }
 
@@ -64,19 +69,21 @@ class UserResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
+                    ->label('Име')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('email')
+                    ->label('Е-пошта')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('roles.name')
                     ->badge()
                     ->color('success')
-                    ->label('Roles'),
+                    ->label('Улоге'),
                 Tables\Columns\TextColumn::make('organ.organ')
-                    ->label('Organ')
+                    ->label('Орган')
                     ->sortable(),
                 Tables\Columns\IconColumn::make('is_super_admin')
                     ->boolean()
-                    ->label('Super Admin'),
+                    ->label('Супер Администратор'),
                 Tables\Columns\TextColumn::make('email_verified_at')
                     ->dateTime()
                     ->sortable()
@@ -94,13 +101,17 @@ class UserResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ViewAction::make()
+                    ->label('Преглед'),
+                Tables\Actions\EditAction::make()
+                    ->label('Измени'),
+                Tables\Actions\DeleteAction::make()
+                    ->label('Обриши'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->label('Обриши означене'),
                 ]),
             ]);
     }

@@ -23,12 +23,12 @@ class StatsOverviewWidget extends BaseWidget
         return [
             // Korisnici - filtrirano po organu
             Stat::make(
-                $isFiltered ? 'Users in Your Organ' : 'Total Users',
+                $isFiltered ? 'Корисници у Вашем Органу' : 'Укупно Корисника',
                 $this->getFilteredCount(User::class, 'organ_id')
             )
                 ->description($isFiltered
-                    ? "Users in {$userOrgan}"
-                    : 'All registered users in the system'
+                    ? "Корисници у {$userOrgan}"
+                    : 'Сви регистровани корисници у систему'
                 )
                 ->descriptionIcon('heroicon-m-users')
                 ->color('success')
@@ -36,19 +36,19 @@ class StatsOverviewWidget extends BaseWidget
 
             // Radna Mesta - filtrirano po organu
             Stat::make(
-                $isFiltered ? 'Radna Mesta in Your Organ' : 'Total Radna Mesta',
+                $isFiltered ? 'Радна Места у Вашем Органу' : 'Укупно Радних Места',
                 $this->getFilteredCount(PodaciORadnomMestu::class, 'organ')
             )
                 ->description($isFiltered
-                    ? "Job positions in {$userOrgan}"
-                    : 'All job positions in the system'
+                    ? "Радна места у {$userOrgan}"
+                    : 'Сва радна места у систему'
                 )
                 ->descriptionIcon('heroicon-m-briefcase')
                 ->color('info'),
 
             // Roles - globalno (ne filtrira se jer su system-wide)
-            Stat::make('Total Roles', Role::count())
-                ->description('System roles')
+            Stat::make('Укупно Улога', Role::count())
+                ->description('Системске улоге')
                 ->descriptionIcon('heroicon-m-shield-check')
                 ->color('warning'),
         ];

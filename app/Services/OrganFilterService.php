@@ -22,10 +22,6 @@ class OrganFilterService
             return $query->whereRaw('1 = 0');
         }
 
-        // Super admins vide sve
-        if ($user->is_super_admin || $user->hasRole('Super Admin')) {
-            return $query;
-        }
 
         // Korisnici sa view_any_podaci::o::radnom::mestu dozvolom vide sve
         if ($user->can('view_any_podaci::o::radnom::mestu')) {
@@ -54,9 +50,7 @@ class OrganFilterService
             return false;
         }
 
-        return $user->is_super_admin
-            || $user->hasRole('Super Admin')
-            || $user->can('view_any_podaci::o::radnom::mestu');
+        return $user->can('view_any_podaci::o::radnom::mestu');
     }
 
     /**

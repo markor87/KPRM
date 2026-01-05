@@ -19,9 +19,9 @@ class Podesavanja extends Page implements HasForms
 
     protected static string $view = 'filament.pages.podesavanja';
 
-    protected static ?string $navigationGroup = 'Admin Panel';
+    protected static ?string $navigationGroup = 'Админ Панел';
 
-    protected static ?string $navigationLabel = 'Podešavanja';
+    protected static ?string $navigationLabel = 'Подешавања';
 
     protected static ?int $navigationSort = 3;
 
@@ -43,19 +43,19 @@ class Podesavanja extends Page implements HasForms
     {
         return $form
             ->schema([
-                Section::make('Security Settings')
-                    ->description('Global security settings that apply to all users')
+                Section::make('Безбедносна подешавања')
+                    ->description('Глобална безбедносна подешавања која важе за све кориснике')
                     ->schema([
                         Toggle::make('two_factor_enabled_global')
-                            ->label('Enable Two-Factor Authentication (2FA) for All Users')
-                            ->helperText('When enabled, ALL users will be required to enter a 6-digit code sent to their email after entering their credentials.')
+                            ->label('Омогући двофакторску аутентификацију (2ФА) за све кориснике')
+                            ->helperText('Када је омогућено, СВИ корисници ће морати да унесу 6-цифрени код послат на њихову е-пошту након уноса акредитива.')
                             ->live()
                             ->afterStateUpdated(function ($state) {
                                 Setting::set('two_factor_enabled_global', $state ? '1' : '0');
 
                                 Notification::make()
-                                    ->title('Global 2FA ' . ($state ? 'Enabled' : 'Disabled'))
-                                    ->body($state ? 'All users must now use 2FA to login.' : '2FA is no longer required for login.')
+                                    ->title('Глобална 2ФА ' . ($state ? 'Омогућена' : 'Онемогућена'))
+                                    ->body($state ? 'Сви корисници сада морају да користе 2ФА за пријаву.' : '2ФА више није потребна за пријаву.')
                                     ->success()
                                     ->send();
                             }),

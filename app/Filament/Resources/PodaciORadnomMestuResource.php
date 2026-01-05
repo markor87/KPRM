@@ -19,11 +19,11 @@ class PodaciORadnomMestuResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-briefcase';
 
-    protected static ?string $navigationLabel = 'Radna Mesta';
+    protected static ?string $navigationLabel = 'Радна Места';
 
-    protected static ?string $modelLabel = 'Radno Mesto';
+    protected static ?string $modelLabel = 'Радно Место';
 
-    protected static ?string $pluralModelLabel = 'Radna Mesta';
+    protected static ?string $pluralModelLabel = 'Радна Места';
 
     protected static ?string $slug = 'podaci-o-radnom-mestu';
 
@@ -38,24 +38,34 @@ class PodaciORadnomMestuResource extends Resource
         return app(\App\Services\OrganFilterService::class)->applyOrganFilter($query, 'organ');
     }
 
+    /**
+     * Allow access to list page with either 'view' or 'view_any' permission
+     */
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->can('view_podaci::o::radnom::mestu')
+            || auth()->user()?->can('view_any_podaci::o::radnom::mestu')
+            || false;
+    }
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Osnovni podaci o konkursu')
+                Forms\Components\Section::make('Основни подаци о конкурсу')
                     ->schema([
                         Forms\Components\TextInput::make('naziv_radnog_mesta')
-                            ->label('Naziv radnog mesta')
+                            ->label('Назив радног места')
                             ->maxLength(255)
                             ->columnSpanFull(),
                         Forms\Components\Select::make('vrsta_organa')
-                            ->label('Vrsta organa')
+                            ->label('Врста органа')
                             ->relationship('vrstaOrganaRelation', 'vrsta_organa', fn($query) => $query->orderBy('id', 'asc'))
                             ->preload()
                             ->searchable()
                             ->live(),
                         Forms\Components\Select::make('organ')
-                            ->label('Organ')
+                            ->label('Орган')
                             ->options(function (callable $get) {
                                 $vrstaOrganaId = $get('vrsta_organa');
                                 if (!$vrstaOrganaId) {
@@ -67,198 +77,198 @@ class PodaciORadnomMestuResource extends Resource
                             ->searchable()
                             ->preload(),
                         Forms\Components\Select::make('tip_konkursa')
-                            ->label('Tip konkursa')
+                            ->label('Тип конкурса')
                             ->relationship('tipKonkursaRelation', 'tip_konkursa')
                             ->preload()
                             ->searchable(),
                         Forms\Components\TextInput::make('broj_izvrsilaca')
-                            ->label('Broj izvršilaca')
+                            ->label('Број извршилаца')
                             ->numeric(),
                         Forms\Components\Select::make('zvanje')
-                            ->label('Zvanje')
+                            ->label('Звање')
                             ->relationship('zvanjeRelation', 'zvanje', fn($query) => $query->orderBy('id', 'asc'))
                             ->preload()
                             ->searchable(),
                         Forms\Components\Select::make('mesto_rada')
-                            ->label('Mesto rada')
+                            ->label('Место рада')
                             ->relationship('mestoRadaRelation', 'mesto')
                             ->preload()
                             ->searchable(),
                         Forms\Components\Select::make('status_konkursa_na_dan_1')
-                            ->label('Status konkursa na dan 1')
+                            ->label('Статус конкурса на дан 1')
                             ->relationship('statusKonkursaNaDan1Relation', 'status_konkursa', fn($query) => $query->orderBy('id', 'asc'))
                             ->preload()
                             ->searchable(),
                         Forms\Components\Select::make('status_konkursa_na_dan_2')
-                            ->label('Status konkursa na dan 2')
+                            ->label('Статус конкурса на дан 2')
                             ->relationship('statusKonkursaNaDan2Relation', 'status_konkursa', fn($query) => $query->orderBy('id', 'asc'))
                             ->preload()
                             ->searchable(),
                     ])->columns(3),
 
-                Forms\Components\Section::make('Datumi postupka')
+                Forms\Components\Section::make('Датуми поступка')
                     ->schema([
                         Forms\Components\DatePicker::make('datum_dobijanja_saglasnosti_vlade')
-                            ->label('Datum dobijanja saglasnosti Vlade')
+                            ->label('Датум добијања сагласности Владе')
                             ->native(true),
                         Forms\Components\DatePicker::make('datum_donosenja_resenja_o_pokretanju_postupka')
-                            ->label('Datum donošenja rešenja o pokretanju postupka')
+                            ->label('Датум доношења решења о покретању поступка')
                             ->native(true),
                         Forms\Components\DatePicker::make('datum_dobijanja_obavestenja_od_suka')
-                            ->label('Datum dobijanja obaveštenja od SUKa')
+                            ->label('Датум добијања обавештења од СУКа')
                             ->native(true),
                         Forms\Components\DatePicker::make('datum_odrzavanja_prvog_sastanka')
-                            ->label('Datum održavanja prvog sastanka')
+                            ->label('Датум одржавања првог састанка')
                             ->native(true),
                         Forms\Components\DatePicker::make('datum_oglasavanja')
-                            ->label('Datum oglašavanja')
+                            ->label('Датум оглашавања')
                             ->native(true),
                         Forms\Components\DatePicker::make('datum_pregleda_prijava')
-                            ->label('Datum pregleda prijava')
+                            ->label('Датум прегледа пријава')
                             ->native(true),
                         Forms\Components\DatePicker::make('datum_ofk_izvestaja')
-                            ->label('Datum OFK izveštaja')
-                            ->helperText('Datum kreiranja izveštaja SUKa')
+                            ->label('Датум ОФК извештаја')
+                            ->helperText('Датум креирања извештаја СУКа')
                             ->native(true),
                         Forms\Components\DatePicker::make('datum_pocetka_provere_pfk')
-                            ->label('Datum početka provere PFK')
+                            ->label('Датум почетка провере ПФК')
                             ->native(true),
                         Forms\Components\DatePicker::make('datum_pk_izvestaja')
-                            ->label('Datum PK izveštaja')
-                            ->helperText('Datum kreiranja izveštaja SUKa')
+                            ->label('Датум ПК извештаја')
+                            ->helperText('Датум креирања извештаја СУКа')
                             ->native(true),
                         Forms\Components\DatePicker::make('datum_predaje_dokumentacije')
-                            ->label('Datum predaje dokumentacije')
+                            ->label('Датум предаје документације')
                             ->native(true),
                         Forms\Components\DatePicker::make('datum_pocetka_sprovodjenja_intervjua')
-                            ->label('Datum početka sprovođenja intervjua')
+                            ->label('Датум почетка спровођења интервјуа')
                             ->native(true),
                         Forms\Components\DatePicker::make('datum_dostavljanja_liste_rukovodiocu_organa')
-                            ->label('Datum dostavljanja liste rukovodiocu organa')
+                            ->label('Датум достављања листе руководиоцу органа')
                             ->native(true),
                         Forms\Components\DatePicker::make('datum_donosenja_resenja_o_izabranom_kandidatu')
-                            ->label('Datum donošenja rešenja o izabranom kandidatu')
+                            ->label('Датум доношења решења о изабраном кандидату')
                             ->native(true),
                         Forms\Components\DatePicker::make('datum_stupanja_na_rad')
-                            ->label('Datum stupanja na rad')
-                            ->helperText('Datum stupanja na rad prvog izvršioca')
+                            ->label('Датум ступања на рад')
+                            ->helperText('Датум ступања на рад првог извршиоца')
                             ->native(true),
                     ])->columns(3)->collapsible(),
 
-                Forms\Components\Section::make('Status i žalbe')
+                Forms\Components\Section::make('Статус и жалбе')
                     ->schema([
                         Forms\Components\TextInput::make('broj_primljenih_izvrsilaca')
-                            ->label('Broj primljenih izvršilaca')
+                            ->label('Број примљених извршилаца')
                             ->numeric(),
                         Forms\Components\TextInput::make('ocena_sa_vrednovanja')
-                            ->label('Ocena sa vrednovanja')
+                            ->label('Оцена са вредновања')
                             ->numeric(),
                         Forms\Components\TextInput::make('broj_zalbi_na_resenje_o_odbacaju_prijave')
-                            ->label('Broj žalbi na rešenje o odbacivanju prijave')
+                            ->label('Број жалби на решење о одбацивању пријаве')
                             ->numeric(),
                         Forms\Components\TextInput::make('broj_zalbi_na_resenje_o_prijemu_u_radni_odnos')
-                            ->label('Broj žalbi na rešenje o prijemu u radni odnos')
+                            ->label('Број жалби на решење о пријему у радни однос')
                             ->numeric(),
                         Forms\Components\TextInput::make('broj_usvojenih_zalbi_na_resenje_o_odbacaju_prijave')
-                            ->label('Broj usvojenih žalbi na rešenje o odbacivanju prijave')
+                            ->label('Број усвојених жалби на решење о одбацивању пријаве')
                             ->numeric(),
                         Forms\Components\TextInput::make('broj_izvrsilaca_ponovno_oglasavanje')
-                            ->label('Broj izvršilaca - ponovno oglašavanje')
+                            ->label('Број извршилаца - поновно оглашавање')
                             ->numeric(),
                     ])->columns(3)->collapsible(),
 
-                Forms\Components\Section::make('Podaci o prijavama')
+                Forms\Components\Section::make('Подаци о пријавама')
                     ->schema([
                         Forms\Components\TextInput::make('ukupan_broj_prijava')
-                            ->label('Ukupan broj prijava')
+                            ->label('Укупан број пријава')
                             ->numeric(),
                         Forms\Components\TextInput::make('broj_prijava_iz_organa')
-                            ->label('Broj prijava iz organa')
+                            ->label('Број пријава из органа')
                             ->numeric(),
                         Forms\Components\TextInput::make('broj_prijava_iz_drugih_organa')
-                            ->label('Broj prijava iz drugih organa')
+                            ->label('Број пријава из других органа')
                             ->numeric(),
                         Forms\Components\TextInput::make('broj_prijava_van_drzavnih_organa')
-                            ->label('Broj prijava van državnih organa')
+                            ->label('Број пријава ван државних органа')
                             ->numeric(),
                     ])->columns(4)->collapsible(),
 
-                Forms\Components\Section::make('Validne prijave')
+                Forms\Components\Section::make('Валидне пријаве')
                     ->schema([
                         Forms\Components\TextInput::make('broj_validnih_prijava')
-                            ->label('Broj validnih prijava')
+                            ->label('Број валидних пријава')
                             ->numeric(),
                         Forms\Components\TextInput::make('broj_validnih_prijava_iz_organa')
-                            ->label('Broj validnih prijava iz organa')
+                            ->label('Број валидних пријава из органа')
                             ->numeric(),
                         Forms\Components\TextInput::make('broj_validnih_prijava_iz_drugog_organa')
-                            ->label('Broj validnih prijava iz drugog organa')
+                            ->label('Број валидних пријава из другог органа')
                             ->numeric(),
                         Forms\Components\TextInput::make('broj_validnih_prijava_van_drzavnih_organa')
-                            ->label('Broj validnih prijava van državnih organa')
+                            ->label('Број валидних пријава ван државних органа')
                             ->numeric(),
                     ])->columns(4)->collapsible(),
 
-                Forms\Components\Section::make('Kandidati koji su ispunili merila')
+                Forms\Components\Section::make('Кандидати који су испунили мерила')
                     ->schema([
                         Forms\Components\TextInput::make('broj_kandidata_koji_su_ispunlii_merila_ofk')
-                            ->label('Broj kandidata koji su ispunili merila OFK')
+                            ->label('Број кандидата који су испунили мерила ОФК')
                             ->numeric(),
                         Forms\Components\TextInput::make('broj_kandidata_koji_su_ispunlii_merila_pfk')
-                            ->label('Broj kandidata koji su ispunili merila PFK')
+                            ->label('Број кандидата који су испунили мерила ПФК')
                             ->numeric(),
                         Forms\Components\TextInput::make('provera_pfk')
-                            ->label('Provera PFK')
+                            ->label('Провера ПФК')
                             ->numeric(),
                         Forms\Components\TextInput::make('broj_kandidata_ispunili_merila_pk')
-                            ->label('Broj kandidata koji su ispunili merila PK')
+                            ->label('Број кандидата који су испунили мерила ПК')
                             ->numeric(),
                         Forms\Components\TextInput::make('broj_odazvanih_kandidata_na_zavrsnom_razgovoru')
-                            ->label('Broj odazvanih kandidata na završnom razgovoru')
+                            ->label('Број одазваних кандидата на завршном разговору')
                             ->numeric(),
                     ])->columns(3)->collapsible(),
 
-                Forms\Components\Section::make('Lista kandidata')
+                Forms\Components\Section::make('Листа кандидата')
                     ->schema([
                         Forms\Components\TextInput::make('broj_kandidata_na_listi')
-                            ->label('Broj kandidata na listi')
+                            ->label('Број кандидата на листи')
                             ->numeric(),
                         Forms\Components\TextInput::make('broj_kandidata_iz_organa_na_listi')
-                            ->label('Broj kandidata iz organa na listi')
+                            ->label('Број кандидата из органа на листи')
                             ->numeric(),
                         Forms\Components\TextInput::make('broj_kandidata_iz_drugog_drzavnog_organa_na_listi')
-                            ->label('Broj kandidata iz drugog državnog organa na listi')
+                            ->label('Број кандидата из другог државног органа на листи')
                             ->numeric(),
                         Forms\Components\TextInput::make('broj_kandidata_van_drzavnih_organa_na_listi')
-                            ->label('Broj kandidata van državnih organa na listi')
+                            ->label('Број кандидата ван државних органа на листи')
                             ->numeric(),
                     ])->columns(4)->collapsible(),
 
-                Forms\Components\Section::make('Izabrani kandidat')
+                Forms\Components\Section::make('Изабрани кандидат')
                     ->schema([
                         Forms\Components\Select::make('izabrani_kandidat')
-                            ->label('Izabrani kandidat')
+                            ->label('Изабрани кандидат')
                             ->relationship('izabraniKandidatRelation', 'izabrani_kandidat')
                             ->searchable()
                             ->preload(),
                         Forms\Components\Select::make('broj_bodova_izabranog_kandidata_na_ofk')
-                            ->label('Broj bodova na OFK')
+                            ->label('Број бодова на ОФК')
                             ->options([
                                 7 => '7',
                                 8 => '8',
                                 9 => '9',
                             ]),
                         Forms\Components\Select::make('broj_bodova_izabranog_kandidata_na_pfk')
-                            ->label('Broj bodova na PFK')
+                            ->label('Број бодова на ПФК')
                             ->options(array_merge(
                                 [0 => '0', 3 => '3', 5 => '5', 8 => '8'],
                                 array_combine(range(10, 20), range(10, 20))
                             )),
                         Forms\Components\Select::make('broj_bodova_izabranog_kandidata_na_pk')
-                            ->label('Broj bodova na PK')
+                            ->label('Број бодова на ПК')
                             ->options(array_combine(range(10, 30), range(10, 30))),
                         Forms\Components\Select::make('broj_bodova_izabranog_kandidata_na_zavrsnom_razgovoru')
-                            ->label('Broj bodova na završnom razgovoru')
+                            ->label('Број бодова на завршном разговору')
                             ->options([
                                 2 => '2',
                                 4 => '4',
@@ -266,31 +276,31 @@ class PodaciORadnomMestuResource extends Resource
                             ]),
                     ])->columns(3)->collapsible(),
 
-                Forms\Components\Section::make('Drugoplasirani kandidat')
+                Forms\Components\Section::make('Другопласирани кандидат')
                     ->schema([
                         Forms\Components\Select::make('drugoplasirani_kandidat')
-                            ->label('Drugoplasirani kandidat')
+                            ->label('Другопласирани кандидат')
                             ->relationship('drugoplasiraniKandidatRelation', 'izabrani_kandidat')
                             ->searchable()
                             ->preload(),
                         Forms\Components\Select::make('broj_bodova_drugplasiranog_kandidata_na_ofk')
-                            ->label('Broj bodova na OFK')
+                            ->label('Број бодова на ОФК')
                             ->options([
                                 7 => '7',
                                 8 => '8',
                                 9 => '9',
                             ]),
                         Forms\Components\Select::make('broj_bodova_drugplasiranog_kandidata_na_pfk')
-                            ->label('Broj bodova na PFK')
+                            ->label('Број бодова на ПФК')
                             ->options(array_merge(
                                 [0 => '0', 3 => '3', 5 => '5', 8 => '8'],
                                 array_combine(range(10, 20), range(10, 20))
                             )),
                         Forms\Components\Select::make('broj_bodova_drugplasiranog_kandidata_na_pk')
-                            ->label('Broj bodova na PK')
+                            ->label('Број бодова на ПК')
                             ->options(array_combine(range(10, 30), range(10, 30))),
                         Forms\Components\Select::make('broj_bodova_drugoplasiranog_kandidata_na_zavrsnom_razgovoru')
-                            ->label('Broj bodova na završnom razgovoru')
+                            ->label('Број бодова на завршном разговору')
                             ->options([
                                 2 => '2',
                                 4 => '4',
@@ -308,24 +318,24 @@ class PodaciORadnomMestuResource extends Resource
                     ->label('ID')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('vrstaOrganaRelation.vrsta_organa')
-                    ->label('Vrsta organa')
+                    ->label('Врста органа')
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('organRelation.organ')
-                    ->label('Organ')
+                    ->label('Орган')
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('naziv_radnog_mesta')
-                    ->label('Naziv radnog mesta')
+                    ->label('Назив радног места')
                     ->searchable()
                     ->sortable()
                     ->wrap(),
                 Tables\Columns\TextColumn::make('zvanjeRelation.zvanje')
-                    ->label('Zvanje')
+                    ->label('Звање')
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('mestoRadaRelation.mesto')
-                    ->label('Mesto rada')
+                    ->label('Место рада')
                     ->sortable()
                     ->searchable(),
             ])
@@ -333,13 +343,17 @@ class PodaciORadnomMestuResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ViewAction::make()
+                    ->label('Преглед'),
+                Tables\Actions\EditAction::make()
+                    ->label('Измени'),
+                Tables\Actions\DeleteAction::make()
+                    ->label('Обриши'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->label('Обриши означене'),
                 ]),
             ])
             ->defaultSort('id', 'desc');
