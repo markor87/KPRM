@@ -10,6 +10,8 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Infolists;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
@@ -343,6 +345,57 @@ class PodaciORadnomMestuResource extends Resource
                 //
             ])
             ->actions([
+                Tables\Actions\Action::make('statistika')
+                    ->label('Статистика')
+                    ->icon('heroicon-o-chart-bar')
+                    ->color('info')
+                    ->modalHeading(fn ($record) => 'Статистика конкурса')
+                    ->modalSubheading(fn ($record) => 'Преглед статистичких података за овај конкурс')
+                    ->modalWidth('lg')
+                    ->infolist(fn ($record) => [
+                        Infolists\Components\Section::make('Статистички подаци')
+                            ->schema([
+                                Infolists\Components\TextEntry::make('vreme_trajanja')
+                                    ->label('Време трајања конкурсног поступка')
+                                    ->state(function ($record) {
+                                        // Izračunaj broj dana ako su oba datuma prisutna
+                                        if ($record->tip_konkursa == 1 // Јавни
+                                            && $record->datum_donosenja_resenja_o_pokretanju_postupka
+                                            && $record->datum_stupanja_na_rad) {
+
+                                            $start = Carbon::parse($record->datum_donosenja_resenja_o_pokretanju_postupka);
+                                            $end = Carbon::parse($record->datum_stupanja_na_rad);
+                                            $days = $start->diffInDays($end);
+
+                                            return $days . ' дана';
+                                        }
+
+                                        return 'Н/Д';
+                                    })
+                                    ->placeholder('Нема података')
+                                    ->helperText('Број дана између доношења решења и ступања на рад'),
+                                Infolists\Components\TextEntry::make('vreme_trajanja_izbornog_postupka')
+                                    ->label('Време трајања изборног поступка')
+                                    ->state(function ($record) {
+                                        // Izračunaj broj dana ako su oba datuma prisutna
+                                        if ($record->tip_konkursa == 1 // Јавни
+                                            && $record->datum_pregleda_prijava
+                                            && $record->datum_dostavljanja_liste_rukovodiocu_organa) {
+
+                                            $start = Carbon::parse($record->datum_pregleda_prijava);
+                                            $end = Carbon::parse($record->datum_dostavljanja_liste_rukovodiocu_organa);
+                                            $days = $start->diffInDays($end);
+
+                                            return $days . ' дана';
+                                        }
+
+                                        return 'Н/Д';
+                                    })
+                                    ->placeholder('Нема података')
+                                    ->helperText('Број дана између прегледа пријава и достављања листе руководиоцу органа'),
+                            ])
+                            ->collapsible(false),
+                    ]),
                 Tables\Actions\ViewAction::make()
                     ->label('Преглед'),
                 Tables\Actions\EditAction::make()
