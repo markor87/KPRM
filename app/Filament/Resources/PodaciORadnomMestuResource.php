@@ -345,63 +345,192 @@ class PodaciORadnomMestuResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\Action::make('statistika')
-                    ->label('Статистика')
-                    ->icon('heroicon-o-chart-bar')
-                    ->color('info')
-                    ->modalHeading(fn ($record) => 'Статистика конкурса')
-                    ->modalSubheading(fn ($record) => 'Преглед статистичких података за овај конкурс')
-                    ->modalWidth('lg')
-                    ->infolist(fn ($record) => [
-                        Infolists\Components\Section::make('Статистички подаци')
-                            ->schema([
-                                Infolists\Components\TextEntry::make('vreme_trajanja')
-                                    ->label('Време трајања конкурсног поступка')
-                                    ->state(function ($record) {
-                                        // Izračunaj broj dana ako su oba datuma prisutna
-                                        if ($record->tip_konkursa == 1 // Јавни
-                                            && $record->datum_donosenja_resenja_o_pokretanju_postupka
-                                            && $record->datum_stupanja_na_rad) {
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('statistika')
+                        ->label('Статистика')
+                        ->icon('heroicon-o-chart-bar')
+                        ->color('info')
+                        ->modalHeading(fn ($record) => 'Статистика конкурса')
+                        ->modalSubheading(fn ($record) => 'Преглед статистичких података за овај конкурс')
+                        ->modalWidth('7xl')
+                        ->modalSubmitAction(false)
+                        ->modalCancelActionLabel('Затвори')
+                        ->infolist(fn ($record) => [
+                            // SEKCIJA 1: Временски периоди
+                            Infolists\Components\Section::make('Временски периоди')
+                                ->description('Периоди трајања конкурсних поступака')
+                                ->icon('heroicon-o-clock')
+                                ->schema([
+                                    Infolists\Components\TextEntry::make('vreme_trajanja')
+                                        ->label('Време трајања конкурсног поступка')
+                                        ->state(function ($record) {
+                                            if ($record->tip_konkursa == 1
+                                                && $record->datum_donosenja_resenja_o_pokretanju_postupka
+                                                && $record->datum_stupanja_na_rad) {
 
-                                            $start = Carbon::parse($record->datum_donosenja_resenja_o_pokretanju_postupka);
-                                            $end = Carbon::parse($record->datum_stupanja_na_rad);
-                                            $days = $start->diffInDays($end);
+                                                $start = Carbon::parse($record->datum_donosenja_resenja_o_pokretanju_postupka);
+                                                $end = Carbon::parse($record->datum_stupanja_na_rad);
+                                                $days = $start->diffInDays($end);
 
-                                            return $days . ' дана';
-                                        }
+                                                return $days . ' дана';
+                                            }
+                                            return 'Н/Д';
+                                        })
+                                        ->placeholder('Нема података')
+                                        ->helperText('Број дана између доношења решења и ступања на рад'),
 
-                                        return 'Н/Д';
-                                    })
-                                    ->placeholder('Нема података')
-                                    ->helperText('Број дана између доношења решења и ступања на рад'),
-                                Infolists\Components\TextEntry::make('vreme_trajanja_izbornog_postupka')
-                                    ->label('Време трајања изборног поступка')
-                                    ->state(function ($record) {
-                                        // Izračunaj broj dana ako su oba datuma prisutna
-                                        if ($record->tip_konkursa == 1 // Јавни
-                                            && $record->datum_pregleda_prijava
-                                            && $record->datum_dostavljanja_liste_rukovodiocu_organa) {
+                                    Infolists\Components\TextEntry::make('vreme_trajanja_izbornog_postupka')
+                                        ->label('Време трајања изборног поступка')
+                                        ->state(function ($record) {
+                                            if ($record->tip_konkursa == 1
+                                                && $record->datum_pregleda_prijava
+                                                && $record->datum_dostavljanja_liste_rukovodiocu_organa) {
 
-                                            $start = Carbon::parse($record->datum_pregleda_prijava);
-                                            $end = Carbon::parse($record->datum_dostavljanja_liste_rukovodiocu_organa);
-                                            $days = $start->diffInDays($end);
+                                                $start = Carbon::parse($record->datum_pregleda_prijava);
+                                                $end = Carbon::parse($record->datum_dostavljanja_liste_rukovodiocu_organa);
+                                                $days = $start->diffInDays($end);
 
-                                            return $days . ' дана';
-                                        }
+                                                return $days . ' дана';
+                                            }
+                                            return 'Н/Д';
+                                        })
+                                        ->placeholder('Нема података')
+                                        ->helperText('Број дана између прегледа пријава и достављања листе'),
+                                ])
+                                ->columns(4)
+                                ->collapsible()
+                                ->collapsed(false),
 
-                                        return 'Н/Д';
-                                    })
-                                    ->placeholder('Нема података')
-                                    ->helperText('Број дана између прегледа пријава и достављања листе руководиоцу органа'),
-                            ])
-                            ->collapsible(false),
-                    ]),
-                Tables\Actions\ViewAction::make()
-                    ->label('Преглед'),
-                Tables\Actions\EditAction::make()
-                    ->label('Измени'),
-                Tables\Actions\DeleteAction::make()
-                    ->label('Обриши'),
+                            // SEKCIJA 2: Интервали између датума
+                            Infolists\Components\Section::make('Интервали између датума')
+                                ->description('Временски размаци између кључних догађаја')
+                                ->icon('heroicon-o-calendar-days')
+                                ->schema([
+                                    Infolists\Components\TextEntry::make('vreme_od_saglasnosti_do_resenja')
+                                        ->label('Време од сагласности Владе до решења')
+                                        ->state(function ($record) {
+                                            if ($record->tip_konkursa == 1
+                                                && $record->datum_dobijanja_saglasnosti_vlade
+                                                && $record->datum_donosenja_resenja_o_pokretanju_postupka) {
+
+                                                $start = Carbon::parse($record->datum_dobijanja_saglasnosti_vlade);
+                                                $end = Carbon::parse($record->datum_donosenja_resenja_o_pokretanju_postupka);
+                                                $days = $start->diffInDays($end);
+
+                                                return $days . ' дана';
+                                            }
+                                            return 'Н/Д';
+                                        })
+                                        ->placeholder('Нема података')
+                                        ->helperText('Број дана између добијања сагласности и решења'),
+
+                                    Infolists\Components\TextEntry::make('vreme_od_obavestenja_suka_do_resenja')
+                                        ->label('Време од обавештења СУК-а до решења')
+                                        ->state(function ($record) {
+                                            if ($record->tip_konkursa == 1
+                                                && $record->datum_dobijanja_obavestenja_od_suka
+                                                && $record->datum_donosenja_resenja_o_pokretanju_postupka) {
+
+                                                $obavestenje = Carbon::parse($record->datum_dobijanja_obavestenja_od_suka);
+                                                $resenje = Carbon::parse($record->datum_donosenja_resenja_o_pokretanju_postupka);
+                                                $days = $resenje->diffInDays($obavestenje);
+
+                                                return $days . ' дана';
+                                            }
+                                            return 'Н/Д';
+                                        })
+                                        ->placeholder('Нема података')
+                                        ->helperText('Број дана између обавештења СУК-а и решења'),
+
+                                    Infolists\Components\TextEntry::make('vreme_od_obavestenja_suka_do_prvog_sastanka')
+                                        ->label('Време од обавештења СУК-а до првог састанка')
+                                        ->state(function ($record) {
+                                            if ($record->tip_konkursa == 1
+                                                && $record->datum_dobijanja_obavestenja_od_suka
+                                                && $record->datum_odrzavanja_prvog_sastanka) {
+
+                                                $obavestenje = Carbon::parse($record->datum_dobijanja_obavestenja_od_suka);
+                                                $sastanak = Carbon::parse($record->datum_odrzavanja_prvog_sastanka);
+                                                $days = $obavestenje->diffInDays($sastanak);
+
+                                                return $days . ' дана';
+                                            }
+                                            return 'Н/Д';
+                                        })
+                                        ->placeholder('Нема података')
+                                        ->helperText('Број дана између обавештења и првог састанка'),
+
+                                    Infolists\Components\TextEntry::make('vreme_od_prvog_sastanka_do_oglasavanja')
+                                        ->label('Време од првог састанка до оглашавања')
+                                        ->state(function ($record) {
+                                            if ($record->tip_konkursa == 1
+                                                && $record->datum_odrzavanja_prvog_sastanka
+                                                && $record->datum_oglasavanja) {
+
+                                                $sastanak = Carbon::parse($record->datum_odrzavanja_prvog_sastanka);
+                                                $oglasavanje = Carbon::parse($record->datum_oglasavanja);
+                                                $days = $sastanak->diffInDays($oglasavanje);
+
+                                                return $days . ' дана';
+                                            }
+                                            return 'Н/Д';
+                                        })
+                                        ->placeholder('Нема података')
+                                        ->helperText('Број дана између првог састанка и оглашавања конкурса'),
+
+                                    Infolists\Components\TextEntry::make('vreme_od_oglasavanja_do_pregleda_prijava')
+                                        ->label('Време од оглашавања до прегледа пријава')
+                                        ->state(function ($record) {
+                                            if ($record->tip_konkursa == 1
+                                                && $record->datum_oglasavanja
+                                                && $record->datum_pregleda_prijava) {
+
+                                                $oglasavanje = Carbon::parse($record->datum_oglasavanja);
+                                                $pregled = Carbon::parse($record->datum_pregleda_prijava);
+                                                $days = $oglasavanje->diffInDays($pregled);
+
+                                                return $days . ' дана';
+                                            }
+                                            return 'Н/Д';
+                                        })
+                                        ->placeholder('Нема података')
+                                        ->helperText('Број дана између оглашавања и прегледа пријава'),
+                                ])
+                                ->columns(4)
+                                ->collapsible()
+                                ->collapsed(false),
+
+                            // SEKCIJA 3: Додатне статистике (за будуће формуле)
+                            Infolists\Components\Section::make('Додатне статистике')
+                                ->description('Додатне анализе конкурсног поступка')
+                                ->icon('heroicon-o-chart-bar')
+                                ->schema([
+                                    // Ovde će se dodavati nove statistike
+                                ])
+                                ->columns(4)
+                                ->collapsible()
+                                ->collapsed(true)
+                                ->hidden(fn () => true), // Sakrij dok je prazna
+
+                            // SEKCIJA 4: Напредна анализа (за више статистика)
+                            Infolists\Components\Section::make('Напредна анализа')
+                                ->description('Детаљна анализа података')
+                                ->icon('heroicon-o-calculator')
+                                ->schema([
+                                    // Ovde će se dodavati dodatne statistike
+                                ])
+                                ->columns(4)
+                                ->collapsible()
+                                ->collapsed(true)
+                                ->hidden(fn () => true), // Sakrij dok je prazna
+                        ]),
+                    Tables\Actions\ViewAction::make()
+                        ->label('Преглед'),
+                    Tables\Actions\EditAction::make()
+                        ->label('Измени'),
+                    Tables\Actions\DeleteAction::make()
+                        ->label('Обриши'),
+                ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
