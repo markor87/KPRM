@@ -209,9 +209,11 @@ class PodaciORadnomMestuResource extends Resource
                         Forms\Components\TextInput::make('broj_kandidata_koji_su_ispunlii_merila_pfk')
                             ->label('Број кандидата који су испунили мерила ПФК')
                             ->numeric(),
-                        Forms\Components\TextInput::make('provera_pfk')
+                        Forms\Components\Select::make('provera_pfk')
                             ->label('Провера ПФК')
-                            ->numeric(),
+                            ->relationship('proveraPfkRelation', 'provera_pfk')
+                            ->preload()
+                            ->searchable(),
                         Forms\Components\TextInput::make('broj_kandidata_ispunili_merila_pk')
                             ->label('Број кандидата који су испунили мерила ПК')
                             ->numeric(),

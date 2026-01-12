@@ -28,6 +28,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login(\App\Filament\Pages\Auth\Login::class)
+            ->brandName('КПРМ')
             ->colors([
                 'primary' => Color::Amber,
             ])

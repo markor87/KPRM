@@ -142,4 +142,12 @@ class PodaciORadnomMestu extends Model
     {
         return $this->belongsTo(SifarnikIzabraniKandidat::class, 'drugoplasirani_kandidat');
     }
+
+    /**
+     * Relacija sa sifarnik_provera_pfk tabelom
+     */
+    public function proveraPfkRelation()
+    {
+        return $this->belongsTo(SifarnikProveraPfk::class, 'provera_pfk');
+    }
 }
