@@ -122,11 +122,15 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Датум оглашавања'),
                         Forms\Components\DatePicker::make('datum_pregleda_prijava')
                             ->label('Датум прегледа пријава'),
+                        Forms\Components\DatePicker::make('datum_pocetka_provere_ofk')
+                            ->label('Датум почетка провере ОФК'),
                         Forms\Components\DatePicker::make('datum_ofk_izvestaja')
                             ->label('Датум ОФК извештаја')
                             ->helperText('Датум креирања извештаја СУКа'),
                         Forms\Components\DatePicker::make('datum_pocetka_provere_pfk')
                             ->label('Датум почетка провере ПФК'),
+                        Forms\Components\DatePicker::make('datum_pocetka_provere_pk')
+                            ->label('Датум почетка провере ПК'),
                         Forms\Components\DatePicker::make('datum_pk_izvestaja')
                             ->label('Датум ПК извештаја')
                             ->helperText('Датум креирања извештаја СУКа'),
@@ -382,16 +386,7 @@ class PodaciORadnomMestuResource extends Resource
                                         })
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између прегледа пријава и достављања листе'),
-                                ])
-                                ->columns(4)
-                                ->collapsible()
-                                ->collapsed(false),
 
-                            // SEKCIJA 2: Интервали између датума
-                            Infolists\Components\Section::make('Интервали између датума')
-                                ->description('Временски размаци између кључних догађаја')
-                                ->icon('heroicon-o-calendar-days')
-                                ->schema([
                                     Infolists\Components\TextEntry::make('vreme_od_saglasnosti_do_resenja')
                                         ->label('Време од сагласности Владе до решења')
                                         ->state(function ($record) {
@@ -481,6 +476,159 @@ class PodaciORadnomMestuResource extends Resource
                                         })
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између оглашавања и прегледа пријава'),
+                                ])
+                                ->columns(4)
+                                ->collapsible()
+                                ->collapsed(false),
+
+                            // SEKCIJA 2: Интервали између датума
+                            Infolists\Components\Section::make('Интервали између датума')
+                                ->description('Временски размаци између кључних догађаја')
+                                ->icon('heroicon-o-calendar-days')
+                                ->schema([
+                                    Infolists\Components\TextEntry::make('vreme_od_pregleda_prijava_do_pocetka_provere_ofk')
+                                        ->label('Време од прегледа пријава до почетка провере ОФК')
+                                        ->state(function ($record) {
+                                            if ($record->tip_konkursa == 1
+                                                && $record->datum_pregleda_prijava
+                                                && $record->datum_pocetka_provere_ofk) {
+
+                                                $pregled = Carbon::parse($record->datum_pregleda_prijava);
+                                                $proveraOfk = Carbon::parse($record->datum_pocetka_provere_ofk);
+                                                $days = $pregled->diffInDays($proveraOfk);
+
+                                                return $days . ' дана';
+                                            }
+                                            return 'Н/Д';
+                                        })
+                                        ->placeholder('Нема података')
+                                        ->helperText('Број дана између прегледа пријава и почетка провере ОФК'),
+
+                                    Infolists\Components\TextEntry::make('vreme_od_pocetka_provere_ofk_do_pocetka_provere_pfk')
+                                        ->label('Време од почетка провере ОФК до почетка провере ПФК')
+                                        ->state(function ($record) {
+                                            if ($record->tip_konkursa == 1
+                                                && $record->datum_pocetka_provere_ofk
+                                                && $record->datum_pocetka_provere_pfk) {
+
+                                                $proveraOfk = Carbon::parse($record->datum_pocetka_provere_ofk);
+                                                $proveraPfk = Carbon::parse($record->datum_pocetka_provere_pfk);
+                                                $days = $proveraOfk->diffInDays($proveraPfk);
+
+                                                return $days . ' дана';
+                                            }
+                                            return 'Н/Д';
+                                        })
+                                        ->placeholder('Нема података')
+                                        ->helperText('Број дана између почетка провере ОФК и почетка провере ПФК'),
+
+                                    Infolists\Components\TextEntry::make('vreme_od_pocetka_provere_pfk_do_pocetka_provere_pk')
+                                        ->label('Време од почетка провере ПФК до почетка провере ПК')
+                                        ->state(function ($record) {
+                                            if ($record->tip_konkursa == 1
+                                                && $record->datum_pocetka_provere_pfk
+                                                && $record->datum_pocetka_provere_pk) {
+
+                                                $proveraPfk = Carbon::parse($record->datum_pocetka_provere_pfk);
+                                                $proveraPk = Carbon::parse($record->datum_pocetka_provere_pk);
+                                                $days = $proveraPfk->diffInDays($proveraPk);
+
+                                                return $days . ' дана';
+                                            }
+                                            return 'Н/Д';
+                                        })
+                                        ->placeholder('Нема података')
+                                        ->helperText('Број дана између почетка провере ПФК и почетка провере ПК'),
+
+                                    Infolists\Components\TextEntry::make('vreme_od_pocetka_provere_pk_do_predaje_dokumentacije')
+                                        ->label('Време од почетка провере ПК до предаје документације')
+                                        ->state(function ($record) {
+                                            if ($record->tip_konkursa == 1
+                                                && $record->datum_pocetka_provere_pk
+                                                && $record->datum_predaje_dokumentacije) {
+
+                                                $proveraPk = Carbon::parse($record->datum_pocetka_provere_pk);
+                                                $predajaDok = Carbon::parse($record->datum_predaje_dokumentacije);
+                                                $days = $proveraPk->diffInDays($predajaDok);
+
+                                                return $days . ' дана';
+                                            }
+                                            return 'Н/Д';
+                                        })
+                                        ->placeholder('Нема података')
+                                        ->helperText('Број дана између почетка провере ПК и предаје документације'),
+
+                                    Infolists\Components\TextEntry::make('vreme_od_predaje_dokumentacije_do_intervjua')
+                                        ->label('Време од предаје документације до спровођења интервјуа')
+                                        ->state(function ($record) {
+                                            if ($record->tip_konkursa == 1
+                                                && $record->datum_predaje_dokumentacije
+                                                && $record->datum_pocetka_sprovodjenja_intervjua) {
+
+                                                $predajaDok = Carbon::parse($record->datum_predaje_dokumentacije);
+                                                $intervju = Carbon::parse($record->datum_pocetka_sprovodjenja_intervjua);
+                                                $days = $predajaDok->diffInDays($intervju);
+
+                                                return $days . ' дана';
+                                            }
+                                            return 'Н/Д';
+                                        })
+                                        ->placeholder('Нема података')
+                                        ->helperText('Број дана између предаје документације и почетка спровођења интервјуа'),
+
+                                    Infolists\Components\TextEntry::make('vreme_od_intervjua_do_dostavljanja_liste')
+                                        ->label('Време од спровођења интервјуа до достављања листе')
+                                        ->state(function ($record) {
+                                            if ($record->tip_konkursa == 1
+                                                && $record->datum_pocetka_sprovodjenja_intervjua
+                                                && $record->datum_dostavljanja_liste_rukovodiocu_organa) {
+
+                                                $intervju = Carbon::parse($record->datum_pocetka_sprovodjenja_intervjua);
+                                                $lista = Carbon::parse($record->datum_dostavljanja_liste_rukovodiocu_organa);
+                                                $days = $intervju->diffInDays($lista);
+
+                                                return $days . ' дана';
+                                            }
+                                            return 'Н/Д';
+                                        })
+                                        ->placeholder('Нема података')
+                                        ->helperText('Број дана између почетка спровођења интервјуа и достављања листе руководиоцу'),
+
+                                    Infolists\Components\TextEntry::make('vreme_od_dostavljanja_liste_do_resenja')
+                                        ->label('Време од достављања листе до доношења решења')
+                                        ->state(function ($record) {
+                                            if ($record->tip_konkursa == 1
+                                                && $record->datum_dostavljanja_liste_rukovodiocu_organa
+                                                && $record->datum_donosenja_resenja_o_izabranom_kandidatu) {
+
+                                                $lista = Carbon::parse($record->datum_dostavljanja_liste_rukovodiocu_organa);
+                                                $resenje = Carbon::parse($record->datum_donosenja_resenja_o_izabranom_kandidatu);
+                                                $days = $lista->diffInDays($resenje);
+
+                                                return $days . ' дана';
+                                            }
+                                            return 'Н/Д';
+                                        })
+                                        ->placeholder('Нема података')
+                                        ->helperText('Број дана између достављања листе и доношења решења о изабраном кандидату'),
+
+                                    Infolists\Components\TextEntry::make('vreme_od_resenja_do_stupanja_na_rad')
+                                        ->label('Време од доношења решења до ступања на рад')
+                                        ->state(function ($record) {
+                                            if ($record->tip_konkursa == 1
+                                                && $record->datum_donosenja_resenja_o_izabranom_kandidatu
+                                                && $record->datum_stupanja_na_rad) {
+
+                                                $resenje = Carbon::parse($record->datum_donosenja_resenja_o_izabranom_kandidatu);
+                                                $stupanje = Carbon::parse($record->datum_stupanja_na_rad);
+                                                $days = $resenje->diffInDays($stupanje);
+
+                                                return $days . ' дана';
+                                            }
+                                            return 'Н/Д';
+                                        })
+                                        ->placeholder('Нема података')
+                                        ->helperText('Број дана између доношења решења и ступања на рад'),
                                 ])
                                 ->columns(4)
                                 ->collapsible()
