@@ -354,8 +354,7 @@ class PodaciORadnomMestuResource extends Resource
                                     Infolists\Components\TextEntry::make('vreme_trajanja')
                                         ->label('Време трајања конкурсног поступка')
                                         ->state(function ($record) {
-                                            if ($record->tip_konkursa == 1
-                                                && $record->datum_donosenja_resenja_o_pokretanju_postupka
+                                            if ($record->datum_donosenja_resenja_o_pokretanju_postupka
                                                 && $record->datum_stupanja_na_rad) {
 
                                                 $start = Carbon::parse($record->datum_donosenja_resenja_o_pokretanju_postupka);
@@ -372,8 +371,7 @@ class PodaciORadnomMestuResource extends Resource
                                     Infolists\Components\TextEntry::make('vreme_trajanja_izbornog_postupka')
                                         ->label('Време трајања изборног поступка')
                                         ->state(function ($record) {
-                                            if ($record->tip_konkursa == 1
-                                                && $record->datum_pregleda_prijava
+                                            if ($record->datum_pregleda_prijava
                                                 && $record->datum_dostavljanja_liste_rukovodiocu_organa) {
 
                                                 $start = Carbon::parse($record->datum_pregleda_prijava);
@@ -390,8 +388,7 @@ class PodaciORadnomMestuResource extends Resource
                                     Infolists\Components\TextEntry::make('vreme_od_saglasnosti_do_resenja')
                                         ->label('Време од сагласности Владе до решења')
                                         ->state(function ($record) {
-                                            if ($record->tip_konkursa == 1
-                                                && $record->datum_dobijanja_saglasnosti_vlade
+                                            if ($record->datum_dobijanja_saglasnosti_vlade
                                                 && $record->datum_donosenja_resenja_o_pokretanju_postupka) {
 
                                                 $start = Carbon::parse($record->datum_dobijanja_saglasnosti_vlade);
@@ -408,8 +405,7 @@ class PodaciORadnomMestuResource extends Resource
                                     Infolists\Components\TextEntry::make('vreme_od_obavestenja_suka_do_resenja')
                                         ->label('Време од обавештења СУК-а до решења')
                                         ->state(function ($record) {
-                                            if ($record->tip_konkursa == 1
-                                                && $record->datum_dobijanja_obavestenja_od_suka
+                                            if ($record->datum_dobijanja_obavestenja_od_suka
                                                 && $record->datum_donosenja_resenja_o_pokretanju_postupka) {
 
                                                 $obavestenje = Carbon::parse($record->datum_dobijanja_obavestenja_od_suka);
@@ -426,8 +422,7 @@ class PodaciORadnomMestuResource extends Resource
                                     Infolists\Components\TextEntry::make('vreme_od_obavestenja_suka_do_prvog_sastanka')
                                         ->label('Време од обавештења СУК-а до првог састанка')
                                         ->state(function ($record) {
-                                            if ($record->tip_konkursa == 1
-                                                && $record->datum_dobijanja_obavestenja_od_suka
+                                            if ($record->datum_dobijanja_obavestenja_od_suka
                                                 && $record->datum_odrzavanja_prvog_sastanka) {
 
                                                 $obavestenje = Carbon::parse($record->datum_dobijanja_obavestenja_od_suka);
@@ -444,8 +439,7 @@ class PodaciORadnomMestuResource extends Resource
                                     Infolists\Components\TextEntry::make('vreme_od_prvog_sastanka_do_oglasavanja')
                                         ->label('Време од првог састанка до оглашавања')
                                         ->state(function ($record) {
-                                            if ($record->tip_konkursa == 1
-                                                && $record->datum_odrzavanja_prvog_sastanka
+                                            if ($record->datum_odrzavanja_prvog_sastanka
                                                 && $record->datum_oglasavanja) {
 
                                                 $sastanak = Carbon::parse($record->datum_odrzavanja_prvog_sastanka);
@@ -462,8 +456,7 @@ class PodaciORadnomMestuResource extends Resource
                                     Infolists\Components\TextEntry::make('vreme_od_oglasavanja_do_pregleda_prijava')
                                         ->label('Време од оглашавања до прегледа пријава')
                                         ->state(function ($record) {
-                                            if ($record->tip_konkursa == 1
-                                                && $record->datum_oglasavanja
+                                            if ($record->datum_oglasavanja
                                                 && $record->datum_pregleda_prijava) {
 
                                                 $oglasavanje = Carbon::parse($record->datum_oglasavanja);
@@ -489,8 +482,7 @@ class PodaciORadnomMestuResource extends Resource
                                     Infolists\Components\TextEntry::make('vreme_od_pregleda_prijava_do_pocetka_provere_ofk')
                                         ->label('Време од прегледа пријава до почетка провере ОФК')
                                         ->state(function ($record) {
-                                            if ($record->tip_konkursa == 1
-                                                && $record->datum_pregleda_prijava
+                                            if ($record->datum_pregleda_prijava
                                                 && $record->datum_pocetka_provere_ofk) {
 
                                                 $pregled = Carbon::parse($record->datum_pregleda_prijava);
@@ -502,13 +494,13 @@ class PodaciORadnomMestuResource extends Resource
                                             return 'Н/Д';
                                         })
                                         ->placeholder('Нема података')
-                                        ->helperText('Број дана између прегледа пријава и почетка провере ОФК'),
+                                        ->helperText('Број дана између прегледа пријава и почетка провере ОФК')
+                                        ->hidden(fn ($record) => $record->tip_konkursa == 2),
 
                                     Infolists\Components\TextEntry::make('vreme_od_pocetka_provere_ofk_do_pocetka_provere_pfk')
                                         ->label('Време од почетка провере ОФК до почетка провере ПФК')
                                         ->state(function ($record) {
-                                            if ($record->tip_konkursa == 1
-                                                && $record->datum_pocetka_provere_ofk
+                                            if ($record->datum_pocetka_provere_ofk
                                                 && $record->datum_pocetka_provere_pfk) {
 
                                                 $proveraOfk = Carbon::parse($record->datum_pocetka_provere_ofk);
@@ -520,13 +512,32 @@ class PodaciORadnomMestuResource extends Resource
                                             return 'Н/Д';
                                         })
                                         ->placeholder('Нема података')
-                                        ->helperText('Број дана између почетка провере ОФК и почетка провере ПФК'),
+                                        ->helperText('Број дана између почетка провере ОФК и почетка провере ПФК')
+                                        ->hidden(fn ($record) => $record->tip_konkursa == 2),
+
+                                    Infolists\Components\TextEntry::make('vreme_od_pregleda_prijava_do_pocetka_provere_pfk')
+                                        ->label('Време трајања од прегледа пријава до ПФК')
+                                        ->state(function ($record) {
+                                            if ($record->tip_konkursa == 2
+                                                && $record->datum_pregleda_prijava
+                                                && $record->datum_pocetka_provere_pfk) {
+
+                                                $pregled = Carbon::parse($record->datum_pregleda_prijava);
+                                                $proveraPfk = Carbon::parse($record->datum_pocetka_provere_pfk);
+                                                $days = $pregled->diffInDays($proveraPfk);
+
+                                                return $days . ' дана';
+                                            }
+                                            return 'Н/Д';
+                                        })
+                                        ->placeholder('Нема података')
+                                        ->helperText('Број дана између прегледа пријава и почетка провере ПФК')
+                                        ->hidden(fn ($record) => $record->tip_konkursa == 1),
 
                                     Infolists\Components\TextEntry::make('vreme_od_pocetka_provere_pfk_do_pocetka_provere_pk')
                                         ->label('Време од почетка провере ПФК до почетка провере ПК')
                                         ->state(function ($record) {
-                                            if ($record->tip_konkursa == 1
-                                                && $record->datum_pocetka_provere_pfk
+                                            if ($record->datum_pocetka_provere_pfk
                                                 && $record->datum_pocetka_provere_pk) {
 
                                                 $proveraPfk = Carbon::parse($record->datum_pocetka_provere_pfk);
@@ -543,8 +554,7 @@ class PodaciORadnomMestuResource extends Resource
                                     Infolists\Components\TextEntry::make('vreme_od_pocetka_provere_pk_do_predaje_dokumentacije')
                                         ->label('Време од почетка провере ПК до предаје документације')
                                         ->state(function ($record) {
-                                            if ($record->tip_konkursa == 1
-                                                && $record->datum_pocetka_provere_pk
+                                            if ($record->datum_pocetka_provere_pk
                                                 && $record->datum_predaje_dokumentacije) {
 
                                                 $proveraPk = Carbon::parse($record->datum_pocetka_provere_pk);
@@ -561,8 +571,7 @@ class PodaciORadnomMestuResource extends Resource
                                     Infolists\Components\TextEntry::make('vreme_od_predaje_dokumentacije_do_intervjua')
                                         ->label('Време од предаје документације до спровођења интервјуа')
                                         ->state(function ($record) {
-                                            if ($record->tip_konkursa == 1
-                                                && $record->datum_predaje_dokumentacije
+                                            if ($record->datum_predaje_dokumentacije
                                                 && $record->datum_pocetka_sprovodjenja_intervjua) {
 
                                                 $predajaDok = Carbon::parse($record->datum_predaje_dokumentacije);
@@ -579,8 +588,7 @@ class PodaciORadnomMestuResource extends Resource
                                     Infolists\Components\TextEntry::make('vreme_od_intervjua_do_dostavljanja_liste')
                                         ->label('Време од спровођења интервјуа до достављања листе')
                                         ->state(function ($record) {
-                                            if ($record->tip_konkursa == 1
-                                                && $record->datum_pocetka_sprovodjenja_intervjua
+                                            if ($record->datum_pocetka_sprovodjenja_intervjua
                                                 && $record->datum_dostavljanja_liste_rukovodiocu_organa) {
 
                                                 $intervju = Carbon::parse($record->datum_pocetka_sprovodjenja_intervjua);
@@ -597,8 +605,7 @@ class PodaciORadnomMestuResource extends Resource
                                     Infolists\Components\TextEntry::make('vreme_od_dostavljanja_liste_do_resenja')
                                         ->label('Време од достављања листе до доношења решења')
                                         ->state(function ($record) {
-                                            if ($record->tip_konkursa == 1
-                                                && $record->datum_dostavljanja_liste_rukovodiocu_organa
+                                            if ($record->datum_dostavljanja_liste_rukovodiocu_organa
                                                 && $record->datum_donosenja_resenja_o_izabranom_kandidatu) {
 
                                                 $lista = Carbon::parse($record->datum_dostavljanja_liste_rukovodiocu_organa);
@@ -615,8 +622,7 @@ class PodaciORadnomMestuResource extends Resource
                                     Infolists\Components\TextEntry::make('vreme_od_resenja_do_stupanja_na_rad')
                                         ->label('Време од доношења решења до ступања на рад')
                                         ->state(function ($record) {
-                                            if ($record->tip_konkursa == 1
-                                                && $record->datum_donosenja_resenja_o_izabranom_kandidatu
+                                            if ($record->datum_donosenja_resenja_o_izabranom_kandidatu
                                                 && $record->datum_stupanja_na_rad) {
 
                                                 $resenje = Carbon::parse($record->datum_donosenja_resenja_o_izabranom_kandidatu);
