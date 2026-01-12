@@ -668,6 +668,8 @@ class PodaciORadnomMestuResource extends Resource
                         ]),
                     Tables\Actions\ViewAction::make()
                         ->label('Преглед'),
+                    Tables\Actions\ReplicateAction::make()
+                        ->label('Дуплирај'),
                     Tables\Actions\EditAction::make()
                         ->label('Измени'),
                     Tables\Actions\DeleteAction::make()

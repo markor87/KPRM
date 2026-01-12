@@ -1,37 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Livewire\Auth\Login;
-use App\Livewire\Auth\Register;
-use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\TwoFactorChallenge;
 
-Route::get('/', function () {
-    if (auth()->check()) {
-        return redirect('/admin');
-    }
-    return redirect()->route('login');
-});
-
-// Guest routes
+// Custom 2FA verification route (Filament handles login, register, forgot-password)
 Route::middleware('guest')->group(function () {
-    Route::get('/login', Login::class)->name('login');
-    Route::get('/register', Register::class)->name('register');
-    Route::get('/forgot-password', ForgotPassword::class)->name('forgot-password');
     Route::get('/two-factor-challenge', TwoFactorChallenge::class)->name('two-factor.login');
 });
 
-// Authenticated routes
-Route::middleware('auth')->group(function () {
-    // Redirect dashboard to Filament admin
-    Route::get('/dashboard', function () {
-        return redirect('/admin');
-    })->name('dashboard');
-
-    Route::post('/logout', function () {
-        auth()->logout();
-        request()->session()->invalidate();
-        request()->session()->regenerateToken();
-        return redirect()->route('login');
-    })->name('logout');
-});
+// Filament handles all authenticated routes including logout
