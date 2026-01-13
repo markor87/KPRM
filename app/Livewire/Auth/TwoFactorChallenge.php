@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Filament\Notifications\Notification;
+use Spatie\Activitylog\Facades\Activity;
 
 class TwoFactorChallenge extends Component
 {
@@ -68,6 +69,18 @@ class TwoFactorChallenge extends Component
 
         // Log the user in
         Auth::login($user);
+
+        // Log successful 2FA verification
+        activity('auth')
+            ->causedBy($user)
+            ->withProperties([
+                'email' => $user->email,
+                'verification_method' => '2FA Code',
+            ])
+            ->tap(function ($activity) {
+                $activity->ip_address = request()->ip();
+            })
+            ->log('Uspešna 2FA verifikacija');
 
         return redirect()->intended(route('filament.admin.pages.dashboard'));
     }

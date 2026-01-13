@@ -3,9 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class PodaciORadnomMestu extends Model
 {
+    use LogsActivity;
+
     protected $table = 'podaci_o_radnom_mestu';
 
     public $timestamps = false;
@@ -149,5 +153,47 @@ class PodaciORadnomMestu extends Model
     public function proveraPfkRelation()
     {
         return $this->belongsTo(SifarnikProveraPfk::class, 'provera_pfk');
+    }
+
+    /**
+     * Activity log konfiguracija
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'vrsta_organa',
+                'organ',
+                'naziv_radnog_mesta',
+                'tip_konkursa',
+                'broj_izvrsilaca',
+                'zvanje',
+                'mesto_rada',
+                'status_konkursa_na_dan_1',
+                'status_konkursa_na_dan_2',
+                'datum_prvog_kreiranja',
+                'datum_poslednje_izmene',
+                'izabrani_kandidat',
+                'drugoplasirani_kandidat',
+                'prvi_dan_na_radu',
+                'provera_pfk',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
+                'created' => 'Kreirano novo radno mesto',
+                'updated' => 'Ažurirano radno mesto',
+                'deleted' => 'Obrisano radno mesto',
+                default => "Radno mesto {$eventName}",
+            })
+            ->useLogName('podaci_o_radnom_mestu');
+    }
+
+    /**
+     * Tap into activity before logging to add IP address
+     */
+    public function tapActivity(\Spatie\Activitylog\Contracts\Activity $activity, string $eventName)
+    {
+        $activity->ip_address = request()->ip();
     }
 }

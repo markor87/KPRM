@@ -669,7 +669,20 @@ class PodaciORadnomMestuResource extends Resource
                     Tables\Actions\ViewAction::make()
                         ->label('Преглед'),
                     Tables\Actions\ReplicateAction::make()
-                        ->label('Дуплирај'),
+                        ->label('Дуплирај')
+                        ->after(function ($replica) {
+                            activity('podaci_o_radnom_mestu')
+                                ->performedOn($replica)
+                                ->causedBy(auth()->user())
+                                ->withProperties([
+                                    'attributes' => $replica->attributesToArray(),
+                                    'original_id' => request()->route('record'),
+                                ])
+                                ->tap(function ($activity) {
+                                    $activity->ip_address = request()->ip();
+                                })
+                                ->log('Duplirano radno mesto');
+                        }),
                     Tables\Actions\EditAction::make()
                         ->label('Измени'),
                     Tables\Actions\DeleteAction::make()
