@@ -36,9 +36,11 @@ class UserResource extends Resource
                     ->label('Е-пошта')
                     ->email()
                     ->required()
-                    ->maxLength(191),
-                Forms\Components\DateTimePicker::make('email_verified_at')
-                    ->label('Е-пошта верификована'),
+                    ->maxLength(191)
+                    ->unique(ignoreRecord: true)
+                    ->validationMessages([
+                        'unique' => 'Корисник са овом е-поштом већ постоји.',
+                    ]),
                 Forms\Components\TextInput::make('password')
                     ->label('Лозинка')
                     ->password()
@@ -52,15 +54,14 @@ class UserResource extends Resource
                     ->multiple()
                     ->relationship('roles', 'name')
                     ->preload()
-                    ->searchable(),
+                    ->searchable()
+                    ->required(),
                 Forms\Components\Select::make('organ_id')
                     ->label('Орган')
                     ->relationship('organ', 'organ')
                     ->preload()
-                    ->searchable(),
-                Forms\Components\Toggle::make('is_super_admin')
-                    ->label('Супер Администратор')
-                    ->helperText('Супер администратори имају приступ свему'),
+                    ->searchable()
+                    ->required(),
             ]);
     }
 
@@ -81,13 +82,6 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('organ.organ')
                     ->label('Орган')
                     ->sortable(),
-                Tables\Columns\IconColumn::make('is_super_admin')
-                    ->boolean()
-                    ->label('Супер Администратор'),
-                Tables\Columns\TextColumn::make('email_verified_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -101,12 +95,14 @@ class UserResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\ViewAction::make()
-                    ->label('Преглед'),
-                Tables\Actions\EditAction::make()
-                    ->label('Измени'),
-                Tables\Actions\DeleteAction::make()
-                    ->label('Обриши'),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make()
+                        ->label('Преглед'),
+                    Tables\Actions\EditAction::make()
+                        ->label('Измени'),
+                    Tables\Actions\DeleteAction::make()
+                        ->label('Обриши'),
+                ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
