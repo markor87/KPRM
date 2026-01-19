@@ -28,22 +28,21 @@ class Login extends BaseLogin
 
         $data = $this->form->getState();
 
-        if (! Filament::auth()->attempt($this->getCredentialsFromFormData($data), $data['remember'] ?? false)) {
-            throw ValidationException::withMessages([
-                'data.email' => __('filament-panels::pages/auth/login.messages.failed'),
-            ]);
-        }
-
-        // Get the authenticated user
-        $user = Filament::auth()->user();
-
-        // Check if 2FA is enabled globally
+        // Check if 2FA is enabled globally BEFORE attempting login
         $twoFactorEnabled = Setting::get('two_factor_enabled_global', '0') === '1';
 
-        // If 2FA is enabled globally, generate code and redirect to verification
         if ($twoFactorEnabled) {
-            // Logout the user temporarily
-            Filament::auth()->logout();
+            // Use validate() instead of attempt() - only checks credentials, doesn't login
+            $credentials = $this->getCredentialsFromFormData($data);
+
+            if (! Filament::auth()->validate($credentials)) {
+                throw ValidationException::withMessages([
+                    'data.email' => __('filament-panels::pages/auth/login.messages.failed'),
+                ]);
+            }
+
+            // Get user without logging them in
+            $user = \App\Models\User::where('email', $credentials['email'])->first();
 
             // Generate 6-digit code
             $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
@@ -63,10 +62,17 @@ class Login extends BaseLogin
             // Redirect to 2FA verification page
             $this->redirect(route('two-factor.login'));
             return null;
+        } else {
+            // 2FA is NOT enabled, login normally
+            if (! Filament::auth()->attempt($this->getCredentialsFromFormData($data), $data['remember'] ?? false)) {
+                throw ValidationException::withMessages([
+                    'data.email' => __('filament-panels::pages/auth/login.messages.failed'),
+                ]);
+            }
+
+            session()->regenerate();
+
+            return app(LoginResponse::class);
         }
-
-        session()->regenerate();
-
-        return app(LoginResponse::class);
     }
 }

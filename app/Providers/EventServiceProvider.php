@@ -17,13 +17,13 @@ class EventServiceProvider extends ServiceProvider
      */
     protected $listen = [
         Login::class => [
-            [LogAuthenticationEvents::class, 'handleLogin'],
+            LogAuthenticationEvents::class . '@handleLogin',
         ],
         Logout::class => [
-            [LogAuthenticationEvents::class, 'handleLogout'],
+            LogAuthenticationEvents::class . '@handleLogout',
         ],
         Failed::class => [
-            [LogAuthenticationEvents::class, 'handleFailed'],
+            LogAuthenticationEvents::class . '@handleFailed',
         ],
     ];
 
@@ -32,7 +32,7 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        parent::boot();
     }
 
     /**

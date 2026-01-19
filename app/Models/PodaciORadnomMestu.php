@@ -21,7 +21,7 @@ class PodaciORadnomMestu extends Model
         'tip_konkursa',
         'broj_izvrsilaca',
         'zvanje',
-        'mesto_rada',
+        // 'mesto_rada', // Uklonjeno - sada je many-to-many relacija
         'status_konkursa_na_dan_1',
         'status_konkursa_na_dan_2',
         'datum_dobijanja_saglasnosti_vlade',
@@ -108,11 +108,16 @@ class PodaciORadnomMestu extends Model
     }
 
     /**
-     * Relacija sa sifarnik_mesta tabelom
+     * Relacija sa sifarnik_mesta tabelom (many-to-many)
      */
-    public function mestoRadaRelation()
+    public function mestaRada()
     {
-        return $this->belongsTo(SifarnikMesta::class, 'mesto_rada');
+        return $this->belongsToMany(
+            SifarnikMesta::class,
+            'mesto_rada_podaci_o_radnom_mestu',
+            'podaci_o_radnom_mestu_id',
+            'sifarnik_mesta_id'
+        )->withTimestamps();
     }
 
     /**
@@ -168,7 +173,7 @@ class PodaciORadnomMestu extends Model
                 'tip_konkursa',
                 'broj_izvrsilaca',
                 'zvanje',
-                'mesto_rada',
+                // 'mesto_rada', // Uklonjeno - many-to-many se ne loguje ovako
                 'status_konkursa_na_dan_1',
                 'status_konkursa_na_dan_2',
                 'datum_prvog_kreiranja',

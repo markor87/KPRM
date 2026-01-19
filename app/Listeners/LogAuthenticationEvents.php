@@ -10,11 +10,32 @@ use Illuminate\Support\Facades\Request;
 
 class LogAuthenticationEvents
 {
+    private static $loggedEvents = [];
+
+    /**
+     * Prevent duplicate logs within same request
+     */
+    private function isDuplicate(string $eventType, string $identifier): bool
+    {
+        $key = $eventType . ':' . $identifier;
+
+        if (isset(self::$loggedEvents[$key])) {
+            return true;
+        }
+
+        self::$loggedEvents[$key] = true;
+        return false;
+    }
+
     /**
      * Handle the Login event
      */
     public function handleLogin(Login $event): void
     {
+        if ($this->isDuplicate('login', $event->user->id)) {
+            return;
+        }
+
         activity('auth')
             ->causedBy($event->user)
             ->withProperties([
@@ -33,6 +54,10 @@ class LogAuthenticationEvents
      */
     public function handleLogout(Logout $event): void
     {
+        if ($this->isDuplicate('logout', $event->user->id)) {
+            return;
+        }
+
         activity('auth')
             ->causedBy($event->user)
             ->withProperties([
@@ -50,6 +75,12 @@ class LogAuthenticationEvents
      */
     public function handleFailed(Failed $event): void
     {
+        $identifier = ($event->credentials['email'] ?? 'unknown') . '_' . Request::ip();
+
+        if ($this->isDuplicate('failed', $identifier)) {
+            return;
+        }
+
         activity('auth')
             ->withProperties([
                 'email' => $event->credentials['email'] ?? 'unknown',

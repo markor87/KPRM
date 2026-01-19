@@ -68,19 +68,8 @@ class TwoFactorChallenge extends Component
         session()->forget('2fa_user_id');
 
         // Log the user in
+        // This will trigger Login event and LogAuthenticationEvents listener will log it
         Auth::login($user);
-
-        // Log successful 2FA verification
-        activity('auth')
-            ->causedBy($user)
-            ->withProperties([
-                'email' => $user->email,
-                'verification_method' => '2FA Code',
-            ])
-            ->tap(function ($activity) {
-                $activity->ip_address = request()->ip();
-            })
-            ->log('Uspešna 2FA verifikacija');
 
         return redirect()->intended(route('filament.admin.pages.dashboard'));
     }

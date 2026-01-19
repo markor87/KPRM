@@ -36,7 +36,12 @@ class PodaciORadnomMestuResource extends Resource
      */
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()->with([
+            'mestaRada',
+            'vrstaOrganaRelation',
+            'organRelation',
+            'zvanjeRelation',
+        ]);
         return app(\App\Services\OrganFilterService::class)->applyOrganFilter($query, 'organ');
     }
 
@@ -91,18 +96,19 @@ class PodaciORadnomMestuResource extends Resource
                             ->relationship('zvanjeRelation', 'zvanje', fn($query) => $query->orderBy('id', 'asc'))
                             ->preload()
                             ->searchable(),
-                        Forms\Components\Select::make('mesto_rada')
+                        Forms\Components\MultiSelect::make('mestaRada')
                             ->label('Место рада')
-                            ->relationship('mestoRadaRelation', 'mesto')
+                            ->relationship('mestaRada', 'mesto')
                             ->preload()
-                            ->searchable(),
+                            ->searchable()
+                            ->required(false),
                         Forms\Components\Select::make('status_konkursa_na_dan_1')
-                            ->label('Статус конкурса на дан 1')
+                            ->label('Статус конкурса на дан 31/12/' . (now()->year - 1))
                             ->relationship('statusKonkursaNaDan1Relation', 'status_konkursa', fn($query) => $query->orderBy('id', 'asc'))
                             ->preload()
                             ->searchable(),
                         Forms\Components\Select::make('status_konkursa_na_dan_2')
-                            ->label('Статус конкурса на дан 2')
+                            ->label('Статус конкурса на дан 31/12/' . now()->year)
                             ->relationship('statusKonkursaNaDan2Relation', 'status_konkursa', fn($query) => $query->orderBy('id', 'asc'))
                             ->preload()
                             ->searchable(),
@@ -318,7 +324,8 @@ class PodaciORadnomMestuResource extends Resource
                 Tables\Columns\TextColumn::make('organRelation.organ')
                     ->label('Орган')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->wrap(),
                 Tables\Columns\TextColumn::make('naziv_radnog_mesta')
                     ->label('Назив радног места')
                     ->searchable()
@@ -328,13 +335,26 @@ class PodaciORadnomMestuResource extends Resource
                     ->label('Звање')
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('mestoRadaRelation.mesto')
+                Tables\Columns\TextColumn::make('mestaRada.mesto')
                     ->label('Место рада')
-                    ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->formatStateUsing(function ($record) {
+                        return $record->mestaRada->pluck('mesto')->join(', ');
+                    })
+                    ->tooltip(function ($record) {
+                        $mesta = $record->mestaRada->pluck('mesto');
+                        return $mesta->count() > 3
+                            ? $mesta->join(', ')
+                            : null;
+                    }),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('mestaRada')
+                    ->label('Место рада')
+                    ->relationship('mestaRada', 'mesto')
+                    ->searchable()
+                    ->preload()
+                    ->multiple(),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
@@ -642,17 +662,30 @@ class PodaciORadnomMestuResource extends Resource
                                 ->collapsible()
                                 ->collapsed(false),
 
-                            // SEKCIJA 3: Додатне статистике (за будуће формуле)
+                            // SEKCIJA 3: Додатне статистике
                             Infolists\Components\Section::make('Додатне статистике')
                                 ->description('Додатне анализе конкурсног поступка')
                                 ->icon('heroicon-o-chart-bar')
                                 ->schema([
-                                    // Ovde će se dodavati nove statistike
+                                    Infolists\Components\TextEntry::make('vreme_trajanja_iz_ugla_kandidata')
+                                        ->label('Време трајања из угла кандидата')
+                                        ->state(function ($record) {
+                                            if ($record->datum_oglasavanja && $record->datum_stupanja_na_rad) {
+                                                $oglasavanje = Carbon::parse($record->datum_oglasavanja);
+                                                $stupanje = Carbon::parse($record->datum_stupanja_na_rad);
+                                                $days = $oglasavanje->diffInDays($stupanje);
+
+                                                return $days . ' дана';
+                                            }
+                                            return 'Н/Д';
+                                        })
+                                        ->placeholder('Нема података')
+                                        ->helperText('Број дана између оглашавања и ступања на рад')
+                                        ->hidden(fn ($record) => $record->tip_konkursa == 2),
                                 ])
                                 ->columns(4)
                                 ->collapsible()
-                                ->collapsed(true)
-                                ->hidden(fn () => true), // Sakrij dok je prazna
+                                ->collapsed(false),
 
                             // SEKCIJA 4: Напредна анализа (за више статистика)
                             Infolists\Components\Section::make('Напредна анализа')
@@ -695,7 +728,11 @@ class PodaciORadnomMestuResource extends Resource
                         ->label('Обриши означене'),
                 ]),
             ])
-            ->defaultSort('id', 'desc');
+            ->defaultSort('id', 'desc')
+            ->striped()
+            ->persistFiltersInSession()
+            ->deferLoading()
+            ->paginated([10, 25, 50, 100]);
     }
 
     public static function getRelations(): array
