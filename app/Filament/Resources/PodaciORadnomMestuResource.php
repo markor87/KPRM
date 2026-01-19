@@ -64,10 +64,12 @@ class PodaciORadnomMestuResource extends Resource
                         Forms\Components\TextInput::make('naziv_radnog_mesta')
                             ->label('Назив радног места')
                             ->maxLength(255)
+                            ->required()
                             ->columnSpanFull(),
                         Forms\Components\Select::make('vrsta_organa')
                             ->label('Врста органа')
                             ->relationship('vrstaOrganaRelation', 'vrsta_organa', fn($query) => $query->orderBy('id', 'asc'))
+                            ->required()
                             ->preload()
                             ->searchable()
                             ->live(),
@@ -81,27 +83,31 @@ class PodaciORadnomMestuResource extends Resource
                                 return \App\Models\SifarnikOrgani::where('vrsta_organ_id', $vrstaOrganaId)
                                     ->pluck('organ', 'id');
                             })
+                            ->required()
                             ->searchable()
                             ->preload(),
                         Forms\Components\Select::make('tip_konkursa')
                             ->label('Тип конкурса')
                             ->relationship('tipKonkursaRelation', 'tip_konkursa')
+                            ->required()
                             ->preload()
                             ->searchable(),
                         Forms\Components\TextInput::make('broj_izvrsilaca')
                             ->label('Број извршилаца')
+                            ->required()
                             ->numeric(),
                         Forms\Components\Select::make('zvanje')
                             ->label('Звање')
                             ->relationship('zvanjeRelation', 'zvanje', fn($query) => $query->orderBy('id', 'asc'))
+                            ->required()
                             ->preload()
                             ->searchable(),
                         Forms\Components\MultiSelect::make('mestaRada')
                             ->label('Место рада')
                             ->relationship('mestaRada', 'mesto')
+                            ->required()
                             ->preload()
-                            ->searchable()
-                            ->required(false),
+                            ->searchable(),
                         Forms\Components\Select::make('status_konkursa_na_dan_1')
                             ->label('Статус конкурса на дан 31/12/' . (now()->year - 1))
                             ->relationship('statusKonkursaNaDan1Relation', 'status_konkursa', fn($query) => $query->orderBy('id', 'asc'))
@@ -119,9 +125,11 @@ class PodaciORadnomMestuResource extends Resource
                         Forms\Components\DatePicker::make('datum_dobijanja_saglasnosti_vlade')
                             ->label('Датум добијања сагласности Владе'),
                         Forms\Components\DatePicker::make('datum_donosenja_resenja_o_pokretanju_postupka')
-                            ->label('Датум доношења решења о покретању поступка'),
+                            ->label('Датум доношења решења о покретању поступка')
+                            ->afterOrEqual('datum_dobijanja_saglasnosti_vlade'),
                         Forms\Components\DatePicker::make('datum_dobijanja_obavestenja_od_suka')
-                            ->label('Датум добијања обавештења од СУКа'),
+                            ->label('Датум добијања обавештења од СУКа')
+                            ->afterOrEqual('datum_donosenja_resenja_o_pokretanju_postupka'),
                         Forms\Components\DatePicker::make('datum_odrzavanja_prvog_sastanka')
                             ->label('Датум одржавања првог састанка'),
                         Forms\Components\DatePicker::make('datum_oglasavanja')
@@ -703,13 +711,19 @@ class PodaciORadnomMestuResource extends Resource
                         ->label('Преглед'),
                     Tables\Actions\ReplicateAction::make()
                         ->label('Дуплирај')
-                        ->after(function ($replica) {
+                        ->after(function ($replica, $record) {
+                            // Kopiraj mestaRada relaciju (many-to-many)
+                            $mestaRadaIds = $record->mestaRada()->pluck('sifarnik_mesta.id')->toArray();
+                            $replica->mestaRada()->sync($mestaRadaIds);
+
+                            // Log aktivnost
                             activity('podaci_o_radnom_mestu')
                                 ->performedOn($replica)
                                 ->causedBy(auth()->user())
                                 ->withProperties([
                                     'attributes' => $replica->attributesToArray(),
-                                    'original_id' => request()->route('record'),
+                                    'original_id' => $record->id,
+                                    'mesta_rada' => $mestaRadaIds,
                                 ])
                                 ->tap(function ($activity) {
                                     $activity->ip_address = request()->ip();
