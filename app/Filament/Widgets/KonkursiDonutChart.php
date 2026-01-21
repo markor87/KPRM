@@ -17,7 +17,7 @@ class KonkursiDonutChart extends Widget
     public function getData(): array
     {
         $organFilterService = app(OrganFilterService::class);
-        $godina = now()->year - 1;
+        $godina = now()->year - 2;
 
         $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina);
         $baseQuery = $organFilterService->applyOrganFilter($baseQuery, 'organ');

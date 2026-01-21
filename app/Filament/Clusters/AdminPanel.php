@@ -11,4 +11,9 @@ class AdminPanel extends Cluster
     protected static ?string $navigationLabel = 'Admin Panel';
 
     protected static ?int $navigationSort = 99;
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
 }

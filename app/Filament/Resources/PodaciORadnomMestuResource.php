@@ -131,18 +131,23 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Датум добијања обавештења од СУКа')
                             ->afterOrEqual('datum_donosenja_resenja_o_pokretanju_postupka'),
                         Forms\Components\DatePicker::make('datum_odrzavanja_prvog_sastanka')
-                            ->label('Датум одржавања првог састанка'),
+                            ->label('Датум одржавања првог састанка')
+                            ->afterOrEqual('datum_dobijanja_obavestenja_od_suka'),
                         Forms\Components\DatePicker::make('datum_oglasavanja')
-                            ->label('Датум оглашавања'),
+                            ->label('Датум оглашавања')
+                            ->afterOrEqual('datum_odrzavanja_prvog_sastanka'),
                         Forms\Components\DatePicker::make('datum_pregleda_prijava')
-                            ->label('Датум прегледа пријава'),
+                            ->label('Датум прегледа пријава')
+                            ->afterOrEqual('datum_oglasavanja'),
                         Forms\Components\DatePicker::make('datum_pocetka_provere_ofk')
-                            ->label('Датум почетка провере ОФК'),
+                            ->label('Датум почетка провере ОФК')
+                            ->afterOrEqual('datum_pregleda_prijava'),
                         Forms\Components\DatePicker::make('datum_ofk_izvestaja')
                             ->label('Датум ОФК извештаја')
                             ->helperText('Датум креирања извештаја СУКа'),
                         Forms\Components\DatePicker::make('datum_pocetka_provere_pfk')
-                            ->label('Датум почетка провере ПФК'),
+                            ->label('Датум почетка провере ПФК')
+                            ->afterOrEqual('datum_pocetka_provere_ofk'),
                         Forms\Components\DatePicker::make('datum_pocetka_provere_pk')
                             ->label('Датум почетка провере ПК'),
                         Forms\Components\DatePicker::make('datum_pk_izvestaja')

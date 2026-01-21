@@ -19,11 +19,11 @@ class Podesavanja extends Page implements HasForms
 
     protected static string $view = 'filament.pages.podesavanja';
 
-    protected static ?string $navigationGroup = 'Админ Панел';
+    protected static ?string $navigationGroup = 'Admin Panel';
 
     protected static ?string $navigationLabel = 'Подешавања';
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 5;
 
     public ?array $data = [];
 

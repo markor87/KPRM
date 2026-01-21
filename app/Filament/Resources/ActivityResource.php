@@ -28,7 +28,7 @@ class ActivityResource extends Resource
 
     protected static ?string $navigationGroup = 'Admin Panel';
 
-    protected static ?int $navigationSort = 99;
+    protected static ?int $navigationSort = 4;
 
     public static function canCreate(): bool
     {
