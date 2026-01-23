@@ -89,6 +89,10 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Назив радног места')
                             ->maxLength(255)
                             ->required()
+                            ->regex('/^[А-Ша-шЂЈЉЊЋЏђјљњћџ0-9\s.,\-()\/]+$/u')
+                            ->validationMessages([
+                                'regex' => 'Назив радног места може садржати само ћирилична слова.',
+                            ])
                             ->columnSpanFull(),
                         Forms\Components\Select::make('vrsta_organa')
                             ->label('Врста органа')
@@ -393,7 +397,7 @@ class PodaciORadnomMestuResource extends Resource
                 Forms\Components\Section::make('Изабрани кандидат')
                     ->schema([
                         Forms\Components\Select::make('izabrani_kandidat')
-                            ->label('Изабрани кандидат')
+                            ->label('Изабрани кандидат је из:')
                             ->relationship('izabraniKandidatRelation', 'izabrani_kandidat')
                             ->searchable()
                             ->preload(),
@@ -425,7 +429,7 @@ class PodaciORadnomMestuResource extends Resource
                 Forms\Components\Section::make('Другопласирани кандидат')
                     ->schema([
                         Forms\Components\Select::make('drugoplasirani_kandidat')
-                            ->label('Другопласирани кандидат')
+                            ->label('Другопласирани кандидат је из:')
                             ->relationship('drugoplasiraniKandidatRelation', 'izabrani_kandidat')
                             ->searchable()
                             ->preload(),
