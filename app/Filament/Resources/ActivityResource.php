@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ActivityResource\Pages;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Spatie\Activitylog\Models\Activity;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -20,13 +21,13 @@ class ActivityResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
-    protected static ?string $navigationLabel = 'Audit Log';
+    protected static ?string $navigationLabel = 'Евиденција активности';
 
-    protected static ?string $modelLabel = 'Aktivnost';
+    protected static ?string $modelLabel = 'Активност';
 
-    protected static ?string $pluralModelLabel = 'Audit Log';
+    protected static ?string $pluralModelLabel = 'Евиденција активности';
 
-    protected static ?string $navigationGroup = 'Admin Panel';
+    protected static ?string $navigationGroup = 'Администрација';
 
     protected static ?int $navigationSort = 4;
 
@@ -134,7 +135,7 @@ class ActivityResource extends Resource
 
                 Tables\Filters\SelectFilter::make('causer_id')
                     ->label('Корисник')
-                    ->options(fn () => User::pluck('email', 'id')->toArray())
+                    ->options(fn () => Cache::remember('activity_users_filter', 3600, fn () => User::pluck('email', 'id')->toArray()))
                     ->searchable(),
 
                 Tables\Filters\Filter::make('created_at')
@@ -217,14 +218,14 @@ class ActivityResource extends Resource
                     ])
                     ->columns(2),
 
-                Infolists\Components\Section::make('Subject Information')
+                Infolists\Components\Section::make('Информације о субјекту')
                     ->schema([
                         Infolists\Components\TextEntry::make('subject_type')
-                            ->label('Model Type')
-                            ->formatStateUsing(fn ($state) => $state ? class_basename($state) : 'N/A'),
+                            ->label('Тип модела')
+                            ->formatStateUsing(fn ($state) => $state ? class_basename($state) : 'Н/Д'),
                         Infolists\Components\TextEntry::make('subject_id')
-                            ->label('Model ID')
-                            ->default('N/A'),
+                            ->label('ID модела')
+                            ->default('Н/Д'),
                     ])
                     ->columns(2)
                     ->visible(fn ($record) => $record->subject_type !== null),

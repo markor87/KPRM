@@ -56,8 +56,11 @@ class Login extends BaseLogin
             // Send email with code
             Mail::to($user->email)->send(new TwoFactorCodeMail($code, $user->name));
 
-            // Store user ID in session for verification page
-            session(['2fa_user_id' => $user->id]);
+            // Store user ID and remember preference in session for verification page
+            session([
+                '2fa_user_id' => $user->id,
+                '2fa_remember' => $data['remember'] ?? false,
+            ]);
 
             // Redirect to 2FA verification page
             $this->redirect(route('two-factor.login'));

@@ -58,7 +58,7 @@
                                 colors: ['#333']
                             },
                             formatter: function(val) {
-                                return val + ' дана';
+                                return val;
                             }
                         },
                         xaxis: {
@@ -86,7 +86,7 @@
                         tooltip: {
                             y: {
                                 formatter: function(val) {
-                                    return val + ' дана';
+                                    return val;
                                 }
                             }
                         }

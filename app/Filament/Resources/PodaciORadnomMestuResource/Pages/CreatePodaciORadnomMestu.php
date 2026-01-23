@@ -5,6 +5,7 @@ namespace App\Filament\Resources\PodaciORadnomMestuResource\Pages;
 use App\Filament\Resources\PodaciORadnomMestuResource;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Support\Facades\Log;
 
 class CreatePodaciORadnomMestu extends CreateRecord
 {
@@ -60,6 +61,12 @@ class CreatePodaciORadnomMestu extends CreateRecord
                         }
                     }
                 } catch (\Throwable $e) {
+                    // Logiraj greške umesto tihog ignorisanja
+                    Log::warning('Greška pri logiranju relacije u CreatePodaciORadnomMestu', [
+                        'method' => $method->name,
+                        'record_id' => $this->record->id ?? null,
+                        'error' => $e->getMessage(),
+                    ]);
                     continue;
                 }
             }

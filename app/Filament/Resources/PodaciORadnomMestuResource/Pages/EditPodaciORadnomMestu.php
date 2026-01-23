@@ -6,6 +6,7 @@ use App\Filament\Resources\PodaciORadnomMestuResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Locked;
 
 class EditPodaciORadnomMestu extends EditRecord
@@ -56,6 +57,11 @@ class EditPodaciORadnomMestu extends EditRecord
                         $this->oldRelationships[$relationName] = $oldValues;
                     }
                 } catch (\Throwable $e) {
+                    Log::warning('Greška pri učitavanju relacije u EditPodaciORadnomMestu::mount', [
+                        'method' => $method->name,
+                        'record_id' => $this->record->id ?? null,
+                        'error' => $e->getMessage(),
+                    ]);
                     continue;
                 }
             }
@@ -99,6 +105,11 @@ class EditPodaciORadnomMestu extends EditRecord
                         ->log('Ažurirana ' . $this->getRelationLabel($relationName));
                 }
             } catch (\Throwable $e) {
+                Log::warning('Greška pri logiranju relacije u EditPodaciORadnomMestu::afterSave', [
+                    'relation' => $relationName,
+                    'record_id' => $this->record->id ?? null,
+                    'error' => $e->getMessage(),
+                ]);
                 continue;
             }
         }

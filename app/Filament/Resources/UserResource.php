@@ -18,9 +18,9 @@ class UserResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
-    protected static ?string $navigationGroup = 'Admin Panel';
+    protected static ?string $navigationGroup = 'Администрација';
 
-    protected static ?string $navigationLabel = 'Users';
+    protected static ?string $navigationLabel = 'Корисници';
 
     protected static ?int $navigationSort = 1;
 

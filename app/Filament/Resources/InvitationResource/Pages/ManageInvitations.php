@@ -8,6 +8,7 @@ use App\Mail\InvitationMail;
 use Filament\Actions;
 use Filament\Resources\Pages\ManageRecords;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 
 class ManageInvitations extends ManageRecords
 {
@@ -20,6 +21,22 @@ class ManageInvitations extends ManageRecords
                 ->label('Пошаљи позивнице')
                 ->icon('heroicon-o-paper-airplane')
                 ->using(function (array $data) {
+                    // Rate limiting: max 20 pozivnica po korisniku na sat
+                    $rateLimitKey = 'invitations:' . auth()->id();
+
+                    if (RateLimiter::tooManyAttempts($rateLimitKey, 20)) {
+                        $seconds = RateLimiter::availableIn($rateLimitKey);
+                        $minutes = ceil($seconds / 60);
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Превише позивница')
+                            ->body("Достигли сте лимит слања позивница. Покушајте поново за {$minutes} минута.")
+                            ->danger()
+                            ->send();
+
+                        return null;
+                    }
+
                     // Podeli email-ove po novim redovima ili zarezima
                     $emails = preg_split('/[\n,]+/', $data['emails']);
                     $emails = array_filter(array_map('trim', $emails));
@@ -37,6 +54,9 @@ class ManageInvitations extends ManageRecords
 
                         // Pošalji email
                         Mail::to($invitation->email)->send(new InvitationMail($invitation));
+
+                        // Inkrementiraj rate limiter za svaku poslatu pozivnicu
+                        RateLimiter::hit($rateLimitKey, 3600); // 1 sat
 
                         $invitationCount++;
                     }

@@ -32,10 +32,36 @@
                     console.log('Rendering chart');
                     const options = {
                         series: [{{ $javni }}, {{ $interni }}],
-                        chart: { type: 'donut', height: 280 },
+                        chart: {
+                            type: 'donut',
+                            height: 280
+                        },
                         labels: ['Јавни: {{ $javni }}', 'Интерни: {{ $interni }}'],
                         colors: ['#3b82f6', '#10b981'],
-                        legend: { show: true, position: 'bottom' }
+                        legend: {
+                            show: true,
+                            position: 'top'
+                        },
+                        plotOptions: {
+                            pie: {
+                                donut: {
+                                    size: '65%'
+                                }
+                            }
+                        },
+                        dataLabels: {
+                            enabled: true,
+                            formatter: function(val) {
+                                return Math.round(val) + '%';
+                            },
+                            style: {
+                                fontSize: '14px',
+                                fontWeight: 'bold'
+                            },
+                            dropShadow: {
+                                enabled: false
+                            }
+                        }
                     };
                     this.chart = new ApexCharts(this.$refs.chartEl, options);
                     this.chart.render();

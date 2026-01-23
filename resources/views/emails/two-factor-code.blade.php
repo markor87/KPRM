@@ -1,76 +1,114 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Two-Factor Authentication Code</title>
+    <title>Код за двофакторску аутентификацију</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             color: #333;
             max-width: 600px;
             margin: 0 auto;
             padding: 20px;
+            background-color: #f5f5f5;
         }
         .container {
-            background-color: #f9f9f9;
+            background-color: #ffffff;
             border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 40px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         .header {
             text-align: center;
             margin-bottom: 30px;
+            border-bottom: 3px solid #d97706;
+            padding-bottom: 20px;
         }
         .header h1 {
-            color: #2563eb;
+            color: #d97706;
             margin: 0;
+            font-size: 28px;
+        }
+        .header p {
+            color: #666;
+            margin: 10px 0 0 0;
+            font-size: 14px;
         }
         .code-box {
-            background-color: #ffffff;
-            border: 2px dashed #2563eb;
-            border-radius: 8px;
-            padding: 20px;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 3px solid #d97706;
+            border-radius: 10px;
+            padding: 30px;
             text-align: center;
             margin: 30px 0;
+            box-shadow: 0 2px 8px rgba(217, 119, 6, 0.2);
         }
         .code {
-            font-size: 36px;
+            font-size: 42px;
             font-weight: bold;
-            color: #2563eb;
-            letter-spacing: 10px;
+            color: #92400e;
+            letter-spacing: 12px;
             font-family: 'Courier New', monospace;
         }
         .content {
             margin: 20px 0;
+            color: #374151;
+            font-size: 15px;
+        }
+        .content p {
+            margin: 15px 0;
+        }
+        .greeting {
+            font-weight: 600;
+            color: #1f2937;
         }
         .footer {
-            margin-top: 30px;
+            margin-top: 40px;
             padding-top: 20px;
-            border-top: 1px solid #ddd;
-            font-size: 12px;
-            color: #666;
+            border-top: 2px solid #e5e7eb;
+            font-size: 13px;
+            color: #6b7280;
             text-align: center;
         }
+        .footer p {
+            margin: 8px 0;
+        }
         .warning {
-            background-color: #fff3cd;
-            border-left: 4px solid #ffc107;
+            background-color: #fef3c7;
+            border-left: 5px solid #f59e0b;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 5px;
+        }
+        .warning-title {
+            color: #92400e;
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        .security-note {
+            background-color: #f3f4f6;
             padding: 15px;
+            border-radius: 5px;
             margin: 20px 0;
+            font-size: 14px;
+            color: #374151;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>Two-Factor Authentication</h1>
+            <h1>Двофакторска аутентификација</h1>
+            <p>КПРМ</p>
         </div>
 
         <div class="content">
-            <p>Hello {{ $userName }},</p>
+            <p class="greeting">Поштовани {{ $userName }},</p>
 
-            <p>You have requested to log in to your account. Please use the following verification code to complete the login process:</p>
+            <p>Примили сте овај имејл јер је затражена пријава на Ваш налог у КПРМ систему. Да бисте наставили са процесом пријављивања, молимо Вас да користите следећи верификациони код:</p>
         </div>
 
         <div class="code-box">
@@ -78,16 +116,18 @@
         </div>
 
         <div class="warning">
-            <strong>⚠️ Important:</strong> This code will expire in <strong>10 minutes</strong>. If you did not request this code, please ignore this email and ensure your account is secure.
+            <div class="warning-title">⚠️ Важно упозорење:</div>
+            <p style="margin: 5px 0;">Овај код ће истећи за <strong>10 минута</strong>.</p>
+            <p style="margin: 5px 0;">Уколико нисте покренули процес пријаве, контактирајте Службу за управљање кадровима.</p>
         </div>
 
-        <div class="content">
-            <p>For your security, never share this code with anyone.</p>
+        <div class="security-note">
+            <strong>Напомена о безбедности:</strong> Никада ни са ким немојте делити овај верификациони код.
         </div>
 
         <div class="footer">
-            <p>This is an automated message. Please do not reply to this email.</p>
-            <p>&copy; {{ date('Y') }} KPRM Admin Panel. All rights reserved.</p>
+            <p>Ово је аутоматска порука. Молимо Вас да не одговарате на овај имејл.</p>
+            <p style="margin-top: 15px;">&copy; {{ date('Y') }} КПРМ. Сва права задржана.</p>
         </div>
     </div>
 </body>

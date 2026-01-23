@@ -10,7 +10,7 @@
 <x-filament-widgets::widget>
     <x-filament::section>
         <x-slot name="heading">
-            Степен успешности поступака спровођених у {{ $godina }}.години
+            Степен успешности {{ $godina }}
         </x-slot>
 
         <div

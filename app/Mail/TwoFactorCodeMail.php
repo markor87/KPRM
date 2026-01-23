@@ -27,7 +27,7 @@ class TwoFactorCodeMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your Two-Factor Authentication Code',
+            subject: 'Ваш код за двофакторску аутентификацију - КПРМ',
         );
     }
 

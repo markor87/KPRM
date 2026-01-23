@@ -32,6 +32,30 @@ class PodaciORadnomMestuResource extends Resource
     protected static ?int $navigationSort = 10;
 
     /**
+     * Kreira validacionu logiku za proveru da li zbir polja odgovara ukupnom broju.
+     */
+    protected static function sumValidationRule(
+        string $totalField,
+        array $sumFields,
+        string $errorMessage
+    ): \Closure {
+        return function ($get) use ($totalField, $sumFields, $errorMessage) {
+            return function (string $attribute, $value, $fail) use ($get, $totalField, $sumFields, $errorMessage) {
+                $ukupan = $get($totalField) ?? 0;
+                $sum = 0;
+
+                foreach ($sumFields as $field) {
+                    $sum += $get($field) ?? 0;
+                }
+
+                if ($ukupan > 0 && $sum > 0 && $sum != $ukupan) {
+                    $fail($errorMessage);
+                }
+            };
+        };
+    }
+
+    /**
      * Apply organ-based filtering globally to all queries
      */
     public static function getEloquentQuery(): Builder
@@ -95,7 +119,7 @@ class PodaciORadnomMestuResource extends Resource
                         Forms\Components\TextInput::make('broj_izvrsilaca')
                             ->label('Број извршилаца')
                             ->required()
-                            ->numeric(),
+                            ->numeric()->minValue(0),
                         Forms\Components\Select::make('zvanje')
                             ->label('Звање')
                             ->relationship('zvanjeRelation', 'zvanje', fn($query) => $query->orderBy('id', 'asc'))
@@ -149,20 +173,26 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Датум почетка провере ПФК')
                             ->afterOrEqual('datum_pocetka_provere_ofk'),
                         Forms\Components\DatePicker::make('datum_pocetka_provere_pk')
-                            ->label('Датум почетка провере ПК'),
+                            ->label('Датум почетка провере ПК')
+                            ->afterOrEqual('datum_pocetka_provere_pfk'),
                         Forms\Components\DatePicker::make('datum_pk_izvestaja')
                             ->label('Датум ПК извештаја')
                             ->helperText('Датум креирања извештаја СУКа'),
                         Forms\Components\DatePicker::make('datum_predaje_dokumentacije')
-                            ->label('Датум предаје документације'),
+                            ->label('Датум предаје документације')
+                            ->afterOrEqual('datum_pocetka_provere_pk'),
                         Forms\Components\DatePicker::make('datum_pocetka_sprovodjenja_intervjua')
-                            ->label('Датум почетка спровођења интервјуа'),
+                            ->label('Датум почетка спровођења интервјуа')
+                            ->afterOrEqual('datum_predaje_dokumentacije'),
                         Forms\Components\DatePicker::make('datum_dostavljanja_liste_rukovodiocu_organa')
-                            ->label('Датум достављања листе руководиоцу органа'),
+                            ->label('Датум достављања листе руководиоцу органа')
+                            ->afterOrEqual('datum_pocetka_sprovodjenja_intervjua'),
                         Forms\Components\DatePicker::make('datum_donosenja_resenja_o_izabranom_kandidatu')
-                            ->label('Датум доношења решења о изабраном кандидату'),
+                            ->label('Датум доношења решења о изабраном кандидату')
+                            ->afterOrEqual('datum_dostavljanja_liste_rukovodiocu_organa'),
                         Forms\Components\DatePicker::make('datum_stupanja_na_rad')
                             ->label('Датум ступања на рад')
+                            ->afterOrEqual('datum_donosenja_resenja_o_izabranom_kandidatu')
                             ->helperText('Датум ступања на рад првог извршиоца'),
                     ])->columns(3)->collapsible(),
 
@@ -170,64 +200,134 @@ class PodaciORadnomMestuResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('broj_primljenih_izvrsilaca')
                             ->label('Број примљених извршилаца')
-                            ->numeric(),
+                            ->numeric()->minValue(0),
                         Forms\Components\TextInput::make('ocena_sa_vrednovanja')
                             ->label('Оцена са вредновања')
-                            ->numeric(),
+                            ->numeric()->minValue(0),
                         Forms\Components\TextInput::make('broj_zalbi_na_resenje_o_odbacaju_prijave')
                             ->label('Број жалби на решење о одбацивању пријаве')
-                            ->numeric(),
+                            ->numeric()->minValue(0),
                         Forms\Components\TextInput::make('broj_zalbi_na_resenje_o_prijemu_u_radni_odnos')
                             ->label('Број жалби на решење о пријему у радни однос')
-                            ->numeric(),
+                            ->numeric()->minValue(0),
                         Forms\Components\TextInput::make('broj_usvojenih_zalbi_na_resenje_o_odbacaju_prijave')
                             ->label('Број усвојених жалби на решење о одбацивању пријаве')
-                            ->numeric(),
+                            ->numeric()->minValue(0),
                         Forms\Components\TextInput::make('broj_izvrsilaca_ponovno_oglasavanje')
                             ->label('Број извршилаца - поновно оглашавање')
-                            ->numeric(),
+                            ->numeric()->minValue(0),
                     ])->columns(3)->collapsible(),
 
                 Forms\Components\Section::make('Подаци о пријавама')
                     ->schema([
                         Forms\Components\TextInput::make('ukupan_broj_prijava')
                             ->label('Укупан број пријава')
-                            ->numeric(),
+                            ->numeric()->minValue(0),
                         Forms\Components\TextInput::make('broj_prijava_iz_organa')
                             ->label('Број пријава из органа')
-                            ->numeric(),
+                            ->numeric()->minValue(0)
+                            ->lte('ukupan_broj_prijava')
+                            ->validationMessages([
+                                'lte' => 'Број пријава из органа не може бити већи од укупног броја пријава.',
+                            ])
+                            ->rules([
+                                self::sumValidationRule(
+                                    'ukupan_broj_prijava',
+                                    ['broj_prijava_iz_organa', 'broj_prijava_iz_drugih_organa', 'broj_prijava_van_drzavnih_organa'],
+                                    'Збир пријава мора бити једнак укупном броју пријава.'
+                                ),
+                            ]),
                         Forms\Components\TextInput::make('broj_prijava_iz_drugih_organa')
                             ->label('Број пријава из других органа')
-                            ->numeric(),
+                            ->numeric()->minValue(0)
+                            ->lte('ukupan_broj_prijava')
+                            ->validationMessages([
+                                'lte' => 'Број пријава из других органа не може бити већи од укупног броја пријава.',
+                            ])
+                            ->rules([
+                                self::sumValidationRule(
+                                    'ukupan_broj_prijava',
+                                    ['broj_prijava_iz_organa', 'broj_prijava_iz_drugih_organa', 'broj_prijava_van_drzavnih_organa'],
+                                    'Збир пријава мора бити једнак укупном броју пријава.'
+                                ),
+                            ]),
                         Forms\Components\TextInput::make('broj_prijava_van_drzavnih_organa')
                             ->label('Број пријава ван државних органа')
-                            ->numeric(),
+                            ->numeric()->minValue(0)
+                            ->lte('ukupan_broj_prijava')
+                            ->validationMessages([
+                                'lte' => 'Број пријава ван државних органа не може бити већи од укупног броја пријава.',
+                            ])
+                            ->rules([
+                                self::sumValidationRule(
+                                    'ukupan_broj_prijava',
+                                    ['broj_prijava_iz_organa', 'broj_prijava_iz_drugih_organa', 'broj_prijava_van_drzavnih_organa'],
+                                    'Збир пријава мора бити једнак укупном броју пријава.'
+                                ),
+                            ]),
                     ])->columns(4)->collapsible(),
 
                 Forms\Components\Section::make('Валидне пријаве')
                     ->schema([
                         Forms\Components\TextInput::make('broj_validnih_prijava')
                             ->label('Број валидних пријава')
-                            ->numeric(),
+                            ->numeric()->minValue(0)
+                            ->lte('ukupan_broj_prijava')
+                            ->validationMessages([
+                                'lte' => 'Број валидних пријава не може бити већи од укупног броја пријава.',
+                            ]),
                         Forms\Components\TextInput::make('broj_validnih_prijava_iz_organa')
                             ->label('Број валидних пријава из органа')
-                            ->numeric(),
+                            ->numeric()->minValue(0)
+                            ->lte('broj_validnih_prijava')
+                            ->validationMessages([
+                                'lte' => 'Број валидних пријава из органа не може бити већи од укупног броја валидних пријава.',
+                            ])
+                            ->rules([
+                                self::sumValidationRule(
+                                    'broj_validnih_prijava',
+                                    ['broj_validnih_prijava_iz_organa', 'broj_validnih_prijava_iz_drugog_organa', 'broj_validnih_prijava_van_drzavnih_organa'],
+                                    'Збир валидних пријава мора бити једнак укупном броју валидних пријава.'
+                                ),
+                            ]),
                         Forms\Components\TextInput::make('broj_validnih_prijava_iz_drugog_organa')
                             ->label('Број валидних пријава из другог органа')
-                            ->numeric(),
+                            ->numeric()->minValue(0)
+                            ->lte('broj_validnih_prijava')
+                            ->validationMessages([
+                                'lte' => 'Број валидних пријава из другог органа не може бити већи од укупног броја валидних пријава.',
+                            ])
+                            ->rules([
+                                self::sumValidationRule(
+                                    'broj_validnih_prijava',
+                                    ['broj_validnih_prijava_iz_organa', 'broj_validnih_prijava_iz_drugog_organa', 'broj_validnih_prijava_van_drzavnih_organa'],
+                                    'Збир валидних пријава мора бити једнак укупном броју валидних пријава.'
+                                ),
+                            ]),
                         Forms\Components\TextInput::make('broj_validnih_prijava_van_drzavnih_organa')
                             ->label('Број валидних пријава ван државних органа')
-                            ->numeric(),
+                            ->numeric()->minValue(0)
+                            ->lte('broj_validnih_prijava')
+                            ->validationMessages([
+                                'lte' => 'Број валидних пријава ван државних органа не може бити већи од укупног броја валидних пријава.',
+                            ])
+                            ->rules([
+                                self::sumValidationRule(
+                                    'broj_validnih_prijava',
+                                    ['broj_validnih_prijava_iz_organa', 'broj_validnih_prijava_iz_drugog_organa', 'broj_validnih_prijava_van_drzavnih_organa'],
+                                    'Збир валидних пријава мора бити једнак укупном броју валидних пријава.'
+                                ),
+                            ]),
                     ])->columns(4)->collapsible(),
 
                 Forms\Components\Section::make('Кандидати који су испунили мерила')
                     ->schema([
                         Forms\Components\TextInput::make('broj_kandidata_koji_su_ispunlii_merila_ofk')
                             ->label('Број кандидата који су испунили мерила ОФК')
-                            ->numeric(),
+                            ->numeric()->minValue(0),
                         Forms\Components\TextInput::make('broj_kandidata_koji_su_ispunlii_merila_pfk')
                             ->label('Број кандидата који су испунили мерила ПФК')
-                            ->numeric(),
+                            ->numeric()->minValue(0),
                         Forms\Components\Select::make('provera_pfk')
                             ->label('Провера ПФК')
                             ->relationship('proveraPfkRelation', 'provera_pfk')
@@ -235,26 +335,59 @@ class PodaciORadnomMestuResource extends Resource
                             ->searchable(),
                         Forms\Components\TextInput::make('broj_kandidata_ispunili_merila_pk')
                             ->label('Број кандидата који су испунили мерила ПК')
-                            ->numeric(),
+                            ->numeric()->minValue(0),
                         Forms\Components\TextInput::make('broj_odazvanih_kandidata_na_zavrsnom_razgovoru')
                             ->label('Број одазваних кандидата на завршном разговору')
-                            ->numeric(),
+                            ->numeric()->minValue(0),
                     ])->columns(3)->collapsible(),
 
                 Forms\Components\Section::make('Листа кандидата')
                     ->schema([
                         Forms\Components\TextInput::make('broj_kandidata_na_listi')
                             ->label('Број кандидата на листи')
-                            ->numeric(),
+                            ->numeric()->minValue(0),
                         Forms\Components\TextInput::make('broj_kandidata_iz_organa_na_listi')
                             ->label('Број кандидата из органа на листи')
-                            ->numeric(),
+                            ->numeric()->minValue(0)
+                            ->lte('broj_kandidata_na_listi')
+                            ->validationMessages([
+                                'lte' => 'Број кандидата из органа не може бити већи од укупног броја кандидата на листи.',
+                            ])
+                            ->rules([
+                                self::sumValidationRule(
+                                    'broj_kandidata_na_listi',
+                                    ['broj_kandidata_iz_organa_na_listi', 'broj_kandidata_iz_drugog_drzavnog_organa_na_listi', 'broj_kandidata_van_drzavnih_organa_na_listi'],
+                                    'Збир кандидата на листи мора бити једнак укупном броју кандидата на листи.'
+                                ),
+                            ]),
                         Forms\Components\TextInput::make('broj_kandidata_iz_drugog_drzavnog_organa_na_listi')
                             ->label('Број кандидата из другог државног органа на листи')
-                            ->numeric(),
+                            ->numeric()->minValue(0)
+                            ->lte('broj_kandidata_na_listi')
+                            ->validationMessages([
+                                'lte' => 'Број кандидата из другог државног органа не може бити већи од укупног броја кандидата на листи.',
+                            ])
+                            ->rules([
+                                self::sumValidationRule(
+                                    'broj_kandidata_na_listi',
+                                    ['broj_kandidata_iz_organa_na_listi', 'broj_kandidata_iz_drugog_drzavnog_organa_na_listi', 'broj_kandidata_van_drzavnih_organa_na_listi'],
+                                    'Збир кандидата на листи мора бити једнак укупном броју кандидата на листи.'
+                                ),
+                            ]),
                         Forms\Components\TextInput::make('broj_kandidata_van_drzavnih_organa_na_listi')
                             ->label('Број кандидата ван државних органа на листи')
-                            ->numeric(),
+                            ->numeric()->minValue(0)
+                            ->lte('broj_kandidata_na_listi')
+                            ->validationMessages([
+                                'lte' => 'Број кандидата ван државних органа не може бити већи од укупног броја кандидата на листи.',
+                            ])
+                            ->rules([
+                                self::sumValidationRule(
+                                    'broj_kandidata_na_listi',
+                                    ['broj_kandidata_iz_organa_na_listi', 'broj_kandidata_iz_drugog_drzavnog_organa_na_listi', 'broj_kandidata_van_drzavnih_organa_na_listi'],
+                                    'Збир кандидата на листи мора бити једнак укупном броју кандидата на листи.'
+                                ),
+                            ]),
                     ])->columns(4)->collapsible(),
 
                 Forms\Components\Section::make('Изабрани кандидат')

@@ -17,7 +17,7 @@ class InvitationResource extends Resource
 {
     protected static ?string $model = Invitation::class;
 
-    protected static ?string $navigationGroup = 'Admin Panel';
+    protected static ?string $navigationGroup = 'Администрација';
 
     protected static ?string $navigationIcon = 'heroicon-o-envelope';
 
