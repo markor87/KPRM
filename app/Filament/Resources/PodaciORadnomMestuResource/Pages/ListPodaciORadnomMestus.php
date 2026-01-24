@@ -13,7 +13,8 @@ class ListPodaciORadnomMestus extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->label('Ново радно место'),
         ];
     }
 }
