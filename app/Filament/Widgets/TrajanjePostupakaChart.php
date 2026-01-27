@@ -18,7 +18,7 @@ class TrajanjePostupakaChart extends Widget
     public function getData(): array
     {
         $organFilterService = app(OrganFilterService::class);
-        $godina = now()->year - 2; // 2024
+        $godina = now()->year - 1; // tekuca godina - 1
 
         // Bazni query sa filtrom po organu
         $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina);
