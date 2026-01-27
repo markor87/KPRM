@@ -100,7 +100,13 @@ class PodaciORadnomMestuResource extends Resource
                             ->required()
                             ->preload()
                             ->searchable()
-                            ->live(),
+                            ->live()
+                            ->disabled()
+                            ->dehydrated()
+                            ->default(function () {
+                                $user = auth()->user();
+                                return $user && $user->organ ? $user->organ->vrsta_organ_id : null;
+                            }),
                         Forms\Components\Select::make('organ')
                             ->label('Орган')
                             ->options(function (callable $get) {
@@ -113,7 +119,12 @@ class PodaciORadnomMestuResource extends Resource
                             })
                             ->required()
                             ->searchable()
-                            ->preload(),
+                            ->preload()
+                            ->disabled()
+                            ->dehydrated()
+                            ->default(function () {
+                                return auth()->user()?->organ_id;
+                            }),
                         Forms\Components\Select::make('tip_konkursa')
                             ->label('Тип конкурса')
                             ->relationship('tipKonkursaRelation', 'tip_konkursa')
@@ -204,7 +215,11 @@ class PodaciORadnomMestuResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('broj_primljenih_izvrsilaca')
                             ->label('Број примљених извршилаца')
-                            ->numeric()->minValue(0),
+                            ->numeric()->minValue(0)
+                            ->lte('broj_izvrsilaca')
+                            ->validationMessages([
+                                'lte' => 'Број примљених извршилаца не може бити већи од броја извршилаца.',
+                            ]),
                         Forms\Components\TextInput::make('ocena_sa_vrednovanja')
                             ->label('Оцена са вредновања')
                             ->numeric()->minValue(0),

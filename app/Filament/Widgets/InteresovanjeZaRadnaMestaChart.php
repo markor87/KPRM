@@ -17,7 +17,7 @@ class InteresovanjeZaRadnaMestaChart extends Widget
     public function getData(): array
     {
         $organFilterService = app(OrganFilterService::class);
-        $godina = now()->year - 2; // 2024
+        $godina = now()->year - 1; // tekuca godina - 1
 
         $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina);
         $baseQuery = $organFilterService->applyOrganFilter($baseQuery, 'organ');
