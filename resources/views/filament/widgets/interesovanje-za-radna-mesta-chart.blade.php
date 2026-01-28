@@ -30,6 +30,10 @@
                         }
                     },
                     renderChart() {
+                        const isDark = document.documentElement.classList.contains('dark');
+                        const textColor = isDark ? '#e5e7eb' : '#333';
+                        const gridColor = isDark ? '#374151' : '#f1f1f1';
+
                         const options = {
                             series: [{
                                 name: 'Број пријава',
@@ -63,7 +67,7 @@
                                 style: {
                                     fontSize: '13px',
                                     fontWeight: 'bold',
-                                    colors: ['#333']
+                                    colors: [textColor]
                                 },
                                 formatter: function(val) {
                                     return val;
@@ -73,11 +77,11 @@
                                 categories: [
                                     'Број пристиглих пријава',
                                     'Број валидних пријава',
-                                    'Број одбačених пријава'
+                                    'Број одбачених пријава'
                                 ],
                                 labels: {
                                     style: {
-                                        colors: '#666'
+                                        colors: textColor
                                     }
                                 }
                             },
@@ -85,19 +89,20 @@
                                 labels: {
                                     style: {
                                         fontSize: '12px',
-                                        colors: ['#333']
+                                        colors: textColor
                                     },
                                     maxWidth: 'none'
                                 }
                             },
                             colors: ['#3b5998', '#5a7cbe', '#8ba3d4'],
                             grid: {
-                                borderColor: '#f1f1f1'
+                                borderColor: gridColor
                             },
                             legend: {
                                 show: false
                             },
                             tooltip: {
+                                theme: isDark ? 'dark' : 'light',
                                 y: {
                                     formatter: function(val) {
                                         return val;

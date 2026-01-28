@@ -33,6 +33,10 @@
                         }
                     },
                     renderChart() {
+                        const isDark = document.documentElement.classList.contains('dark');
+                        const textColor = isDark ? '#e5e7eb' : '#333';
+                        const gridColor = isDark ? '#374151' : '#f1f1f1';
+
                         const options = {
                             series: [{
                                 name: 'Број кандидата',
@@ -69,7 +73,7 @@
                                 style: {
                                     fontSize: '13px',
                                     fontWeight: 'bold',
-                                    colors: ['#1f2937']
+                                    colors: [textColor]
                                 },
                                 formatter: function(val) {
                                     return val;
@@ -86,7 +90,7 @@
                                 ],
                                 labels: {
                                     style: {
-                                        colors: '#666',
+                                        colors: textColor,
                                         fontSize: '12px'
                                     }
                                 }
@@ -95,18 +99,19 @@
                                 labels: {
                                     style: {
                                         fontSize: '12px',
-                                        colors: ['#333']
+                                        colors: textColor
                                     }
                                 }
                             },
                             colors: ['#3b82f6'],
                             grid: {
-                                borderColor: '#f1f1f1'
+                                borderColor: gridColor
                             },
                             legend: {
                                 show: false
                             },
                             tooltip: {
+                                theme: isDark ? 'dark' : 'light',
                                 y: {
                                     formatter: function(val) {
                                         return val + ' кандидата';

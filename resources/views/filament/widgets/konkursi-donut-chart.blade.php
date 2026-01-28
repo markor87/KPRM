@@ -30,6 +30,9 @@
                 },
                 renderChart() {
                     console.log('Rendering chart');
+                    const isDark = document.documentElement.classList.contains('dark');
+                    const textColor = isDark ? '#e5e7eb' : '#333';
+
                     const options = {
                         series: [{{ $javni }}, {{ $interni }}],
                         chart: {
@@ -40,12 +43,18 @@
                         colors: ['#3b82f6', '#10b981'],
                         legend: {
                             show: true,
-                            position: 'top'
+                            position: 'top',
+                            labels: {
+                                colors: textColor
+                            }
                         },
                         plotOptions: {
                             pie: {
                                 donut: {
-                                    size: '65%'
+                                    size: '65%',
+                                    labels: {
+                                        show: false
+                                    }
                                 }
                             }
                         },
@@ -56,11 +65,15 @@
                             },
                             style: {
                                 fontSize: '14px',
-                                fontWeight: 'bold'
+                                fontWeight: 'bold',
+                                colors: ['#fff']
                             },
                             dropShadow: {
                                 enabled: false
                             }
+                        },
+                        tooltip: {
+                            theme: isDark ? 'dark' : 'light'
                         }
                     };
                     this.chart = new ApexCharts(this.$refs.chartEl, options);

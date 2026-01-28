@@ -28,6 +28,10 @@
                     }
                 },
                 renderChart() {
+                    const isDark = document.documentElement.classList.contains('dark');
+                    const textColor = isDark ? '#e5e7eb' : '#333';
+                    const gridColor = isDark ? '#374151' : '#f1f1f1';
+
                     const options = {
                         series: [{
                             name: 'Просечан број дана',
@@ -55,7 +59,7 @@
                             style: {
                                 fontSize: '13px',
                                 fontWeight: 'bold',
-                                colors: ['#333']
+                                colors: [textColor]
                             },
                             formatter: function(val) {
                                 return val;
@@ -64,26 +68,36 @@
                         xaxis: {
                             categories: @js($labels),
                             title: {
-                                text: 'Број дана'
+                                text: 'Број дана',
+                                style: {
+                                    color: textColor
+                                }
+                            },
+                            labels: {
+                                style: {
+                                    colors: textColor
+                                }
                             }
                         },
                         yaxis: {
                             labels: {
                                 maxWidth: 450,
                                 style: {
-                                    fontSize: '10px'
+                                    fontSize: '10px',
+                                    colors: textColor
                                 }
                             }
                         },
                         colors: ['#dc2626'],
                         grid: {
-                            borderColor: '#f1f1f1',
+                            borderColor: gridColor,
                             padding: {
                                 left: 20,
                                 right: 40
                             }
                         },
                         tooltip: {
+                            theme: isDark ? 'dark' : 'light',
                             y: {
                                 formatter: function(val) {
                                     return val;
