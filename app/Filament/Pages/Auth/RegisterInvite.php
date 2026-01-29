@@ -146,6 +146,9 @@ class RegisterInvite extends SimplePage
         // Loguj korisnika
         auth()->login($user);
 
+        // Regenerate session for security (prevents session fixation attacks)
+        session()->regenerate();
+
         Notification::make()
             ->success()
             ->title('Регистрација успешна')

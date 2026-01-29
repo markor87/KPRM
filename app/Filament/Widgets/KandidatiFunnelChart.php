@@ -10,14 +10,14 @@ class KandidatiFunnelChart extends Widget
 {
     protected static string $view = 'filament.widgets.kandidati-funnel-chart';
 
-    protected static ?int $sort = 7;
+    protected static ?int $sort = 6;
 
     protected int | string | array $columnSpan = 6;
 
     public function getData(): array
     {
         $organFilterService = app(OrganFilterService::class);
-        $godina = now()->year - 2;
+        $godina = now()->year - 1;
 
         $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina);
         $baseQuery = $organFilterService->applyOrganFilter($baseQuery, 'organ');

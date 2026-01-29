@@ -1,8 +1,10 @@
 @php
     $data = $this->getData();
     $uspesno = $data['uspesno'];
+    $neuspeo = $data['neuspeo'];
     $obustavljeno = $data['obustavljeno'];
     $uspesnoProcenat = $data['uspesnoProcenat'];
+    $neuspeoProcenat = $data['neuspeoProcenat'];
     $obustavljenoProcenat = $data['obustavljenoProcenat'];
     $godina = $data['godina'];
 @endphp
@@ -34,13 +36,13 @@
                     const textColor = isDark ? '#e5e7eb' : '#333';
 
                     const options = {
-                        series: [{{ $uspesno }}, {{ $obustavljeno }}],
+                        series: [{{ $uspesno }}, {{ $neuspeo }}, {{ $obustavljeno }}],
                         chart: {
                             type: 'donut',
                             height: 280
                         },
-                        labels: ['Успешно завршен конкурс', 'Обустављен конкурс'],
-                        colors: ['#3b82f6', '#dc2626'],
+                        labels: ['Успешно завршен конкурс', 'Неуспео конкурс', 'Обустављен конкурс'],
+                        colors: ['#3b82f6', '#f59e0b', '#dc2626'],
                         legend: {
                             show: true,
                             position: 'top',
