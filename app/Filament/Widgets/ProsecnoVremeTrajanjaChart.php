@@ -100,7 +100,7 @@ class ProsecnoVremeTrajanjaChart extends Widget
         // Bazni upit sa filterima
         $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina)
             ->where('tip_konkursa', 1);
-        $baseQuery = $organFilterService->applyOrganFilter($baseQuery, 'organ');
+        $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ');
 
         // Izvrši jedan upit sa svim AVG kalkulacijama
         $result = $baseQuery

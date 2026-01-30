@@ -20,7 +20,7 @@ class KonkursiDonutChart extends Widget
         $godina = now()->year - 1; // tekuca godina - 1
 
         $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina);
-        $baseQuery = $organFilterService->applyOrganFilter($baseQuery, 'organ');
+        $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ');
 
         $javni = (clone $baseQuery)->where('tip_konkursa', 1)->count();
         $interni = (clone $baseQuery)->where('tip_konkursa', 2)->count();

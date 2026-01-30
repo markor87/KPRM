@@ -33,16 +33,17 @@
                 },
                 renderChart() {
                     const isDark = document.documentElement.classList.contains('dark');
-                    const textColor = isDark ? '#e5e7eb' : '#333';
+                    const textColor = isDark ? '#d1d5db' : '#374151';
 
                     const options = {
                         series: [{{ $uspesno }}, {{ $neuspeo }}, {{ $obustavljeno }}],
                         chart: {
                             type: 'donut',
-                            height: 280
+                            height: 280,
+                            background: 'transparent'
                         },
                         labels: ['Успешно завршен конкурс', 'Неуспео конкурс', 'Обустављен конкурс'],
-                        colors: ['#3b82f6', '#f59e0b', '#dc2626'],
+                        colors: isDark ? ['#60a5fa', '#fbbf24', '#f87171'] : ['#3b82f6', '#f59e0b', '#ef4444'],
                         legend: {
                             show: true,
                             position: 'top',
@@ -68,10 +69,14 @@
                             style: {
                                 fontSize: '14px',
                                 fontWeight: 'bold',
-                                colors: ['#fff']
+                                colors: ['#ffffff']
                             },
                             dropShadow: {
-                                enabled: false
+                                enabled: true,
+                                top: 1,
+                                left: 1,
+                                blur: 2,
+                                opacity: isDark ? 0.5 : 0.3
                             }
                         },
                         tooltip: {

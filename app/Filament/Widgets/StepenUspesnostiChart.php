@@ -20,7 +20,7 @@ class StepenUspesnostiChart extends Widget
         $godina = now()->year - 1; // tekuca godina - 1
 
         $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina);
-        $baseQuery = $organFilterService->applyOrganFilter($baseQuery, 'organ');
+        $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ');
 
         // status_konkursa_na_dan_1: 1 = Успешно завршен, 2 = Неуспео, 3 = Обустављен
         $uspesno = (clone $baseQuery)->where('status_konkursa_na_dan_1', 1)->count();

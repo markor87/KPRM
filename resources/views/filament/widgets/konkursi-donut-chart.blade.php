@@ -29,18 +29,18 @@
                     }
                 },
                 renderChart() {
-                    console.log('Rendering chart');
                     const isDark = document.documentElement.classList.contains('dark');
-                    const textColor = isDark ? '#e5e7eb' : '#333';
+                    const textColor = isDark ? '#d1d5db' : '#374151';
 
                     const options = {
                         series: [{{ $javni }}, {{ $interni }}],
                         chart: {
                             type: 'donut',
-                            height: 280
+                            height: 280,
+                            background: 'transparent'
                         },
                         labels: ['Јавни: {{ $javni }}', 'Интерни: {{ $interni }}'],
-                        colors: ['#3b82f6', '#10b981'],
+                        colors: isDark ? ['#60a5fa', '#34d399'] : ['#3b82f6', '#10b981'],
                         legend: {
                             show: true,
                             position: 'top',
@@ -66,10 +66,14 @@
                             style: {
                                 fontSize: '14px',
                                 fontWeight: 'bold',
-                                colors: ['#fff']
+                                colors: ['#ffffff']
                             },
                             dropShadow: {
-                                enabled: false
+                                enabled: true,
+                                top: 1,
+                                left: 1,
+                                blur: 2,
+                                opacity: isDark ? 0.5 : 0.3
                             }
                         },
                         tooltip: {

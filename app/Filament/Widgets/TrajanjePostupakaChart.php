@@ -22,7 +22,7 @@ class TrajanjePostupakaChart extends Widget
 
         // Bazni query sa filtrom po organu
         $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina);
-        $baseQuery = $organFilterService->applyOrganFilter($baseQuery, 'organ');
+        $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ');
 
         // JAVNI KONKURSI - Vreme trajanja konkursnog postupka
         $javniQuery = (clone $baseQuery)->where('tip_konkursa', 1);

@@ -20,7 +20,7 @@ class KandidatiFunnelChart extends Widget
         $godina = now()->year - 1;
 
         $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina);
-        $baseQuery = $organFilterService->applyOrganFilter($baseQuery, 'organ');
+        $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ');
 
         $podaci = $baseQuery->get();
 

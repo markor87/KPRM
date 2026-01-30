@@ -29,8 +29,8 @@
                 },
                 renderChart() {
                     const isDark = document.documentElement.classList.contains('dark');
-                    const textColor = isDark ? '#e5e7eb' : '#333';
-                    const gridColor = isDark ? '#374151' : '#f1f1f1';
+                    const textColor = isDark ? '#d1d5db' : '#374151';
+                    const gridColor = isDark ? '#4b5563' : '#e5e7eb';
 
                     const options = {
                         series: [{
@@ -42,7 +42,8 @@
                             height: 600,
                             toolbar: {
                                 show: false
-                            }
+                            },
+                            background: 'transparent'
                         },
                         plotOptions: {
                             bar: {
@@ -70,12 +71,14 @@
                             title: {
                                 text: 'Број дана',
                                 style: {
-                                    color: textColor
+                                    color: textColor,
+                                    fontSize: '12px'
                                 }
                             },
                             labels: {
                                 style: {
-                                    colors: textColor
+                                    colors: textColor,
+                                    fontSize: '11px'
                                 }
                             }
                         },
@@ -88,9 +91,10 @@
                                 }
                             }
                         },
-                        colors: ['#dc2626'],
+                        colors: [isDark ? '#f87171' : '#dc2626'],
                         grid: {
                             borderColor: gridColor,
+                            strokeDashArray: 3,
                             padding: {
                                 left: 20,
                                 right: 40
@@ -100,7 +104,7 @@
                             theme: isDark ? 'dark' : 'light',
                             y: {
                                 formatter: function(val) {
-                                    return val;
+                                    return val + ' дана';
                                 }
                             }
                         }

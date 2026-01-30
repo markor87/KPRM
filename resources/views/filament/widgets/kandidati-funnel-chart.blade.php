@@ -34,8 +34,8 @@
                     },
                     renderChart() {
                         const isDark = document.documentElement.classList.contains('dark');
-                        const textColor = isDark ? '#e5e7eb' : '#333';
-                        const gridColor = isDark ? '#374151' : '#f1f1f1';
+                        const textColor = isDark ? '#d1d5db' : '#374151';
+                        const gridColor = isDark ? '#4b5563' : '#e5e7eb';
 
                         const options = {
                             series: [{
@@ -103,9 +103,10 @@
                                     }
                                 }
                             },
-                            colors: ['#3b82f6'],
+                            colors: [isDark ? '#60a5fa' : '#3b82f6'],
                             grid: {
-                                borderColor: gridColor
+                                borderColor: gridColor,
+                                strokeDashArray: 3
                             },
                             legend: {
                                 show: false

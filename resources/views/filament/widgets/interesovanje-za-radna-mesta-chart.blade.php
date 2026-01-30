@@ -31,8 +31,8 @@
                     },
                     renderChart() {
                         const isDark = document.documentElement.classList.contains('dark');
-                        const textColor = isDark ? '#e5e7eb' : '#333';
-                        const gridColor = isDark ? '#374151' : '#f1f1f1';
+                        const textColor = isDark ? '#d1d5db' : '#374151';
+                        const gridColor = isDark ? '#4b5563' : '#e5e7eb';
 
                         const options = {
                             series: [{
@@ -81,7 +81,8 @@
                                 ],
                                 labels: {
                                     style: {
-                                        colors: textColor
+                                        colors: textColor,
+                                        fontSize: '11px'
                                     }
                                 }
                             },
@@ -94,9 +95,10 @@
                                     maxWidth: 'none'
                                 }
                             },
-                            colors: ['#3b5998', '#5a7cbe', '#8ba3d4'],
+                            colors: isDark ? ['#6b7cbe', '#8b9cd4', '#abbcee'] : ['#3b5998', '#5a7cbe', '#8ba3d4'],
                             grid: {
-                                borderColor: gridColor
+                                borderColor: gridColor,
+                                strokeDashArray: 3
                             },
                             legend: {
                                 show: false
@@ -105,7 +107,7 @@
                                 theme: isDark ? 'dark' : 'light',
                                 y: {
                                     formatter: function(val) {
-                                        return val;
+                                        return val + ' пријава';
                                     }
                                 }
                             }

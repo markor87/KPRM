@@ -22,13 +22,36 @@ class OrganFilterService
             return $query->whereRaw('1 = 0');
         }
 
-
         // Korisnici sa view_any_podaci::o::radnom::mestu dozvolom vide sve
         if ($user->can('view_any_podaci::o::radnom::mestu')) {
             return $query;
         }
 
         // Filtriraj po organ_id korisnika
+        if ($user->organ_id) {
+            return $query->where($organColumn, $user->organ_id);
+        }
+
+        // Korisnici bez organa ne vide ništa
+        return $query->whereRaw('1 = 0');
+    }
+
+    /**
+     * Apply organ-based filtering for charts (always filters by user's organ, even for super admin)
+     *
+     * @param Builder $query
+     * @param string $organColumn The column name for organ (default: 'organ')
+     * @return Builder
+     */
+    public function applyOrganFilterForCharts(Builder $query, string $organColumn = 'organ'): Builder
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        // Uvek filtriraj po organ_id korisnika (čak i za super admin)
         if ($user->organ_id) {
             return $query->where($organColumn, $user->organ_id);
         }
