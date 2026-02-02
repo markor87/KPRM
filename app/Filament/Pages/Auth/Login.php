@@ -6,6 +6,7 @@ use App\Mail\TwoFactorCodeMail;
 use App\Models\Setting;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Component;
+use Filament\Forms\Components\Checkbox;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 use Filament\Pages\Auth\Login as BaseLogin;
 use Illuminate\Support\Facades\Mail;
@@ -15,6 +16,19 @@ use Illuminate\Support\HtmlString;
 
 class Login extends BaseLogin
 {
+    public function mount(): void
+    {
+        parent::mount();
+
+        // Pre-fill email from cookie if it exists
+        if ($rememberedEmail = request()->cookie('remembered_email')) {
+            $this->form->fill([
+                'email' => $rememberedEmail,
+                'remember_email' => true,
+            ]);
+        }
+    }
+
     protected function getForms(): array
     {
         return [
@@ -24,11 +38,17 @@ class Login extends BaseLogin
                         $this->getImageComponent(),
                         $this->getEmailFormComponent(),
                         $this->getPasswordFormComponent(),
-                        $this->getRememberFormComponent(),
+                        $this->getRememberEmailComponent(),
                     ])
                     ->statePath('data'),
             ),
         ];
+    }
+
+    protected function getRememberEmailComponent(): Component
+    {
+        return Checkbox::make('remember_email')
+            ->label('Запамти е-пошту');
     }
 
     protected function getImageComponent(): Component
@@ -69,6 +89,15 @@ class Login extends BaseLogin
 
         $data = $this->form->getState();
 
+        // Handle "Remember Email" cookie
+        if ($data['remember_email'] ?? false) {
+            // Save email to cookie for 30 days
+            cookie()->queue('remembered_email', $data['email'], 43200); // 30 days in minutes
+        } else {
+            // Remove the cookie if unchecked
+            cookie()->queue(cookie()->forget('remembered_email'));
+        }
+
         // Check if 2FA is enabled globally BEFORE attempting login
         $twoFactorEnabled = Setting::get('two_factor_enabled_global', '0') === '1';
 
@@ -97,18 +126,15 @@ class Login extends BaseLogin
             // Send email with code
             Mail::to($user->email)->send(new TwoFactorCodeMail($code, $user->name));
 
-            // Store user ID and remember preference in session for verification page
-            session([
-                '2fa_user_id' => $user->id,
-                '2fa_remember' => $data['remember'] ?? false,
-            ]);
+            // Store only user ID in session (no remember)
+            session(['2fa_user_id' => $user->id]);
 
             // Redirect to 2FA verification page
             $this->redirect(route('two-factor.login'));
             return null;
         } else {
-            // 2FA is NOT enabled, login normally
-            if (! Filament::auth()->attempt($this->getCredentialsFromFormData($data), $data['remember'] ?? false)) {
+            // 2FA is NOT enabled, login normally WITHOUT remember me
+            if (! Filament::auth()->attempt($this->getCredentialsFromFormData($data), false)) {
                 throw ValidationException::withMessages([
                     'data.email' => __('filament-panels::pages/auth/login.messages.failed'),
                 ]);

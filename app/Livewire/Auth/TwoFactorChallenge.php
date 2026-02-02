@@ -85,15 +85,12 @@ class TwoFactorChallenge extends Component
             'two_factor_expires_at' => null,
         ]);
 
-        // Get remember preference from session
-        $remember = session('2fa_remember', false);
-
         // Clear 2FA session data
-        session()->forget(['2fa_user_id', '2fa_remember']);
+        session()->forget('2fa_user_id');
 
-        // Log the user in with remember preference
+        // Log the user in WITHOUT remember me (always false)
         // This will trigger Login event and LogAuthenticationEvents listener will log it
-        Auth::login($user, $remember);
+        Auth::login($user, false);
 
         return redirect()->intended(route('filament.admin.pages.dashboard'));
     }
