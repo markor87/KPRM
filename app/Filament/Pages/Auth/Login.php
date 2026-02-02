@@ -5,14 +5,55 @@ namespace App\Filament\Pages\Auth;
 use App\Mail\TwoFactorCodeMail;
 use App\Models\Setting;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\Component;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 use Filament\Pages\Auth\Login as BaseLogin;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
+use Illuminate\Support\HtmlString;
 
 class Login extends BaseLogin
 {
+    protected function getForms(): array
+    {
+        return [
+            'form' => $this->form(
+                $this->makeForm()
+                    ->schema([
+                        $this->getImageComponent(),
+                        $this->getEmailFormComponent(),
+                        $this->getPasswordFormComponent(),
+                        $this->getRememberFormComponent(),
+                    ])
+                    ->statePath('data'),
+            ),
+        ];
+    }
+
+    protected function getImageComponent(): Component
+    {
+        return \Filament\Forms\Components\Placeholder::make('')
+            ->label('')
+            ->content(new HtmlString('
+                <div style="text-align: center; margin-bottom: 1rem;">
+                    <img src="' . asset('images/suk.png') . '" alt="" class="login-logo-light" style="max-width: 100%; height: auto;" />
+                    <img src="' . asset('images/suk-dark.png') . '" alt="" class="login-logo-dark" style="max-width: 100%; height: auto;" />
+                </div>
+                <style>
+                    .login-logo-dark {
+                        display: none;
+                    }
+                    .dark .login-logo-light {
+                        display: none;
+                    }
+                    .dark .login-logo-dark {
+                        display: block;
+                    }
+                </style>
+            '));
+    }
+
     public function authenticate(): ?LoginResponse
     {
         try {
