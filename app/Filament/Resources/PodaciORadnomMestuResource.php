@@ -235,7 +235,7 @@ class PodaciORadnomMestuResource extends Resource
                         Forms\Components\TextInput::make('broj_izvrsilaca_ponovno_oglasavanje')
                             ->label('Број извршилаца - поновно оглашавање')
                             ->numeric()->minValue(0),
-                    ])->columns(3)->collapsible(),
+                    ])->columns(2)->collapsible(),
 
                 Forms\Components\Section::make('Подаци о пријавама')
                     ->schema([
@@ -284,7 +284,7 @@ class PodaciORadnomMestuResource extends Resource
                                     'Збир пријава мора бити једнак укупном броју пријава.'
                                 ),
                             ]),
-                    ])->columns(4)->collapsible(),
+                    ])->columns(2)->collapsible(),
 
                 Forms\Components\Section::make('Валидне пријаве')
                     ->schema([
@@ -337,7 +337,7 @@ class PodaciORadnomMestuResource extends Resource
                                     'Збир валидних пријава мора бити једнак укупном броју валидних пријава.'
                                 ),
                             ]),
-                    ])->columns(4)->collapsible(),
+                    ])->columns(2)->collapsible(),
 
                 Forms\Components\Section::make('Кандидати који су испунили мерила')
                     ->schema([
@@ -407,7 +407,7 @@ class PodaciORadnomMestuResource extends Resource
                                     'Збир кандидата на листи мора бити једнак укупном броју кандидата на листи.'
                                 ),
                             ]),
-                    ])->columns(4)->collapsible(),
+                    ])->columns(2)->collapsible(),
 
                 Forms\Components\Section::make('Изабрани кандидат')
                     ->schema([
