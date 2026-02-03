@@ -32,13 +32,17 @@
         }
         .button {
             display: inline-block;
-            padding: 12px 30px;
+            padding: 14px 40px;
             background-color: #d97706;
-            color: white;
+            color: #ffffff;
             text-decoration: none;
-            border-radius: 5px;
+            border-radius: 8px;
             margin: 20px 0;
             text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            box-shadow: 0 2px 6px rgba(217, 119, 6, 0.4);
         }
         .button:hover {
             background-color: #b45309;
@@ -62,7 +66,7 @@
     <div class="container">
         <div class="header">
             <h1>КПРМ</h1>
-            <p>Конкурси и попуњеност радних места</p>
+            <p>Квалитет попуњавања радних места</p>
         </div>
 
         <div class="content">
@@ -75,7 +79,7 @@
             <p>Кликните на дугме испод да бисте завршили процес регистрације:</p>
 
             <div style="text-align: center;">
-                <a href="{{ url('/register-invite/' . $invitation->token) }}" class="button">
+                <a href="{{ url('/register-invite/' . $invitation->token) }}" class="button" style="color: #ffffff;">
                     Завршите регистрацију
                 </a>
             </div>
