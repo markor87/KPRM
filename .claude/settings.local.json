@@ -8,7 +8,11 @@
       "Bash(composer require:*)",
       "Bash(curl:*)",
       "WebSearch",
-      "WebFetch(domain:tallstackui.com)"
+      "WebFetch(domain:tallstackui.com)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(php -l:*)",
+      "Bash(xargs rm -rf)"
     ]
   }
 }
