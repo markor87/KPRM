@@ -161,52 +161,438 @@ class PodaciORadnomMestuResource extends Resource
 
                 Forms\Components\Section::make('Датуми поступка')
                     ->schema([
-                        Forms\Components\DatePicker::make('datum_dobijanja_saglasnosti_vlade')
-                            ->label('Датум добијања сагласности Владе'),
-                        Forms\Components\DatePicker::make('datum_donosenja_resenja_o_pokretanju_postupka')
+                        Forms\Components\TextInput::make('datum_dobijanja_saglasnosti_vlade')
+                            ->label('Датум добијања сагласности Владе')
+                            ->mask('99.99.9999')
+                            ->placeholder('дд.мм.гггг')
+                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
+                            ->rules([
+                                fn () => function (string $attribute, $value, \Closure $fail) {
+                                    if (!$value) return;
+
+                                    // Proveri format
+                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
+                                        $fail('Датум мора бити у формату дд.мм.гггг');
+                                        return;
+                                    }
+
+                                    // Izdvoji dan, mesec, godinu
+                                    [$day, $month, $year] = explode('.', $value);
+
+                                    // Proveri da li je datum validan
+                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
+                                        $fail('Унети датум није валидан');
+                                    }
+                                },
+                            ])
+                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null),
+                        Forms\Components\TextInput::make('datum_donosenja_resenja_o_pokretanju_postupka')
                             ->label('Датум доношења решења о покретању поступка')
+                            ->mask('99.99.9999')
+                            ->placeholder('дд.мм.гггг')
+                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
+                            ->rules([
+                                fn () => function (string $attribute, $value, \Closure $fail) {
+                                    if (!$value) return;
+
+                                    // Proveri format
+                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
+                                        $fail('Датум мора бити у формату дд.мм.гггг');
+                                        return;
+                                    }
+
+                                    // Izdvoji dan, mesec, godinu
+                                    [$day, $month, $year] = explode('.', $value);
+
+                                    // Proveri da li je datum validan
+                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
+                                        $fail('Унети датум није валидан');
+                                    }
+                                },
+                            ])
+                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
                             ->afterOrEqual('datum_dobijanja_saglasnosti_vlade'),
-                        Forms\Components\DatePicker::make('datum_dobijanja_obavestenja_od_suka')
+                        Forms\Components\TextInput::make('datum_dobijanja_obavestenja_od_suka')
                             ->label('Датум добијања обавештења од СУКа')
+                            ->mask('99.99.9999')
+                            ->placeholder('дд.мм.гггг')
+                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
+                            ->rules([
+                                fn () => function (string $attribute, $value, \Closure $fail) {
+                                    if (!$value) return;
+
+                                    // Proveri format
+                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
+                                        $fail('Датум мора бити у формату дд.мм.гггг');
+                                        return;
+                                    }
+
+                                    // Izdvoji dan, mesec, godinu
+                                    [$day, $month, $year] = explode('.', $value);
+
+                                    // Proveri da li je datum validan
+                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
+                                        $fail('Унети датум није валидан');
+                                    }
+                                },
+                            ])
+                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
                             ->afterOrEqual('datum_donosenja_resenja_o_pokretanju_postupka'),
-                        Forms\Components\DatePicker::make('datum_odrzavanja_prvog_sastanka')
+                        Forms\Components\TextInput::make('datum_odrzavanja_prvog_sastanka')
                             ->label('Датум одржавања првог састанка')
+                            ->mask('99.99.9999')
+                            ->placeholder('дд.мм.гггг')
+                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
+                            ->rules([
+                                fn () => function (string $attribute, $value, \Closure $fail) {
+                                    if (!$value) return;
+
+                                    // Proveri format
+                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
+                                        $fail('Датум мора бити у формату дд.мм.гггг');
+                                        return;
+                                    }
+
+                                    // Izdvoji dan, mesec, godinu
+                                    [$day, $month, $year] = explode('.', $value);
+
+                                    // Proveri da li je datum validan
+                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
+                                        $fail('Унети датум није валидан');
+                                    }
+                                },
+                            ])
+                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
                             ->afterOrEqual('datum_dobijanja_obavestenja_od_suka'),
-                        Forms\Components\DatePicker::make('datum_oglasavanja')
+                        Forms\Components\TextInput::make('datum_oglasavanja')
                             ->label('Датум оглашавања')
+                            ->mask('99.99.9999')
+                            ->placeholder('дд.мм.гггг')
+                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
+                            ->rules([
+                                fn () => function (string $attribute, $value, \Closure $fail) {
+                                    if (!$value) return;
+
+                                    // Proveri format
+                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
+                                        $fail('Датум мора бити у формату дд.мм.гггг');
+                                        return;
+                                    }
+
+                                    // Izdvoji dan, mesec, godinu
+                                    [$day, $month, $year] = explode('.', $value);
+
+                                    // Proveri da li je datum validan
+                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
+                                        $fail('Унети датум није валидан');
+                                    }
+                                },
+                            ])
+                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
                             ->afterOrEqual('datum_odrzavanja_prvog_sastanka'),
-                        Forms\Components\DatePicker::make('datum_pregleda_prijava')
+                        Forms\Components\TextInput::make('datum_pregleda_prijava')
                             ->label('Датум прегледа пријава')
+                            ->mask('99.99.9999')
+                            ->placeholder('дд.мм.гггг')
+                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
+                            ->rules([
+                                fn () => function (string $attribute, $value, \Closure $fail) {
+                                    if (!$value) return;
+
+                                    // Proveri format
+                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
+                                        $fail('Датум мора бити у формату дд.мм.гггг');
+                                        return;
+                                    }
+
+                                    // Izdvoji dan, mesec, godinu
+                                    [$day, $month, $year] = explode('.', $value);
+
+                                    // Proveri da li je datum validan
+                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
+                                        $fail('Унети датум није валидан');
+                                    }
+                                },
+                            ])
+                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
                             ->afterOrEqual('datum_oglasavanja'),
-                        Forms\Components\DatePicker::make('datum_pocetka_provere_ofk')
+                        Forms\Components\TextInput::make('datum_pocetka_provere_ofk')
                             ->label('Датум почетка провере ОФК')
+                            ->mask('99.99.9999')
+                            ->placeholder('дд.мм.гггг')
+                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
+                            ->rules([
+                                fn () => function (string $attribute, $value, \Closure $fail) {
+                                    if (!$value) return;
+
+                                    // Proveri format
+                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
+                                        $fail('Датум мора бити у формату дд.мм.гггг');
+                                        return;
+                                    }
+
+                                    // Izdvoji dan, mesec, godinu
+                                    [$day, $month, $year] = explode('.', $value);
+
+                                    // Proveri da li je datum validan
+                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
+                                        $fail('Унети датум није валидан');
+                                    }
+                                },
+                            ])
+                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
                             ->afterOrEqual('datum_pregleda_prijava'),
-                        Forms\Components\DatePicker::make('datum_ofk_izvestaja')
+                        Forms\Components\TextInput::make('datum_ofk_izvestaja')
                             ->label('Датум ОФК извештаја')
+                            ->mask('99.99.9999')
+                            ->placeholder('дд.мм.гггг')
+                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
+                            ->rules([
+                                fn () => function (string $attribute, $value, \Closure $fail) {
+                                    if (!$value) return;
+
+                                    // Proveri format
+                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
+                                        $fail('Датум мора бити у формату дд.мм.гггг');
+                                        return;
+                                    }
+
+                                    // Izdvoji dan, mesec, godinu
+                                    [$day, $month, $year] = explode('.', $value);
+
+                                    // Proveri da li je datum validan
+                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
+                                        $fail('Унети датум није валидан');
+                                    }
+                                },
+                            ])
+                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
                             ->helperText('Датум креирања извештаја СУКа'),
-                        Forms\Components\DatePicker::make('datum_pocetka_provere_pfk')
+                        Forms\Components\TextInput::make('datum_pocetka_provere_pfk')
                             ->label('Датум почетка провере ПФК')
+                            ->mask('99.99.9999')
+                            ->placeholder('дд.мм.гггг')
+                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
+                            ->rules([
+                                fn () => function (string $attribute, $value, \Closure $fail) {
+                                    if (!$value) return;
+
+                                    // Proveri format
+                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
+                                        $fail('Датум мора бити у формату дд.мм.гггг');
+                                        return;
+                                    }
+
+                                    // Izdvoji dan, mesec, godinu
+                                    [$day, $month, $year] = explode('.', $value);
+
+                                    // Proveri da li je datum validan
+                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
+                                        $fail('Унети датум није валидан');
+                                    }
+                                },
+                            ])
+                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
                             ->afterOrEqual('datum_pocetka_provere_ofk'),
-                        Forms\Components\DatePicker::make('datum_pocetka_provere_pk')
+                        Forms\Components\TextInput::make('datum_pocetka_provere_pk')
                             ->label('Датум почетка провере ПК')
+                            ->mask('99.99.9999')
+                            ->placeholder('дд.мм.гггг')
+                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
+                            ->rules([
+                                fn () => function (string $attribute, $value, \Closure $fail) {
+                                    if (!$value) return;
+
+                                    // Proveri format
+                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
+                                        $fail('Датум мора бити у формату дд.мм.гггг');
+                                        return;
+                                    }
+
+                                    // Izdvoji dan, mesec, godinu
+                                    [$day, $month, $year] = explode('.', $value);
+
+                                    // Proveri da li je datum validan
+                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
+                                        $fail('Унети датум није валидан');
+                                    }
+                                },
+                            ])
+                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
                             ->afterOrEqual('datum_pocetka_provere_pfk'),
-                        Forms\Components\DatePicker::make('datum_pk_izvestaja')
+                        Forms\Components\TextInput::make('datum_pk_izvestaja')
                             ->label('Датум ПК извештаја')
+                            ->mask('99.99.9999')
+                            ->placeholder('дд.мм.гггг')
+                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
+                            ->rules([
+                                fn () => function (string $attribute, $value, \Closure $fail) {
+                                    if (!$value) return;
+
+                                    // Proveri format
+                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
+                                        $fail('Датум мора бити у формату дд.мм.гггг');
+                                        return;
+                                    }
+
+                                    // Izdvoji dan, mesec, godinu
+                                    [$day, $month, $year] = explode('.', $value);
+
+                                    // Proveri da li je datum validan
+                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
+                                        $fail('Унети датум није валидан');
+                                    }
+                                },
+                            ])
+                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
                             ->helperText('Датум креирања извештаја СУКа'),
-                        Forms\Components\DatePicker::make('datum_predaje_dokumentacije')
+                        Forms\Components\TextInput::make('datum_predaje_dokumentacije')
                             ->label('Датум предаје документације')
+                            ->mask('99.99.9999')
+                            ->placeholder('дд.мм.гггг')
+                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
+                            ->rules([
+                                fn () => function (string $attribute, $value, \Closure $fail) {
+                                    if (!$value) return;
+
+                                    // Proveri format
+                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
+                                        $fail('Датум мора бити у формату дд.мм.гггг');
+                                        return;
+                                    }
+
+                                    // Izdvoji dan, mesec, godinu
+                                    [$day, $month, $year] = explode('.', $value);
+
+                                    // Proveri da li je datum validan
+                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
+                                        $fail('Унети датум није валидан');
+                                    }
+                                },
+                            ])
+                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
                             ->afterOrEqual('datum_pocetka_provere_pk'),
-                        Forms\Components\DatePicker::make('datum_pocetka_sprovodjenja_intervjua')
+                        Forms\Components\TextInput::make('datum_pocetka_sprovodjenja_intervjua')
                             ->label('Датум почетка спровођења интервјуа')
+                            ->mask('99.99.9999')
+                            ->placeholder('дд.мм.гггг')
+                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
+                            ->rules([
+                                fn () => function (string $attribute, $value, \Closure $fail) {
+                                    if (!$value) return;
+
+                                    // Proveri format
+                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
+                                        $fail('Датум мора бити у формату дд.мм.гггг');
+                                        return;
+                                    }
+
+                                    // Izdvoji dan, mesec, godinu
+                                    [$day, $month, $year] = explode('.', $value);
+
+                                    // Proveri da li je datum validan
+                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
+                                        $fail('Унети датум није валидан');
+                                    }
+                                },
+                            ])
+                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
                             ->afterOrEqual('datum_predaje_dokumentacije'),
-                        Forms\Components\DatePicker::make('datum_dostavljanja_liste_rukovodiocu_organa')
+                        Forms\Components\TextInput::make('datum_dostavljanja_liste_rukovodiocu_organa')
                             ->label('Датум достављања листе руководиоцу органа')
+                            ->mask('99.99.9999')
+                            ->placeholder('дд.мм.гггг')
+                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
+                            ->rules([
+                                fn () => function (string $attribute, $value, \Closure $fail) {
+                                    if (!$value) return;
+
+                                    // Proveri format
+                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
+                                        $fail('Датум мора бити у формату дд.мм.гггг');
+                                        return;
+                                    }
+
+                                    // Izdvoji dan, mesec, godinu
+                                    [$day, $month, $year] = explode('.', $value);
+
+                                    // Proveri da li je datum validan
+                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
+                                        $fail('Унети датум није валидан');
+                                    }
+                                },
+                            ])
+                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
                             ->afterOrEqual('datum_pocetka_sprovodjenja_intervjua'),
-                        Forms\Components\DatePicker::make('datum_donosenja_resenja_o_izabranom_kandidatu')
+                        Forms\Components\TextInput::make('datum_donosenja_resenja_o_izabranom_kandidatu')
                             ->label('Датум доношења решења о изабраном кандидату')
+                            ->mask('99.99.9999')
+                            ->placeholder('дд.мм.гггг')
+                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
+                            ->rules([
+                                fn () => function (string $attribute, $value, \Closure $fail) {
+                                    if (!$value) return;
+
+                                    // Proveri format
+                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
+                                        $fail('Датум мора бити у формату дд.мм.гггг');
+                                        return;
+                                    }
+
+                                    // Izdvoji dan, mesec, godinu
+                                    [$day, $month, $year] = explode('.', $value);
+
+                                    // Proveri da li je datum validan
+                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
+                                        $fail('Унети датум није валидан');
+                                    }
+                                },
+                            ])
+                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
                             ->afterOrEqual('datum_dostavljanja_liste_rukovodiocu_organa'),
-                        Forms\Components\DatePicker::make('datum_stupanja_na_rad')
+                        Forms\Components\TextInput::make('datum_stupanja_na_rad')
                             ->label('Датум ступања на рад')
+                            ->mask('99.99.9999')
+                            ->placeholder('дд.мм.гггг')
+                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
+                            ->rules([
+                                fn () => function (string $attribute, $value, \Closure $fail) {
+                                    if (!$value) return;
+
+                                    // Proveri format
+                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
+                                        $fail('Датум мора бити у формату дд.мм.гггг');
+                                        return;
+                                    }
+
+                                    // Izdvoji dan, mesec, godinu
+                                    [$day, $month, $year] = explode('.', $value);
+
+                                    // Proveri da li je datum validan
+                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
+                                        $fail('Унети датум није валидан');
+                                    }
+                                },
+                            ])
+                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
                             ->afterOrEqual('datum_donosenja_resenja_o_izabranom_kandidatu')
                             ->helperText('Датум ступања на рад првог извршиоца'),
                     ])->columns(3)->collapsible(),
