@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\PodaciORadnomMestuResource\Pages;
 use App\Filament\Resources\PodaciORadnomMestuResource\RelationManagers;
 use App\Models\PodaciORadnomMestu;
+use App\Exports\PodaciORadnomMestuExport;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -14,6 +15,7 @@ use Filament\Infolists;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PodaciORadnomMestuResource extends Resource
 {
@@ -900,6 +902,18 @@ class PodaciORadnomMestuResource extends Resource
                     }),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('organ')
+                    ->label('Орган')
+                    ->relationship('organRelation', 'organ')
+                    ->searchable()
+                    ->preload()
+                    ->multiple(),
+                Tables\Filters\SelectFilter::make('zvanje')
+                    ->label('Звање')
+                    ->relationship('zvanjeRelation', 'zvanje', fn ($query) => $query->orderBy('id', 'asc'))
+                    ->searchable()
+                    ->preload()
+                    ->multiple(),
                 Tables\Filters\SelectFilter::make('mestaRada')
                     ->label('Место рада')
                     ->relationship('mestaRada', 'mesto')

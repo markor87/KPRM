@@ -234,6 +234,8 @@ class ActivityResource extends Resource
                     ->schema([
                         Infolists\Components\KeyValueEntry::make('properties.old')
                             ->label('')
+                            ->keyLabel('Поље')
+                            ->valueLabel('Вредност')
                             ->columnSpanFull(),
                     ])
                     ->visible(fn ($record) => !empty($record->properties['old'] ?? null)),
@@ -242,6 +244,8 @@ class ActivityResource extends Resource
                     ->schema([
                         Infolists\Components\KeyValueEntry::make('properties.attributes')
                             ->label('')
+                            ->keyLabel('Поље')
+                            ->valueLabel('Вредност')
                             ->columnSpanFull(),
                     ])
                     ->visible(fn ($record) => !empty($record->properties['attributes'] ?? null)),

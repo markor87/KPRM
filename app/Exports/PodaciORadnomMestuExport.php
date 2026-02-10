@@ -1,0 +1,153 @@
+<?php
+
+namespace App\Exports;
+
+use Maatwebsite\Excel\Concerns\FromQuery;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
+use Illuminate\Database\Eloquent\Builder;
+
+class PodaciORadnomMestuExport implements FromQuery, WithHeadings, WithMapping
+{
+    protected Builder $query;
+
+    public function __construct(Builder $query)
+    {
+        $this->query = $query;
+    }
+
+    public function query()
+    {
+        return $this->query;
+    }
+
+    public function headings(): array
+    {
+        return [
+            'ID',
+            'Врста органа',
+            'Орган',
+            'Назив радног места',
+            'Тип конкурса',
+            'Број извршилаца',
+            'Звање',
+            'Место рада',
+            'Статус конкурса на дан 31/12/' . (now()->year - 1),
+            'Статус конкурса на дан 31/12/' . now()->year,
+            'Датум добијања сагласности Владе',
+            'Датум доношења решења о покретању поступка',
+            'Датум добијања обавештења од СУКа',
+            'Датум одржавања првог састанка',
+            'Датум оглашавања',
+            'Датум прегледа пријава',
+            'Датум ОФК извештаја',
+            'Датум почетка провере ОФК',
+            'Датум почетка провере ПФК',
+            'Датум почетка провере ПК',
+            'Датум ПК извештаја',
+            'Датум предаје документације',
+            'Датум почетка спровођења интервјуа',
+            'Датум достављања листе руководиоцу органа',
+            'Датум доношења решења о изабраном кандидату',
+            'Датум ступања на рад',
+            'Број примљених извршилаца',
+            'Оцена са вредновања',
+            'Број жалби на решење о одбацивању пријаве',
+            'Број жалби на решење о пријему у радни однос',
+            'Број усвојених жалби на решење о одбацивању пријаве',
+            'Број извршилаца - поновно оглашавање',
+            'Укупан број пријава',
+            'Број пријава из органа',
+            'Број пријава из других органа',
+            'Број пријава ван државних органа',
+            'Број валидних пријава',
+            'Број валидних пријава из органа',
+            'Број валидних пријава из другог органа',
+            'Број валидних пријава ван државних органа',
+            'Број кандидата који су испунили мерила ОФК',
+            'Број кандидата који су испунили мерила ПФК',
+            'Провера ПФК',
+            'Број кандидата који су испунили мерила ПК',
+            'Број одазваних кандидата на завршном разговору',
+            'Број кандидата на листи',
+            'Број кандидата из органа на листи',
+            'Број кандидата из другог државног органа на листи',
+            'Број кандидата ван државних органа на листи',
+            'Изабрани кандидат је из',
+            'Број бодова изабраног кандидата на ОФК',
+            'Број бодова изабраног кандидата на ПФК',
+            'Број бодова изабраног кандидата на ПК',
+            'Број бодова изабраног кандидата на завршном разговору',
+            'Другопласирани кандидат је из',
+            'Број бодова другопласираног кандидата на ОФК',
+            'Број бодова другопласираног кандидата на ПФК',
+            'Број бодова другопласираног кандидата на ПК',
+            'Број бодова другопласираног кандидата на завршном разговору',
+        ];
+    }
+
+    public function map($row): array
+    {
+        return [
+            $row->id,
+            $row->vrstaOrganaRelation?->vrsta_organa,
+            $row->organRelation?->organ,
+            $row->naziv_radnog_mesta,
+            $row->tipKonkursaRelation?->tip_konkursa,
+            $row->broj_izvrsilaca,
+            $row->zvanjeRelation?->zvanje,
+            $row->mestaRada->pluck('mesto')->join(', '),
+            $row->statusKonkursaNaDan1Relation?->status_konkursa,
+            $row->statusKonkursaNaDan2Relation?->status_konkursa,
+            $row->datum_dobijanja_saglasnosti_vlade ? \Carbon\Carbon::parse($row->datum_dobijanja_saglasnosti_vlade)->format('d.m.Y') : '',
+            $row->datum_donosenja_resenja_o_pokretanju_postupka ? \Carbon\Carbon::parse($row->datum_donosenja_resenja_o_pokretanju_postupka)->format('d.m.Y') : '',
+            $row->datum_dobijanja_obavestenja_od_suka ? \Carbon\Carbon::parse($row->datum_dobijanja_obavestenja_od_suka)->format('d.m.Y') : '',
+            $row->datum_odrzavanja_prvog_sastanka ? \Carbon\Carbon::parse($row->datum_odrzavanja_prvog_sastanka)->format('d.m.Y') : '',
+            $row->datum_oglasavanja ? \Carbon\Carbon::parse($row->datum_oglasavanja)->format('d.m.Y') : '',
+            $row->datum_pregleda_prijava ? \Carbon\Carbon::parse($row->datum_pregleda_prijava)->format('d.m.Y') : '',
+            $row->datum_ofk_izvestaja ? \Carbon\Carbon::parse($row->datum_ofk_izvestaja)->format('d.m.Y') : '',
+            $row->datum_pocetka_provere_ofk ? \Carbon\Carbon::parse($row->datum_pocetka_provere_ofk)->format('d.m.Y') : '',
+            $row->datum_pocetka_provere_pfk ? \Carbon\Carbon::parse($row->datum_pocetka_provere_pfk)->format('d.m.Y') : '',
+            $row->datum_pocetka_provere_pk ? \Carbon\Carbon::parse($row->datum_pocetka_provere_pk)->format('d.m.Y') : '',
+            $row->datum_pk_izvestaja ? \Carbon\Carbon::parse($row->datum_pk_izvestaja)->format('d.m.Y') : '',
+            $row->datum_predaje_dokumentacije ? \Carbon\Carbon::parse($row->datum_predaje_dokumentacije)->format('d.m.Y') : '',
+            $row->datum_pocetka_sprovodjenja_intervjua ? \Carbon\Carbon::parse($row->datum_pocetka_sprovodjenja_intervjua)->format('d.m.Y') : '',
+            $row->datum_dostavljanja_liste_rukovodiocu_organa ? \Carbon\Carbon::parse($row->datum_dostavljanja_liste_rukovodiocu_organa)->format('d.m.Y') : '',
+            $row->datum_donosenja_resenja_o_izabranom_kandidatu ? \Carbon\Carbon::parse($row->datum_donosenja_resenja_o_izabranom_kandidatu)->format('d.m.Y') : '',
+            $row->datum_stupanja_na_rad ? \Carbon\Carbon::parse($row->datum_stupanja_na_rad)->format('d.m.Y') : '',
+            $row->broj_primljenih_izvrsilaca,
+            $row->ocena_sa_vrednovanja,
+            $row->broj_zalbi_na_resenje_o_odbacaju_prijave,
+            $row->broj_zalbi_na_resenje_o_prijemu_u_radni_odnos,
+            $row->broj_usvojenih_zalbi_na_resenje_o_odbacaju_prijave,
+            $row->broj_izvrsilaca_ponovno_oglasavanje,
+            $row->ukupan_broj_prijava,
+            $row->broj_prijava_iz_organa,
+            $row->broj_prijava_iz_drugih_organa,
+            $row->broj_prijava_van_drzavnih_organa,
+            $row->broj_validnih_prijava,
+            $row->broj_validnih_prijava_iz_organa,
+            $row->broj_validnih_prijava_iz_drugog_organa,
+            $row->broj_validnih_prijava_van_drzavnih_organa,
+            $row->broj_kandidata_koji_su_ispunlii_merila_ofk,
+            $row->broj_kandidata_koji_su_ispunlii_merila_pfk,
+            $row->proveraPfkRelation?->provera_pfk,
+            $row->broj_kandidata_ispunili_merila_pk,
+            $row->broj_odazvanih_kandidata_na_zavrsnom_razgovoru,
+            $row->broj_kandidata_na_listi,
+            $row->broj_kandidata_iz_organa_na_listi,
+            $row->broj_kandidata_iz_drugog_drzavnog_organa_na_listi,
+            $row->broj_kandidata_van_drzavnih_organa_na_listi,
+            $row->izabraniKandidatRelation?->izabrani_kandidat,
+            $row->broj_bodova_izabranog_kandidata_na_ofk,
+            $row->broj_bodova_izabranog_kandidata_na_pfk,
+            $row->broj_bodova_izabranog_kandidata_na_pk,
+            $row->broj_bodova_izabranog_kandidata_na_zavrsnom_razgovoru,
+            $row->drugoplasiraniKandidatRelation?->izabrani_kandidat,
+            $row->broj_bodova_drugplasiranog_kandidata_na_ofk,
+            $row->broj_bodova_drugplasiranog_kandidata_na_pfk,
+            $row->broj_bodova_drugplasiranog_kandidata_na_pk,
+            $row->broj_bodova_drugoplasiranog_kandidata_na_zavrsnom_razgovoru,
+        ];
+    }
+}
