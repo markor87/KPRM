@@ -23,6 +23,7 @@ class PodaciORadnomMestu extends Model
         'zvanje',
         // 'mesto_rada', // Uklonjeno - sada je many-to-many relacija
         'status_konkursa_na_dan_1',
+        'razlog_neuspelog_konkursa',
         'status_konkursa_na_dan_2',
         'datum_dobijanja_saglasnosti_vlade',
         'datum_donosenja_resenja_o_pokretanju_postupka',
@@ -30,9 +31,16 @@ class PodaciORadnomMestu extends Model
         'datum_odrzavanja_prvog_sastanka',
         'datum_oglasavanja',
         'datum_pregleda_prijava',
-        'datum_ofk_izvestaja',
+        'datum_slanja_zahteva_za_sprovodjenje_ofk_provera',
+        'broj_kandidata_za_koje_se_zakazuju_ofk',
         'datum_pocetka_provere_ofk',
+        'datum_ofk_izvestaja',
+        'datum_slanja_zahteva_za_sprovodjenje_pfk_provera',
+        'broj_kandidata_za_koje_se_zakazuju_pfk',
         'datum_pocetka_provere_pfk',
+        'datum_pfk_izvestaja',
+        'datum_slanja_zahteva_za_sprovodjenje_pk_provera',
+        'broj_kandidata_za_koje_se_zakazuju_pk',
         'datum_pocetka_provere_pk',
         'datum_pk_izvestaja',
         'datum_predaje_dokumentacije',
@@ -59,6 +67,7 @@ class PodaciORadnomMestu extends Model
         'provera_pfk',
         'broj_kandidata_ispunili_merila_pk',
         'broj_odazvanih_kandidata_na_zavrsnom_razgovoru',
+        'datum_formiranja_liste_kandidata',
         'broj_kandidata_na_listi',
         'broj_kandidata_iz_organa_na_listi',
         'broj_kandidata_iz_drugog_drzavnog_organa_na_listi',
@@ -73,6 +82,19 @@ class PodaciORadnomMestu extends Model
         'broj_bodova_drugplasiranog_kandidata_na_pfk',
         'broj_bodova_drugplasiranog_kandidata_na_pk',
         'broj_bodova_drugoplasiranog_kandidata_na_zavrsnom_razgovoru',
+        'broj_neodazvanih_kandidata_ofk',
+        'broj_neodazvanih_kandidata_pfk',
+        'broj_neodazvanih_kandidata_pk',
+        'broj_neodazvanih_kandidata_dokumentacija',
+        'broj_neodazvanih_kandidata_zavrsni_razgovor',
+        'oblast_rada',
+        'velicina_organa',
+        'broj_uspelih_postupaka',
+        'broj_neuspelih_postupaka',
+        'broj_obustavljenih_postupaka',
+        'broj_ponistenih_postupaka',
+        'prosecna_starost_kandidata',
+        'udeo_kandidata_mladjih_od_30',
     ];
 
     /**
@@ -161,6 +183,22 @@ class PodaciORadnomMestu extends Model
     }
 
     /**
+     * Relacija sa sifarnik_velicina_organa tabelom
+     */
+    public function velicinaOrganaRelation()
+    {
+        return $this->belongsTo(SifarnikVelicinaOrgana::class, 'velicina_organa');
+    }
+
+    /**
+     * Relacija sa sifarnik_razlog_neuspelih_konkursa tabelom
+     */
+    public function razlogNeuspelogKonkursaRelation()
+    {
+        return $this->belongsTo(SifarnikRazlogNeuspelihKonkursa::class, 'razlog_neuspelog_konkursa');
+    }
+
+    /**
      * Activity log konfiguracija
      */
     public function getActivitylogOptions(): LogOptions
@@ -175,6 +213,7 @@ class PodaciORadnomMestu extends Model
                 'zvanje',
                 // 'mesto_rada', // Uklonjeno - many-to-many se ne loguje ovako
                 'status_konkursa_na_dan_1',
+                'razlog_neuspelog_konkursa',
                 'status_konkursa_na_dan_2',
                 // Datumi poступka
                 'datum_dobijanja_saglasnosti_vlade',
@@ -183,9 +222,16 @@ class PodaciORadnomMestu extends Model
                 'datum_odrzavanja_prvog_sastanka',
                 'datum_oglasavanja',
                 'datum_pregleda_prijava',
-                'datum_ofk_izvestaja',
+                'datum_slanja_zahteva_za_sprovodjenje_ofk_provera',
+                'broj_kandidata_za_koje_se_zakazuju_ofk',
                 'datum_pocetka_provere_ofk',
+                'datum_ofk_izvestaja',
+                'datum_slanja_zahteva_za_sprovodjenje_pfk_provera',
+                'broj_kandidata_za_koje_se_zakazuju_pfk',
                 'datum_pocetka_provere_pfk',
+                'datum_pfk_izvestaja',
+                'datum_slanja_zahteva_za_sprovodjenje_pk_provera',
+                'broj_kandidata_za_koje_se_zakazuju_pk',
                 'datum_pocetka_provere_pk',
                 'datum_pk_izvestaja',
                 'datum_predaje_dokumentacije',
@@ -213,6 +259,7 @@ class PodaciORadnomMestu extends Model
                 'provera_pfk',
                 'broj_kandidata_ispunili_merila_pk',
                 'broj_odazvanih_kandidata_na_zavrsnom_razgovoru',
+                'datum_formiranja_liste_kandidata',
                 'broj_kandidata_na_listi',
                 'broj_kandidata_iz_organa_na_listi',
                 'broj_kandidata_iz_drugog_drzavnog_organa_na_listi',
@@ -227,6 +274,19 @@ class PodaciORadnomMestu extends Model
                 'broj_bodova_drugplasiranog_kandidata_na_pfk',
                 'broj_bodova_drugplasiranog_kandidata_na_pk',
                 'broj_bodova_drugoplasiranog_kandidata_na_zavrsnom_razgovoru',
+                'broj_neodazvanih_kandidata_ofk',
+                'broj_neodazvanih_kandidata_pfk',
+                'broj_neodazvanih_kandidata_pk',
+                'broj_neodazvanih_kandidata_dokumentacija',
+                'broj_neodazvanih_kandidata_zavrsni_razgovor',
+                'oblast_rada',
+                'velicina_organa',
+                'broj_uspelih_postupaka',
+                'broj_neuspelih_postupaka',
+                'broj_obustavljenih_postupaka',
+                'broj_ponistenih_postupaka',
+                'prosecna_starost_kandidata',
+                'udeo_kandidata_mladjih_od_30',
             ])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()

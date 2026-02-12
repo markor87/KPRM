@@ -136,7 +136,9 @@ class PodaciORadnomMestuResource extends Resource
                         Forms\Components\TextInput::make('broj_izvrsilaca')
                             ->label('Број извршилаца')
                             ->required()
-                            ->numeric()->minValue(0),
+                            ->numeric()
+                            ->minValue(1)
+                            ->live(),
                         Forms\Components\Select::make('zvanje')
                             ->label('Звање')
                             ->relationship('zvanjeRelation', 'zvanje', fn($query) => $query->orderBy('id', 'asc'))
@@ -148,12 +150,31 @@ class PodaciORadnomMestuResource extends Resource
                             ->relationship('mestaRada', 'mesto')
                             ->required()
                             ->preload()
-                            ->searchable(),
+                            ->searchable()
+                            ->helperText(fn (Forms\Get $get) => 'Број изабраних места не сме бити већи од броја извршилаца (' . max(1, (int) $get('broj_izvrsilaca')) . ')')
+                            ->rules([
+                                fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get) {
+                                    $brojIzvrsilaca = (int) $get('broj_izvrsilaca') ?: 1;
+                                    $selectedCount = is_array($value) ? count($value) : 0;
+
+                                    if ($selectedCount > $brojIzvrsilaca) {
+                                        $fail('Изабрали сте ' . $selectedCount . ' места рада, а број извршилаца је ' . $brojIzvrsilaca . '. Број места не може бити већи од броја извршилаца.');
+                                    }
+                                },
+                            ]),
                         Forms\Components\Select::make('status_konkursa_na_dan_1')
                             ->label('Статус конкурса на дан 31/12/' . (now()->year - 1))
                             ->relationship('statusKonkursaNaDan1Relation', 'status_konkursa', fn($query) => $query->orderBy('id', 'asc'))
                             ->preload()
-                            ->searchable(),
+                            ->searchable()
+                            ->live(),
+                        Forms\Components\Select::make('razlog_neuspelog_konkursa')
+                            ->label('Разлог неуспелог конкурса')
+                            ->relationship('razlogNeuspelogKonkursaRelation', 'razlog', fn($query) => $query->orderBy('id', 'asc'))
+                            ->preload()
+                            ->searchable()
+                            ->disabled(fn (Forms\Get $get) => $get('status_konkursa_na_dan_1') != 2)
+                            ->dehydrated(),
                         Forms\Components\Select::make('status_konkursa_na_dan_2')
                             ->label('Статус конкурса на дан 31/12/' . now()->year)
                             ->relationship('statusKonkursaNaDan2Relation', 'status_konkursa', fn($query) => $query->orderBy('id', 'asc'))
@@ -326,6 +347,37 @@ class PodaciORadnomMestuResource extends Resource
                             ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
                             ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
                             ->afterOrEqual('datum_oglasavanja'),
+                        Forms\Components\TextInput::make('datum_slanja_zahteva_za_sprovodjenje_ofk_provera')
+                            ->label('Датум слања захтева за спровођење ОФК провера')
+                            ->mask('99.99.9999')
+                            ->placeholder('дд.мм.гггг')
+                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
+                            ->rules([
+                                fn () => function (string $attribute, $value, \Closure $fail) {
+                                    if (!$value) return;
+
+                                    // Proveri format
+                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
+                                        $fail('Датум мора бити у формату дд.мм.гггг');
+                                        return;
+                                    }
+
+                                    // Izdvoji dan, mesec, godinu
+                                    [$day, $month, $year] = explode('.', $value);
+
+                                    // Proveri da li je datum validan
+                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
+                                        $fail('Унети датум није валидан');
+                                    }
+                                },
+                            ])
+                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                            ->afterOrEqual('datum_pregleda_prijava'),
+                        Forms\Components\TextInput::make('broj_kandidata_za_koje_se_zakazuju_ofk')
+                            ->label('Број кандидата за које се заказују ОФК')
+                            ->numeric()
+                            ->minValue(0),
                         Forms\Components\TextInput::make('datum_pocetka_provere_ofk')
                             ->label('Датум почетка провере ОФК')
                             ->mask('99.99.9999')
@@ -352,7 +404,7 @@ class PodaciORadnomMestuResource extends Resource
                             ])
                             ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
                             ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
-                            ->afterOrEqual('datum_pregleda_prijava'),
+                            ->afterOrEqual('datum_slanja_zahteva_za_sprovodjenje_ofk_provera'),
                         Forms\Components\TextInput::make('datum_ofk_izvestaja')
                             ->label('Датум ОФК извештаја')
                             ->mask('99.99.9999')
@@ -380,6 +432,37 @@ class PodaciORadnomMestuResource extends Resource
                             ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
                             ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
                             ->helperText('Датум креирања извештаја СУКа'),
+                        Forms\Components\TextInput::make('datum_slanja_zahteva_za_sprovodjenje_pfk_provera')
+                            ->label('Датум слања захтева за спровођење ПФК провера')
+                            ->mask('99.99.9999')
+                            ->placeholder('дд.мм.гггг')
+                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
+                            ->rules([
+                                fn () => function (string $attribute, $value, \Closure $fail) {
+                                    if (!$value) return;
+
+                                    // Proveri format
+                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
+                                        $fail('Датум мора бити у формату дд.мм.гггг');
+                                        return;
+                                    }
+
+                                    // Izdvoji dan, mesec, godinu
+                                    [$day, $month, $year] = explode('.', $value);
+
+                                    // Proveri da li je datum validan
+                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
+                                        $fail('Унети датум није валидан');
+                                    }
+                                },
+                            ])
+                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                            ->afterOrEqual('datum_ofk_izvestaja'),
+                        Forms\Components\TextInput::make('broj_kandidata_za_koje_se_zakazuju_pfk')
+                            ->label('Број кандидата за које се заказују ПФК')
+                            ->numeric()
+                            ->minValue(0),
                         Forms\Components\TextInput::make('datum_pocetka_provere_pfk')
                             ->label('Датум почетка провере ПФК')
                             ->mask('99.99.9999')
@@ -406,7 +489,65 @@ class PodaciORadnomMestuResource extends Resource
                             ])
                             ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
                             ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
-                            ->afterOrEqual('datum_pocetka_provere_ofk'),
+                            ->afterOrEqual('datum_slanja_zahteva_za_sprovodjenje_pfk_provera'),
+                        Forms\Components\TextInput::make('datum_pfk_izvestaja')
+                            ->label('Датум ПФК извештаја')
+                            ->mask('99.99.9999')
+                            ->placeholder('дд.мм.гггг')
+                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
+                            ->rules([
+                                fn () => function (string $attribute, $value, \Closure $fail) {
+                                    if (!$value) return;
+
+                                    // Proveri format
+                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
+                                        $fail('Датум мора бити у формату дд.мм.гггг');
+                                        return;
+                                    }
+
+                                    // Izdvoji dan, mesec, godinu
+                                    [$day, $month, $year] = explode('.', $value);
+
+                                    // Proveri da li je datum validan
+                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
+                                        $fail('Унети датум није валидан');
+                                    }
+                                },
+                            ])
+                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                            ->helperText('Датум креирања извештаја СУКа'),
+                        Forms\Components\TextInput::make('datum_slanja_zahteva_za_sprovodjenje_pk_provera')
+                            ->label('Датум слања захтева за спровођење ПК провера')
+                            ->mask('99.99.9999')
+                            ->placeholder('дд.мм.гггг')
+                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
+                            ->rules([
+                                fn () => function (string $attribute, $value, \Closure $fail) {
+                                    if (!$value) return;
+
+                                    // Proveri format
+                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
+                                        $fail('Датум мора бити у формату дд.мм.гггг');
+                                        return;
+                                    }
+
+                                    // Izdvoji dan, mesec, godinu
+                                    [$day, $month, $year] = explode('.', $value);
+
+                                    // Proveri da li je datum validan
+                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
+                                        $fail('Унети датум није валидан');
+                                    }
+                                },
+                            ])
+                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                            ->afterOrEqual('datum_pfk_izvestaja'),
+                        Forms\Components\TextInput::make('broj_kandidata_za_koje_se_zakazuju_pk')
+                            ->label('Број кандидата за које се заказују ПК')
+                            ->numeric()
+                            ->minValue(0),
                         Forms\Components\TextInput::make('datum_pocetka_provere_pk')
                             ->label('Датум почетка провере ПК')
                             ->mask('99.99.9999')
@@ -433,7 +574,7 @@ class PodaciORadnomMestuResource extends Resource
                             ])
                             ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
                             ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
-                            ->afterOrEqual('datum_pocetka_provere_pfk'),
+                            ->afterOrEqual('datum_slanja_zahteva_za_sprovodjenje_pk_provera'),
                         Forms\Components\TextInput::make('datum_pk_izvestaja')
                             ->label('Датум ПК извештаја')
                             ->mask('99.99.9999')
@@ -750,6 +891,33 @@ class PodaciORadnomMestuResource extends Resource
 
                 Forms\Components\Section::make('Листа кандидата')
                     ->schema([
+                        Forms\Components\TextInput::make('datum_formiranja_liste_kandidata')
+                            ->label('Дан формирања листе кандидата који учествују у изборном поступку')
+                            ->mask('99.99.9999')
+                            ->placeholder('дд.мм.гггг')
+                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
+                            ->rules([
+                                fn () => function (string $attribute, $value, \Closure $fail) {
+                                    if (!$value) return;
+
+                                    // Proveri format
+                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
+                                        $fail('Датум мора бити у формату дд.мм.гггг');
+                                        return;
+                                    }
+
+                                    // Izdvoji dan, mesec, godinu
+                                    [$day, $month, $year] = explode('.', $value);
+
+                                    // Proveri da li je datum validan
+                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
+                                        $fail('Унети датум није валидан');
+                                    }
+                                },
+                            ])
+                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
+                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                            ->columnSpanFull(),
                         Forms\Components\TextInput::make('broj_kandidata_na_listi')
                             ->label('Број кандидата на листи')
                             ->numeric()->minValue(0),
@@ -860,6 +1028,80 @@ class PodaciORadnomMestuResource extends Resource
                                 6 => '6',
                             ]),
                     ])->columns(3)->collapsible(),
+
+                Forms\Components\Section::make('Додатни подаци о поступку')
+                    ->schema([
+                        Forms\Components\TextInput::make('broj_neodazvanih_kandidata_ofk')
+                            ->label('Број кандидата који се није одазвао позиву на ОФК')
+                            ->numeric()
+                            ->minValue(0),
+                        Forms\Components\TextInput::make('broj_neodazvanih_kandidata_pfk')
+                            ->label('Број кандидата који се није одазвао позиву на ПФК')
+                            ->numeric()
+                            ->minValue(0),
+                        Forms\Components\TextInput::make('broj_neodazvanih_kandidata_pk')
+                            ->label('Број кандидата који се није одазвао позиву на ПК проверу')
+                            ->numeric()
+                            ->minValue(0),
+                        Forms\Components\TextInput::make('broj_neodazvanih_kandidata_dokumentacija')
+                            ->label('Број кандидата који се није одазвао позиву на доставу документације')
+                            ->numeric()
+                            ->minValue(0),
+                        Forms\Components\TextInput::make('broj_neodazvanih_kandidata_zavrsni_razgovor')
+                            ->label('Број кандидата који се није одазвао позиву на завршном разговору')
+                            ->numeric()
+                            ->minValue(0),
+                        Forms\Components\TextInput::make('oblast_rada')
+                            ->label('Област рада')
+                            ->maxLength(255)
+                            ->regex('/^[А-Ша-шЂЈЉЊЋЏђјљњћџ0-9\s.,\-()\/]+$/u')
+                            ->validationMessages([
+                                'regex' => 'Област рада може садржати само ћирилична слова.',
+                            ]),
+                        Forms\Components\Select::make('velicina_organa')
+                            ->label('Величина органа')
+                            ->relationship('velicinaOrganaRelation', 'velicina_organa', fn($query) => $query->orderBy('id', 'asc'))
+                            ->preload()
+                            ->searchable(),
+                    ])->columns(3)->collapsible(),
+
+                Forms\Components\Section::make('Исходи конкурсних поступака, према врсти радних места (извршиоци и положаји)')
+                    ->schema([
+                        Forms\Components\TextInput::make('broj_uspelih_postupaka')
+                            ->label('Број успелих поступака')
+                            ->numeric()
+                            ->minValue(0),
+                        Forms\Components\TextInput::make('broj_neuspelih_postupaka')
+                            ->label('Број неуспелих поступака')
+                            ->numeric()
+                            ->minValue(0),
+                        Forms\Components\TextInput::make('broj_obustavljenih_postupaka')
+                            ->label('Број обустављених поступака')
+                            ->numeric()
+                            ->minValue(0),
+                        Forms\Components\TextInput::make('broj_ponistenih_postupaka')
+                            ->label('Број поништених поступака')
+                            ->numeric()
+                            ->minValue(0),
+                    ])->columns(4)->collapsible(),
+
+                Forms\Components\Section::make('Старосна структура кандидата')
+                    ->schema([
+                        Forms\Components\TextInput::make('prosecna_starost_kandidata')
+                            ->label('Просечна старост кандидата у изборном поступку')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(100)
+                            ->step(0.01)
+                            ->suffix('година'),
+                        Forms\Components\TextInput::make('udeo_kandidata_mladjih_od_30')
+                            ->label('Удео кандидата млађих од 30 година')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(100)
+                            ->step(0.01)
+                            ->suffix('%'),
+                    ])->columns(2)->collapsible(),
             ]);
     }
 
