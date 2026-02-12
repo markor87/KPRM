@@ -139,7 +139,9 @@ class PodaciORadnomMestu extends Model
             'mesto_rada_podaci_o_radnom_mestu',
             'podaci_o_radnom_mestu_id',
             'sifarnik_mesta_id'
-        )->withTimestamps();
+        )
+        ->withPivot('broj_izvrsilaca')
+        ->withTimestamps();
     }
 
     /**

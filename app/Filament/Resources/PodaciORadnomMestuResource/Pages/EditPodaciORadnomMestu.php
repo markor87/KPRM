@@ -16,6 +16,8 @@ class EditPodaciORadnomMestu extends EditRecord
     #[Locked]
     public array $oldRelationships = [];
 
+    public array $mestaRadaData = [];
+
     protected function getHeaderActions(): array
     {
         return [
@@ -26,6 +28,20 @@ class EditPodaciORadnomMestu extends EditRecord
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');
+    }
+
+    /**
+     * Обрада података пре чувања
+     */
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        // Читај директно из form state (јер је поље dehydrated(false))
+        $this->mestaRadaData = $this->data['mestaRada'] ?? [];
+
+        // Уклони из data array ако постоји
+        unset($data['mestaRada']);
+
+        return $data;
     }
 
     /**
@@ -73,6 +89,23 @@ class EditPodaciORadnomMestu extends EditRecord
      */
     protected function afterSave(): void
     {
+        // Прво сачувај mestaRada релацију са pivot подацима
+        if (isset($this->mestaRadaData)) {
+            $syncData = [];
+
+            foreach ($this->mestaRadaData as $mesto) {
+                if (isset($mesto['sifarnik_mesta_id']) && $mesto['sifarnik_mesta_id']) {
+                    $syncData[$mesto['sifarnik_mesta_id']] = [
+                        'broj_izvrsilaca' => $mesto['broj_izvrsilaca'] ?? 1,
+                    ];
+                }
+            }
+
+            // Sync са pivot подацима
+            $this->record->mestaRada()->sync($syncData);
+        }
+
+        // Затим логирај промене
         foreach ($this->oldRelationships as $relationName => $oldValues) {
             try {
                 $relation = $this->record->{$relationName}();

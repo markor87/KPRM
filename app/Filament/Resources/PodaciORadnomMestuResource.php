@@ -145,23 +145,64 @@ class PodaciORadnomMestuResource extends Resource
                             ->required()
                             ->preload()
                             ->searchable(),
-                        Forms\Components\MultiSelect::make('mestaRada')
-                            ->label('Место рада')
-                            ->relationship('mestaRada', 'mesto')
+                        Forms\Components\Repeater::make('mestaRada')
+                            ->label('Места рада са бројем извршилаца')
+                            ->schema([
+                                Forms\Components\Select::make('sifarnik_mesta_id')
+                                    ->label('Место рада')
+                                    ->options(\App\Models\SifarnikMesta::whereNotNull('mesto')->where('mesto', '!=', '')->orderBy('mesto')->pluck('mesto', 'id'))
+                                    ->required()
+                                    ->searchable()
+                                    ->distinct(),
+
+                                Forms\Components\TextInput::make('broj_izvrsilaca')
+                                    ->label('Број извршилаца')
+                                    ->numeric()
+                                    ->required()
+                                    ->minValue(1)
+                                    ->default(1),
+                            ])
+                            ->columns(2)
+                            ->addActionLabel('Додај место рада')
+                            ->defaultItems(1)
                             ->required()
-                            ->preload()
-                            ->searchable()
-                            ->helperText(fn (Forms\Get $get) => 'Број изабраних места не сме бити већи од броја извршилаца (' . max(1, (int) $get('broj_izvrsilaca')) . ')')
+                            ->afterStateHydrated(function (Forms\Components\Repeater $component, $state, $record) {
+                                if ($record && $record->mestaRada) {
+                                    $data = $record->mestaRada->map(function ($mesto) {
+                                        return [
+                                            'sifarnik_mesta_id' => $mesto->id,
+                                            'broj_izvrsilaca' => $mesto->pivot->broj_izvrsilaca ?? 1,
+                                        ];
+                                    })->toArray();
+
+                                    $component->state($data);
+                                }
+                            })
+                            ->dehydrated(false)
                             ->rules([
                                 fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get) {
-                                    $brojIzvrsilaca = (int) $get('broj_izvrsilaca') ?: 1;
-                                    $selectedCount = is_array($value) ? count($value) : 0;
+                                    $ukupanBrojIzvrsilaca = (int) $get('broj_izvrsilaca') ?: 0;
 
-                                    if ($selectedCount > $brojIzvrsilaca) {
-                                        $fail('Изабрали сте ' . $selectedCount . ' места рада, а број извршилаца је ' . $brojIzvrsilaca . '. Број места не може бити већи од броја извршилаца.');
+                                    if (!is_array($value) || empty($value)) {
+                                        return;
+                                    }
+
+                                    // Провера дупликата
+                                    $gradovi = array_column($value, 'sifarnik_mesta_id');
+                                    $gradovi = array_filter($gradovi);
+                                    if (count($gradovi) !== count(array_unique($gradovi))) {
+                                        $fail("Не можете изабрати исти град више пута.");
+                                    }
+
+                                    // Збир извршилаца по градовима
+                                    $zbirPoGradovima = array_sum(array_column($value, 'broj_izvrsilaca'));
+
+                                    if ($zbirPoGradovima !== $ukupanBrojIzvrsilaca) {
+                                        $fail("Збир извршилаца по градовима ($zbirPoGradovima) мора бити једнак укупном броју извршилаца ($ukupanBrojIzvrsilaca).");
                                     }
                                 },
-                            ]),
+                            ])
+                            ->helperText(fn (Forms\Get $get) => 'Укупан број извршилаца: ' . ($get('broj_izvrsilaca') ?: 0) . '. Збир по градовима мора бити једнак овом броју.'),
                         Forms\Components\Select::make('status_konkursa_na_dan_1')
                             ->label('Статус конкурса на дан 31/12/' . (now()->year - 1))
                             ->relationship('statusKonkursaNaDan1Relation', 'status_konkursa', fn($query) => $query->orderBy('id', 'asc'))

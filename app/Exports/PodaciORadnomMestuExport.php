@@ -118,7 +118,9 @@ class PodaciORadnomMestuExport implements FromQuery, WithHeadings, WithMapping
             $row->tipKonkursaRelation?->tip_konkursa,
             $row->broj_izvrsilaca,
             $row->zvanjeRelation?->zvanje,
-            $row->mestaRada->pluck('mesto')->join(', '),
+            $row->mestaRada->map(function($mesto) {
+                return $mesto->mesto . ' (' . $mesto->pivot->broj_izvrsilaca . ')';
+            })->join(', '),
             $row->statusKonkursaNaDan1Relation?->status_konkursa,
             $row->razlogNeuspelogKonkursaRelation?->razlog,
             $row->statusKonkursaNaDan2Relation?->status_konkursa,

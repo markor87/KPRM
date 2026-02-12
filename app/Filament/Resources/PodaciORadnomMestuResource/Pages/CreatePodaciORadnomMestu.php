@@ -11,9 +11,25 @@ class CreatePodaciORadnomMestu extends CreateRecord
 {
     protected static string $resource = PodaciORadnomMestuResource::class;
 
+    public array $mestaRadaData = [];
+
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');
+    }
+
+    /**
+     * Обрада података пре чувања
+     */
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        // Читај директно из form state (јер је поље dehydrated(false))
+        $this->mestaRadaData = $this->data['mestaRada'] ?? [];
+
+        // Уклони из data array ако постоји
+        unset($data['mestaRada']);
+
+        return $data;
     }
 
     /**
@@ -21,6 +37,23 @@ class CreatePodaciORadnomMestu extends CreateRecord
      */
     protected function afterCreate(): void
     {
+        // Прво сачувај mestaRada релацију са pivot подацима
+        if (isset($this->mestaRadaData)) {
+            $syncData = [];
+
+            foreach ($this->mestaRadaData as $mesto) {
+                if (isset($mesto['sifarnik_mesta_id']) && $mesto['sifarnik_mesta_id']) {
+                    $syncData[$mesto['sifarnik_mesta_id']] = [
+                        'broj_izvrsilaca' => $mesto['broj_izvrsilaca'] ?? 1,
+                    ];
+                }
+            }
+
+            // Sync са pivot подацима
+            $this->record->mestaRada()->sync($syncData);
+        }
+
+        // Затим логирај релације
         // Pronađi sve belongsToMany relacije na modelu
         $reflection = new \ReflectionClass($this->record);
         foreach ($reflection->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
