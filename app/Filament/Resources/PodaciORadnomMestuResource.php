@@ -153,7 +153,8 @@ class PodaciORadnomMestuResource extends Resource
                                     ->options(\App\Models\SifarnikMesta::whereNotNull('mesto')->where('mesto', '!=', '')->orderBy('mesto')->pluck('mesto', 'id'))
                                     ->required()
                                     ->searchable()
-                                    ->distinct(),
+                                    ->distinct()
+                                    ->live(),
 
                                 Forms\Components\TextInput::make('broj_izvrsilaca')
                                     ->label('Број извршилаца')
@@ -166,6 +167,21 @@ class PodaciORadnomMestuResource extends Resource
                             ->addActionLabel('Додај место рада')
                             ->defaultItems(1)
                             ->required()
+                            ->collapsed()
+                            ->itemLabel(function (array $state): ?string {
+                                $mestoId = $state['sifarnik_mesta_id'] ?? null;
+                                $brojIzvrsilaca = $state['broj_izvrsilaca'] ?? 1;
+
+                                if ($mestoId) {
+                                    $mesto = \App\Models\SifarnikMesta::find($mestoId);
+                                    if ($mesto) {
+                                        return "{$mesto->mesto} ({$brojIzvrsilaca})";
+                                    }
+                                }
+
+                                return 'Место рада';
+                            })
+                            ->collapsible()
                             ->afterStateHydrated(function (Forms\Components\Repeater $component, $state, $record) {
                                 if ($record && $record->mestaRada) {
                                     $data = $record->mestaRada->map(function ($mesto) {
@@ -913,21 +929,48 @@ class PodaciORadnomMestuResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('broj_kandidata_koji_su_ispunlii_merila_ofk')
                             ->label('Број кандидата који су испунили мерила ОФК')
-                            ->numeric()->minValue(0),
+                            ->numeric()->minValue(0)
+                            ->live(),
                         Forms\Components\TextInput::make('broj_kandidata_koji_su_ispunlii_merila_pfk')
                             ->label('Број кандидата који су испунили мерила ПФК')
-                            ->numeric()->minValue(0),
+                            ->numeric()->minValue(0)
+                            ->live()
+                            ->rules([
+                                fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get) {
+                                    $ofk = (int) $get('broj_kandidata_koji_su_ispunlii_merila_ofk');
+                                    if ($value && $ofk && (int)$value > $ofk) {
+                                        $fail('Број кандидата који су испунили мерила ПФК не сме бити већи од броја кандидата који су испунили мерила ОФК.');
+                                    }
+                                },
+                            ]),
                         Forms\Components\Select::make('provera_pfk')
                             ->label('Провера ПФК')
-                            ->relationship('proveraPfkRelation', 'provera_pfk')
+                            ->relationship('proveraPfkRelation', 'provera_pfk', fn($query) => $query->orderBy('id', 'asc'))
                             ->preload()
                             ->searchable(),
                         Forms\Components\TextInput::make('broj_kandidata_ispunili_merila_pk')
                             ->label('Број кандидата који су испунили мерила ПК')
-                            ->numeric()->minValue(0),
+                            ->numeric()->minValue(0)
+                            ->live()
+                            ->rules([
+                                fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get) {
+                                    $pfk = (int) $get('broj_kandidata_koji_su_ispunlii_merila_pfk');
+                                    if ($value && $pfk && (int)$value > $pfk) {
+                                        $fail('Број кандидата који су испунили мерила ПК не сме бити већи од броја кандидата који су испунили мерила ПФК.');
+                                    }
+                                },
+                            ]),
                         Forms\Components\TextInput::make('broj_odazvanih_kandidata_na_zavrsnom_razgovoru')
                             ->label('Број одазваних кандидата на завршном разговору')
-                            ->numeric()->minValue(0),
+                            ->numeric()->minValue(0)
+                            ->rules([
+                                fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get) {
+                                    $pk = (int) $get('broj_kandidata_ispunili_merila_pk');
+                                    if ($value && $pk && (int)$value > $pk) {
+                                        $fail('Број одазваних кандидата на завршном разговору не сме бити већи од броја кандидата који су испунили мерила ПК.');
+                                    }
+                                },
+                            ]),
                     ])->columns(3)->collapsible(),
 
                 Forms\Components\Section::make('Листа кандидата')
