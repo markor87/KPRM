@@ -1017,16 +1017,16 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број кандидата који се није одазвао позиву на ПФК')
                             ->numeric()
                             ->minValue(0),
-                        Forms\Components\TextInput::make('broj_neodazvanih_kandidata_pk')
-                            ->label('Број кандидата који се није одазвао позиву на ПК проверу')
-                            ->numeric()
-                            ->minValue(0),
                         Forms\Components\TextInput::make('broj_neodazvanih_kandidata_dokumentacija')
                             ->label('Број кандидата који се није одазвао позиву на доставу документације')
                             ->numeric()
                             ->minValue(0),
                         Forms\Components\TextInput::make('broj_neodazvanih_kandidata_zavrsni_razgovor')
                             ->label('Број кандидата који се није одазвао позиву на завршном разговору')
+                            ->numeric()
+                            ->minValue(0),
+                        Forms\Components\TextInput::make('broj_neodazvanih_kandidata_pk')
+                            ->label('Број кандидата који се није одазвао позиву на ПК проверу')
                             ->numeric()
                             ->minValue(0),
                         Forms\Components\TextInput::make('oblast_rada')
@@ -1041,7 +1041,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->relationship('velicinaOrganaRelation', 'velicina_organa', fn($query) => $query->orderBy('id', 'asc'))
                             ->preload()
                             ->searchable(),
-                    ])->columns(3)->collapsible(),
+                    ])->columns(2)->collapsible(),
 
                 Forms\Components\Section::make('Исходи конкурсних поступака, према врсти радних места (извршиоци и положаји)')
                     ->schema([
