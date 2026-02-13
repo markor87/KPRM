@@ -239,7 +239,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->searchable(),
                     ])->columns(3),
 
-                Forms\Components\Section::make('Датуми поступка')
+                Forms\Components\Section::make('Покретање поступка')
                     ->schema([
                         Forms\Components\TextInput::make('datum_dobijanja_saglasnosti_vlade')
                             ->label('Датум добијања сагласности Владе')
@@ -249,24 +249,16 @@ class PodaciORadnomMestuResource extends Resource
                             ->rules([
                                 fn () => function (string $attribute, $value, \Closure $fail) {
                                     if (!$value) return;
-
-                                    // Proveri format
                                     if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
                                         $fail('Датум мора бити у формату дд.мм.гггг');
                                         return;
                                     }
-
-                                    // Izdvoji dan, mesec, godinu
                                     [$day, $month, $year] = explode('.', $value);
-
-                                    // Proveri da li je datum validan
                                     if (!checkdate((int)$month, (int)$day, (int)$year)) {
                                         $fail('Унети датум није валидан');
                                     }
                                 },
                             ])
-                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
-                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
                             ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
                             ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null),
                         Forms\Components\TextInput::make('datum_donosenja_resenja_o_pokretanju_postupka')
@@ -277,17 +269,11 @@ class PodaciORadnomMestuResource extends Resource
                             ->rules([
                                 fn () => function (string $attribute, $value, \Closure $fail) {
                                     if (!$value) return;
-
-                                    // Proveri format
                                     if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
                                         $fail('Датум мора бити у формату дд.мм.гггг');
                                         return;
                                     }
-
-                                    // Izdvoji dan, mesec, godinu
                                     [$day, $month, $year] = explode('.', $value);
-
-                                    // Proveri da li je datum validan
                                     if (!checkdate((int)$month, (int)$day, (int)$year)) {
                                         $fail('Унети датум није валидан');
                                     }
@@ -304,17 +290,11 @@ class PodaciORadnomMestuResource extends Resource
                             ->rules([
                                 fn () => function (string $attribute, $value, \Closure $fail) {
                                     if (!$value) return;
-
-                                    // Proveri format
                                     if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
                                         $fail('Датум мора бити у формату дд.мм.гггг');
                                         return;
                                     }
-
-                                    // Izdvoji dan, mesec, godinu
                                     [$day, $month, $year] = explode('.', $value);
-
-                                    // Proveri da li je datum validan
                                     if (!checkdate((int)$month, (int)$day, (int)$year)) {
                                         $fail('Унети датум није валидан');
                                     }
@@ -331,17 +311,11 @@ class PodaciORadnomMestuResource extends Resource
                             ->rules([
                                 fn () => function (string $attribute, $value, \Closure $fail) {
                                     if (!$value) return;
-
-                                    // Proveri format
                                     if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
                                         $fail('Датум мора бити у формату дд.мм.гггг');
                                         return;
                                     }
-
-                                    // Izdvoji dan, mesec, godinu
                                     [$day, $month, $year] = explode('.', $value);
-
-                                    // Proveri da li je datum validan
                                     if (!checkdate((int)$month, (int)$day, (int)$year)) {
                                         $fail('Унети датум није валидан');
                                     }
@@ -358,17 +332,11 @@ class PodaciORadnomMestuResource extends Resource
                             ->rules([
                                 fn () => function (string $attribute, $value, \Closure $fail) {
                                     if (!$value) return;
-
-                                    // Proveri format
                                     if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
                                         $fail('Датум мора бити у формату дд.мм.гггг');
                                         return;
                                     }
-
-                                    // Izdvoji dan, mesec, godinu
                                     [$day, $month, $year] = explode('.', $value);
-
-                                    // Proveri da li je datum validan
                                     if (!checkdate((int)$month, (int)$day, (int)$year)) {
                                         $fail('Унети датум није валидан');
                                     }
@@ -385,17 +353,11 @@ class PodaciORadnomMestuResource extends Resource
                             ->rules([
                                 fn () => function (string $attribute, $value, \Closure $fail) {
                                     if (!$value) return;
-
-                                    // Proveri format
                                     if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
                                         $fail('Датум мора бити у формату дд.мм.гггг');
                                         return;
                                     }
-
-                                    // Izdvoji dan, mesec, godinu
                                     [$day, $month, $year] = explode('.', $value);
-
-                                    // Proveri da li je datum validan
                                     if (!checkdate((int)$month, (int)$day, (int)$year)) {
                                         $fail('Унети датум није валидан');
                                     }
@@ -404,6 +366,10 @@ class PodaciORadnomMestuResource extends Resource
                             ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
                             ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
                             ->afterOrEqual('datum_oglasavanja'),
+                    ])->columns(3)->collapsible(),
+
+                Forms\Components\Section::make('ОФК провера')
+                    ->schema([
                         Forms\Components\TextInput::make('datum_slanja_zahteva_za_sprovodjenje_ofk_provera')
                             ->label('Датум слања захтева за спровођење ОФК провера')
                             ->mask('99.99.9999')
@@ -412,17 +378,11 @@ class PodaciORadnomMestuResource extends Resource
                             ->rules([
                                 fn () => function (string $attribute, $value, \Closure $fail) {
                                     if (!$value) return;
-
-                                    // Proveri format
                                     if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
                                         $fail('Датум мора бити у формату дд.мм.гггг');
                                         return;
                                     }
-
-                                    // Izdvoji dan, mesec, godinu
                                     [$day, $month, $year] = explode('.', $value);
-
-                                    // Proveri da li je datum validan
                                     if (!checkdate((int)$month, (int)$day, (int)$year)) {
                                         $fail('Унети датум није валидан');
                                     }
@@ -443,17 +403,11 @@ class PodaciORadnomMestuResource extends Resource
                             ->rules([
                                 fn () => function (string $attribute, $value, \Closure $fail) {
                                     if (!$value) return;
-
-                                    // Proveri format
                                     if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
                                         $fail('Датум мора бити у формату дд.мм.гггг');
                                         return;
                                     }
-
-                                    // Izdvoji dan, mesec, godinu
                                     [$day, $month, $year] = explode('.', $value);
-
-                                    // Proveri da li je datum validan
                                     if (!checkdate((int)$month, (int)$day, (int)$year)) {
                                         $fail('Унети датум није валидан');
                                     }
@@ -470,17 +424,11 @@ class PodaciORadnomMestuResource extends Resource
                             ->rules([
                                 fn () => function (string $attribute, $value, \Closure $fail) {
                                     if (!$value) return;
-
-                                    // Proveri format
                                     if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
                                         $fail('Датум мора бити у формату дд.мм.гггг');
                                         return;
                                     }
-
-                                    // Izdvoji dan, mesec, godinu
                                     [$day, $month, $year] = explode('.', $value);
-
-                                    // Proveri da li je datum validan
                                     if (!checkdate((int)$month, (int)$day, (int)$year)) {
                                         $fail('Унети датум није валидан');
                                     }
@@ -489,6 +437,10 @@ class PodaciORadnomMestuResource extends Resource
                             ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
                             ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
                             ->helperText('Датум креирања извештаја СУКа'),
+                    ])->columns(2)->collapsible(),
+
+                Forms\Components\Section::make('ПФК провера')
+                    ->schema([
                         Forms\Components\TextInput::make('datum_slanja_zahteva_za_sprovodjenje_pfk_provera')
                             ->label('Датум слања захтева за спровођење ПФК провера')
                             ->mask('99.99.9999')
@@ -497,17 +449,11 @@ class PodaciORadnomMestuResource extends Resource
                             ->rules([
                                 fn () => function (string $attribute, $value, \Closure $fail) {
                                     if (!$value) return;
-
-                                    // Proveri format
                                     if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
                                         $fail('Датум мора бити у формату дд.мм.гггг');
                                         return;
                                     }
-
-                                    // Izdvoji dan, mesec, godinu
                                     [$day, $month, $year] = explode('.', $value);
-
-                                    // Proveri da li je datum validan
                                     if (!checkdate((int)$month, (int)$day, (int)$year)) {
                                         $fail('Унети датум није валидан');
                                     }
@@ -528,17 +474,11 @@ class PodaciORadnomMestuResource extends Resource
                             ->rules([
                                 fn () => function (string $attribute, $value, \Closure $fail) {
                                     if (!$value) return;
-
-                                    // Proveri format
                                     if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
                                         $fail('Датум мора бити у формату дд.мм.гггг');
                                         return;
                                     }
-
-                                    // Izdvoji dan, mesec, godinu
                                     [$day, $month, $year] = explode('.', $value);
-
-                                    // Proveri da li je datum validan
                                     if (!checkdate((int)$month, (int)$day, (int)$year)) {
                                         $fail('Унети датум није валидан');
                                     }
@@ -555,17 +495,11 @@ class PodaciORadnomMestuResource extends Resource
                             ->rules([
                                 fn () => function (string $attribute, $value, \Closure $fail) {
                                     if (!$value) return;
-
-                                    // Proveri format
                                     if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
                                         $fail('Датум мора бити у формату дд.мм.гггг');
                                         return;
                                     }
-
-                                    // Izdvoji dan, mesec, godinu
                                     [$day, $month, $year] = explode('.', $value);
-
-                                    // Proveri da li je datum validan
                                     if (!checkdate((int)$month, (int)$day, (int)$year)) {
                                         $fail('Унети датум није валидан');
                                     }
@@ -574,6 +508,10 @@ class PodaciORadnomMestuResource extends Resource
                             ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
                             ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
                             ->helperText('Датум креирања извештаја СУКа'),
+                    ])->columns(2)->collapsible(),
+
+                Forms\Components\Section::make('ПК провера')
+                    ->schema([
                         Forms\Components\TextInput::make('datum_slanja_zahteva_za_sprovodjenje_pk_provera')
                             ->label('Датум слања захтева за спровођење ПК провера')
                             ->mask('99.99.9999')
@@ -582,17 +520,11 @@ class PodaciORadnomMestuResource extends Resource
                             ->rules([
                                 fn () => function (string $attribute, $value, \Closure $fail) {
                                     if (!$value) return;
-
-                                    // Proveri format
                                     if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
                                         $fail('Датум мора бити у формату дд.мм.гггг');
                                         return;
                                     }
-
-                                    // Izdvoji dan, mesec, godinu
                                     [$day, $month, $year] = explode('.', $value);
-
-                                    // Proveri da li je datum validan
                                     if (!checkdate((int)$month, (int)$day, (int)$year)) {
                                         $fail('Унети датум није валидан');
                                     }
@@ -613,17 +545,11 @@ class PodaciORadnomMestuResource extends Resource
                             ->rules([
                                 fn () => function (string $attribute, $value, \Closure $fail) {
                                     if (!$value) return;
-
-                                    // Proveri format
                                     if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
                                         $fail('Датум мора бити у формату дд.мм.гггг');
                                         return;
                                     }
-
-                                    // Izdvoji dan, mesec, godinu
                                     [$day, $month, $year] = explode('.', $value);
-
-                                    // Proveri da li je datum validan
                                     if (!checkdate((int)$month, (int)$day, (int)$year)) {
                                         $fail('Унети датум није валидан');
                                     }
@@ -640,17 +566,11 @@ class PodaciORadnomMestuResource extends Resource
                             ->rules([
                                 fn () => function (string $attribute, $value, \Closure $fail) {
                                     if (!$value) return;
-
-                                    // Proveri format
                                     if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
                                         $fail('Датум мора бити у формату дд.мм.гггг');
                                         return;
                                     }
-
-                                    // Izdvoji dan, mesec, godinu
                                     [$day, $month, $year] = explode('.', $value);
-
-                                    // Proveri da li je datum validan
                                     if (!checkdate((int)$month, (int)$day, (int)$year)) {
                                         $fail('Унети датум није валидан');
                                     }
@@ -659,6 +579,10 @@ class PodaciORadnomMestuResource extends Resource
                             ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
                             ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
                             ->helperText('Датум креирања извештаја СУКа'),
+                    ])->columns(2)->collapsible(),
+
+                Forms\Components\Section::make('Завршна фаза поступка')
+                    ->schema([
                         Forms\Components\TextInput::make('datum_predaje_dokumentacije')
                             ->label('Датум предаје документације')
                             ->mask('99.99.9999')
@@ -667,17 +591,11 @@ class PodaciORadnomMestuResource extends Resource
                             ->rules([
                                 fn () => function (string $attribute, $value, \Closure $fail) {
                                     if (!$value) return;
-
-                                    // Proveri format
                                     if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
                                         $fail('Датум мора бити у формату дд.мм.гггг');
                                         return;
                                     }
-
-                                    // Izdvoji dan, mesec, godinu
                                     [$day, $month, $year] = explode('.', $value);
-
-                                    // Proveri da li je datum validan
                                     if (!checkdate((int)$month, (int)$day, (int)$year)) {
                                         $fail('Унети датум није валидан');
                                     }
@@ -694,17 +612,11 @@ class PodaciORadnomMestuResource extends Resource
                             ->rules([
                                 fn () => function (string $attribute, $value, \Closure $fail) {
                                     if (!$value) return;
-
-                                    // Proveri format
                                     if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
                                         $fail('Датум мора бити у формату дд.мм.гггг');
                                         return;
                                     }
-
-                                    // Izdvoji dan, mesec, godinu
                                     [$day, $month, $year] = explode('.', $value);
-
-                                    // Proveri da li je datum validan
                                     if (!checkdate((int)$month, (int)$day, (int)$year)) {
                                         $fail('Унети датум није валидан');
                                     }
@@ -721,17 +633,11 @@ class PodaciORadnomMestuResource extends Resource
                             ->rules([
                                 fn () => function (string $attribute, $value, \Closure $fail) {
                                     if (!$value) return;
-
-                                    // Proveri format
                                     if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
                                         $fail('Датум мора бити у формату дд.мм.гггг');
                                         return;
                                     }
-
-                                    // Izdvoji dan, mesec, godinu
                                     [$day, $month, $year] = explode('.', $value);
-
-                                    // Proveri da li je datum validan
                                     if (!checkdate((int)$month, (int)$day, (int)$year)) {
                                         $fail('Унети датум није валидан');
                                     }
@@ -748,17 +654,11 @@ class PodaciORadnomMestuResource extends Resource
                             ->rules([
                                 fn () => function (string $attribute, $value, \Closure $fail) {
                                     if (!$value) return;
-
-                                    // Proveri format
                                     if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
                                         $fail('Датум мора бити у формату дд.мм.гггг');
                                         return;
                                     }
-
-                                    // Izdvoji dan, mesec, godinu
                                     [$day, $month, $year] = explode('.', $value);
-
-                                    // Proveri da li je datum validan
                                     if (!checkdate((int)$month, (int)$day, (int)$year)) {
                                         $fail('Унети датум није валидан');
                                     }
@@ -775,17 +675,11 @@ class PodaciORadnomMestuResource extends Resource
                             ->rules([
                                 fn () => function (string $attribute, $value, \Closure $fail) {
                                     if (!$value) return;
-
-                                    // Proveri format
                                     if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
                                         $fail('Датум мора бити у формату дд.мм.гггг');
                                         return;
                                     }
-
-                                    // Izdvoji dan, mesec, godinu
                                     [$day, $month, $year] = explode('.', $value);
-
-                                    // Proveri da li je datum validan
                                     if (!checkdate((int)$month, (int)$day, (int)$year)) {
                                         $fail('Унети датум није валидан');
                                     }
