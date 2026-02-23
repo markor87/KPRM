@@ -508,9 +508,30 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број кандидата за које се заказују ПК')
                             ->numeric()
                             ->minValue(0),
-                        static::makeDateField('datum_pocetka_provere_pk', 'Датум почетка провере ПК', 'datum_slanja_zahteva_za_sprovodjenje_pk_provera', 'слања захтева за спровођење ПК провера'),
+                        static::makeDateField('datum_pocetka_provere_pk', 'Датум почетка провере ПК', 'datum_slanja_zahteva_za_sprovodjenje_pk_provera', 'слања захтева за спровођење ПК провера')
+                            ->helperText('Уколико је било више дана провере, унети први датум.'),
                         static::makeDateField('datum_pk_izvestaja', 'Датум ПК извештаја', 'datum_pocetka_provere_pk', 'почетка провере ПК')
                             ->helperText('Датум креирања извештаја СУКа'),
+                        Forms\Components\TextInput::make('broj_kandidata_ispunili_merila_pk')
+                            ->label('Број кандидата који су испунили мерила на ПК')
+                            ->numeric()->minValue(0)
+                            ->live()
+                            ->rules([
+                                fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get) {
+                                    $pfk = (int) $get('broj_kandidata_koji_su_ispunlii_merila_pfk');
+                                    if ($value && $pfk && (int)$value > $pfk) {
+                                        $fail('Број кандидата који су испунили мерила ПК не сме бити већи од броја кандидата који су испунили мерила ПФК.');
+                                    }
+                                },
+                            ]),
+                        Forms\Components\TextInput::make('broj_neodazvanih_kandidata_pk')
+                            ->label('Број кандидата који се нису одазвали на проверу ПК')
+                            ->numeric()
+                            ->minValue(0),
+                        Forms\Components\TextInput::make('broj_dana_sprovodjenja_pk_provera')
+                            ->label('Број дана спровођења ПК провера')
+                            ->numeric()
+                            ->minValue(0),
                     ])->columns(2)->collapsible(),
 
                 Forms\Components\Section::make('Завршна фаза поступка')
@@ -648,18 +669,6 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број кандидата који су испунили мерила ОФК')
                             ->numeric()->minValue(0)
                             ->live(),
-                        Forms\Components\TextInput::make('broj_kandidata_ispunili_merila_pk')
-                            ->label('Број кандидата који су испунили мерила ПК')
-                            ->numeric()->minValue(0)
-                            ->live()
-                            ->rules([
-                                fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get) {
-                                    $pfk = (int) $get('broj_kandidata_koji_su_ispunlii_merila_pfk');
-                                    if ($value && $pfk && (int)$value > $pfk) {
-                                        $fail('Број кандидата који су испунили мерила ПК не сме бити већи од броја кандидата који су испунили мерила ПФК.');
-                                    }
-                                },
-                            ]),
                         Forms\Components\TextInput::make('broj_odazvanih_kandidata_na_zavrsnom_razgovoru')
                             ->label('Број одазваних кандидата на завршном разговору')
                             ->numeric()->minValue(0)
@@ -685,10 +694,6 @@ class PodaciORadnomMestuResource extends Resource
                             ->minValue(0),
                         Forms\Components\TextInput::make('broj_neodazvanih_kandidata_zavrsni_razgovor')
                             ->label('Број кандидата који се није одазвао позиву на завршном разговору')
-                            ->numeric()
-                            ->minValue(0),
-                        Forms\Components\TextInput::make('broj_neodazvanih_kandidata_pk')
-                            ->label('Број кандидата који се није одазвао позиву на ПК проверу')
                             ->numeric()
                             ->minValue(0),
                         Forms\Components\Select::make('oblastiRada')
