@@ -473,9 +473,32 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број кандидата за које се заказују ПФК')
                             ->numeric()
                             ->minValue(0),
-                        static::makeDateField('datum_pocetka_provere_pfk', 'Датум почетка провере ПФК', 'datum_slanja_zahteva_za_sprovodjenje_pfk_provera', 'слања захтева за спровођење ПФК провера'),
+                        static::makeDateField('datum_pocetka_provere_pfk', 'Датум почетка провере ПФК', 'datum_slanja_zahteva_za_sprovodjenje_pfk_provera', 'слања захтева за спровођење ПФК провера')
+                            ->helperText('Уколико је било више дана провере, унети први датум'),
                         static::makeDateField('datum_pfk_izvestaja', 'Датум ПФК извештаја', 'datum_pocetka_provere_pfk', 'почетка провере ПФК')
-                            ->helperText('Датум креирања извештаја СУКа'),
+                            ->hintIcon('heroicon-m-information-circle')
+                            ->hintIconTooltip('Иако се ова форма извештаја тренутно не израђује, њено увођење омогућава праћење времена вредновања одговора кандидата и представља важан показатељ ефикасности изборног поступка.'),
+                        Forms\Components\TextInput::make('broj_kandidata_koji_su_ispunlii_merila_pfk')
+                            ->label('Број кандидата који су испунили мерила ПФК')
+                            ->numeric()->minValue(0)
+                            ->live()
+                            ->rules([
+                                fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get) {
+                                    $ofk = (int) $get('broj_kandidata_koji_su_ispunlii_merila_ofk');
+                                    if ($value && $ofk && (int)$value > $ofk) {
+                                        $fail('Број кандидата који су испунили мерила ПФК не сме бити већи од броја кандидата који су испунили мерила ОФК.');
+                                    }
+                                },
+                            ]),
+                        Forms\Components\TextInput::make('broj_neodazvanih_kandidata_pfk')
+                            ->label('Број кандидата који се није одазвао позиву на ПФК')
+                            ->numeric()
+                            ->minValue(0),
+                        Forms\Components\Select::make('provera_pfk')
+                            ->label('Провера ПФК')
+                            ->relationship('proveraPfkRelation', 'provera_pfk', fn($query) => $query->orderBy('id', 'asc'))
+                            ->preload()
+                            ->searchable(),
                     ])->columns(2)->collapsible(),
 
                 Forms\Components\Section::make('ПК провера')
@@ -625,23 +648,6 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број кандидата који су испунили мерила ОФК')
                             ->numeric()->minValue(0)
                             ->live(),
-                        Forms\Components\TextInput::make('broj_kandidata_koji_su_ispunlii_merila_pfk')
-                            ->label('Број кандидата који су испунили мерила ПФК')
-                            ->numeric()->minValue(0)
-                            ->live()
-                            ->rules([
-                                fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get) {
-                                    $ofk = (int) $get('broj_kandidata_koji_su_ispunlii_merila_ofk');
-                                    if ($value && $ofk && (int)$value > $ofk) {
-                                        $fail('Број кандидата који су испунили мерила ПФК не сме бити већи од броја кандидата који су испунили мерила ОФК.');
-                                    }
-                                },
-                            ]),
-                        Forms\Components\Select::make('provera_pfk')
-                            ->label('Провера ПФК')
-                            ->relationship('proveraPfkRelation', 'provera_pfk', fn($query) => $query->orderBy('id', 'asc'))
-                            ->preload()
-                            ->searchable(),
                         Forms\Components\TextInput::make('broj_kandidata_ispunili_merila_pk')
                             ->label('Број кандидата који су испунили мерила ПК')
                             ->numeric()->minValue(0)
@@ -671,10 +677,6 @@ class PodaciORadnomMestuResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('broj_neodazvanih_kandidata_ofk')
                             ->label('Број кандидата који се није одазвао позиву на ОФК')
-                            ->numeric()
-                            ->minValue(0),
-                        Forms\Components\TextInput::make('broj_neodazvanih_kandidata_pfk')
-                            ->label('Број кандидата који се није одазвао позиву на ПФК')
                             ->numeric()
                             ->minValue(0),
                         Forms\Components\TextInput::make('broj_neodazvanih_kandidata_dokumentacija')
