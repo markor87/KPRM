@@ -57,29 +57,72 @@ class PodaciORadnomMestuResource extends Resource
         };
     }
 
-    protected static function dateValidationRule(): \Closure
+    protected static function makeDateField(string $name, string $label, string $afterField = null, string $afterLabel = null): Forms\Components\TextInput
     {
-        return function (string $attribute, $value, \Closure $fail) {
-            if (!$value) return;
-            if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
-                $fail('Датум мора бити у формату дд.мм.гггг');
-                return;
-            }
-            [$day, $month, $year] = explode('.', $value);
-            if (!checkdate((int)$month, (int)$day, (int)$year)) {
-                $fail('Унети датум није валидан');
-            }
-        };
-    }
+        // Submit-time validation (prevents saving bad data)
+        $rules = [
+            fn () => function (string $attribute, $value, \Closure $fail) {
+                if (!$value) return;
+                if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
+                    $fail('Датум мора бити у формату дд.мм.гггг');
+                    return;
+                }
+                [$day, $month, $year] = explode('.', $value);
+                if (!checkdate((int)$month, (int)$day, (int)$year)) {
+                    $fail('Унети датум није валидан');
+                }
+            },
+        ];
 
-    protected static function makeDateField(string $name, string $label): Forms\Components\TextInput
-    {
+        if ($afterField && $afterLabel) {
+            $rules[] = fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get, $afterField, $afterLabel) {
+                if (!$value || !$get($afterField)) return;
+                try {
+                    $current  = \Carbon\Carbon::createFromFormat('d.m.Y', $value);
+                    $previous = \Carbon\Carbon::createFromFormat('d.m.Y', $get($afterField));
+                    if ($current->lt($previous)) {
+                        $fail("Датум мора бити после илиједнак датуму {$afterLabel}");
+                    }
+                } catch (\Exception $e) {}
+            };
+        }
+
         return Forms\Components\TextInput::make($name)
             ->label($label)
             ->mask('99.99.9999')
             ->placeholder('дд.мм.гггг')
-            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
-            ->rules([fn () => static::dateValidationRule()])
+            ->live(onBlur: true)
+            ->rules($rules)
+            ->afterStateUpdated(function ($state, $get, $component, $livewire) use ($afterField, $afterLabel) {
+                $path = $component->getStatePath();
+
+                // Always clear previous error for this field first
+                $livewire->resetValidation($path);
+
+                if (!$state) return;
+
+                // Real-time format validation
+                if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $state)) {
+                    $livewire->addError($path, 'Датум мора бити у формату дд.мм.гггг');
+                    return;
+                }
+                [$day, $month, $year] = explode('.', $state);
+                if (!checkdate((int)$month, (int)$day, (int)$year)) {
+                    $livewire->addError($path, 'Унети датум није валидан');
+                    return;
+                }
+
+                // Real-time comparison validation
+                if ($afterField && $afterLabel && $get($afterField)) {
+                    try {
+                        $current  = \Carbon\Carbon::createFromFormat('d.m.Y', $state);
+                        $previous = \Carbon\Carbon::createFromFormat('d.m.Y', $get($afterField));
+                        if ($current->lt($previous)) {
+                            $livewire->addError($path, "Датум мора бити после илиједнак датуму {$afterLabel}");
+                        }
+                    } catch (\Exception $e) {}
+                }
+            })
             ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
             ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null);
     }
@@ -283,16 +326,11 @@ class PodaciORadnomMestuResource extends Resource
                 Forms\Components\Section::make('Покретање поступка')
                     ->schema([
                         static::makeDateField('datum_dobijanja_saglasnosti_vlade', 'Датум добијања сагласности Владе'),
-                        static::makeDateField('datum_donosenja_resenja_o_pokretanju_postupka', 'Датум доношења решења о покретању поступка')
-                            ->afterOrEqual('datum_dobijanja_saglasnosti_vlade'),
-                        static::makeDateField('datum_dobijanja_obavestenja_od_suka', 'Датум добијања обавештења од СУКа')
-                            ->afterOrEqual('datum_donosenja_resenja_o_pokretanju_postupka'),
-                        static::makeDateField('datum_odrzavanja_prvog_sastanka', 'Датум одржавања првог састанка')
-                            ->afterOrEqual('datum_dobijanja_obavestenja_od_suka'),
-                        static::makeDateField('datum_oglasavanja', 'Датум оглашавања')
-                            ->afterOrEqual('datum_odrzavanja_prvog_sastanka'),
-                        static::makeDateField('datum_pregleda_prijava', 'Датум прегледа пријава')
-                            ->afterOrEqual('datum_oglasavanja'),
+                        static::makeDateField('datum_donosenja_resenja_o_pokretanju_postupka', 'Датум доношења решења о покретању поступка', 'datum_dobijanja_saglasnosti_vlade', 'добијања сагласности Владе'),
+                        static::makeDateField('datum_dobijanja_obavestenja_od_suka', 'Датум добијања обавештења од СУКа', 'datum_donosenja_resenja_o_pokretanju_postupka', 'доношења решења о покретању поступка'),
+                        static::makeDateField('datum_odrzavanja_prvog_sastanka', 'Датум одржавања првог састанка', 'datum_dobijanja_obavestenja_od_suka', 'добијања обавештења од СУКа'),
+                        static::makeDateField('datum_oglasavanja', 'Датум оглашавања', 'datum_odrzavanja_prvog_sastanka', 'одржавања првог sastanka'),
+                        static::makeDateField('datum_pregleda_prijava', 'Датум прегледа пријава', 'datum_oglasavanja', 'оглашавања'),
                     ])->columns(3)->collapsible(),
 
                 Forms\Components\Section::make('Подаци о пријавама')
@@ -417,58 +455,47 @@ class PodaciORadnomMestuResource extends Resource
 
                 Forms\Components\Section::make('ОФК провера')
                     ->schema([
-                        static::makeDateField('datum_slanja_zahteva_za_sprovodjenje_ofk_provera', 'Датум слања захтева за спровођење ОФК провера')
-                            ->afterOrEqual('datum_pregleda_prijava'),
+                        static::makeDateField('datum_slanja_zahteva_za_sprovodjenje_ofk_provera', 'Датум слања захтева за спровођење ОФК провера', 'datum_pregleda_prijava', 'прегледа пријава'),
                         Forms\Components\TextInput::make('broj_kandidata_za_koje_se_zakazuju_ofk')
                             ->label('Број кандидата за које се заказују ОФК')
                             ->numeric()
                             ->minValue(0),
-                        static::makeDateField('datum_pocetka_provere_ofk', 'Датум почетка провере ОФК')
-                            ->afterOrEqual('datum_slanja_zahteva_za_sprovodjenje_ofk_provera'),
+                        static::makeDateField('datum_pocetka_provere_ofk', 'Датум почетка провере ОФК', 'datum_slanja_zahteva_za_sprovodjenje_ofk_provera', 'слања захтева за спровођење ОФК провера'),
                         static::makeDateField('datum_ofk_izvestaja', 'Датум ОФК извештаја')
                             ->helperText('Датум креирања извештаја СУКа'),
                     ])->columns(2)->collapsible(),
 
                 Forms\Components\Section::make('ПФК провера')
                     ->schema([
-                        static::makeDateField('datum_slanja_zahteva_za_sprovodjenje_pfk_provera', 'Датум слања захтева за спровођење ПФК провера')
-                            ->afterOrEqual('datum_ofk_izvestaja'),
+                        static::makeDateField('datum_slanja_zahteva_za_sprovodjenje_pfk_provera', 'Датум слања захтева за спровођење ПФК провера', 'datum_ofk_izvestaja', 'ОФК извештаја'),
                         Forms\Components\TextInput::make('broj_kandidata_za_koje_se_zakazuju_pfk')
                             ->label('Број кандидата за које се заказују ПФК')
                             ->numeric()
                             ->minValue(0),
-                        static::makeDateField('datum_pocetka_provere_pfk', 'Датум почетка провере ПФК')
-                            ->afterOrEqual('datum_slanja_zahteva_za_sprovodjenje_pfk_provera'),
+                        static::makeDateField('datum_pocetka_provere_pfk', 'Датум почетка провере ПФК', 'datum_slanja_zahteva_za_sprovodjenje_pfk_provera', 'слања захтева за спровођење ПФК провера'),
                         static::makeDateField('datum_pfk_izvestaja', 'Датум ПФК извештаја')
                             ->helperText('Датум креирања извештаја СУКа'),
                     ])->columns(2)->collapsible(),
 
                 Forms\Components\Section::make('ПК провера')
                     ->schema([
-                        static::makeDateField('datum_slanja_zahteva_za_sprovodjenje_pk_provera', 'Датум слања захтева за спровођење ПК провера')
-                            ->afterOrEqual('datum_pfk_izvestaja'),
+                        static::makeDateField('datum_slanja_zahteva_za_sprovodjenje_pk_provera', 'Датум слања захтева за спровођење ПК провера', 'datum_pfk_izvestaja', 'ПФК извештаја'),
                         Forms\Components\TextInput::make('broj_kandidata_za_koje_se_zakazuju_pk')
                             ->label('Број кандидата за које се заказују ПК')
                             ->numeric()
                             ->minValue(0),
-                        static::makeDateField('datum_pocetka_provere_pk', 'Датум почетка провере ПК')
-                            ->afterOrEqual('datum_slanja_zahteva_za_sprovodjenje_pk_provera'),
+                        static::makeDateField('datum_pocetka_provere_pk', 'Датум почетка провере ПК', 'datum_slanja_zahteva_za_sprovodjenje_pk_provera', 'слања захтева за спровођење ПК провера'),
                         static::makeDateField('datum_pk_izvestaja', 'Датум ПК извештаја')
                             ->helperText('Датум креирања извештаја СУКа'),
                     ])->columns(2)->collapsible(),
 
                 Forms\Components\Section::make('Завршна фаза поступка')
                     ->schema([
-                        static::makeDateField('datum_predaje_dokumentacije', 'Датум предаје документације')
-                            ->afterOrEqual('datum_pocetka_provere_pk'),
-                        static::makeDateField('datum_pocetka_sprovodjenja_intervjua', 'Датум почетка спровођења интервјуа')
-                            ->afterOrEqual('datum_predaje_dokumentacije'),
-                        static::makeDateField('datum_dostavljanja_liste_rukovodiocu_organa', 'Датум достављања листе руководиоцу органа')
-                            ->afterOrEqual('datum_pocetka_sprovodjenja_intervjua'),
-                        static::makeDateField('datum_donosenja_resenja_o_izabranom_kandidatu', 'Датум доношења решења о изабраном кандидату')
-                            ->afterOrEqual('datum_dostavljanja_liste_rukovodiocu_organa'),
-                        static::makeDateField('datum_stupanja_na_rad', 'Датум ступања на рад')
-                            ->afterOrEqual('datum_donosenja_resenja_o_izabranom_kandidatu')
+                        static::makeDateField('datum_predaje_dokumentacije', 'Датум предаје документације', 'datum_pocetka_provere_pk', 'почетка провере ПК'),
+                        static::makeDateField('datum_pocetka_sprovodjenja_intervjua', 'Датум почетка спровођења интервјуа', 'datum_predaje_dokumentacije', 'предаје документације'),
+                        static::makeDateField('datum_dostavljanja_liste_rukovodiocu_organa', 'Датум достављања листе руководиоцу органа', 'datum_pocetka_sprovodjenja_intervjua', 'почетка спровођења интервјуа'),
+                        static::makeDateField('datum_donosenja_resenja_o_izabranom_kandidatu', 'Датум доношења решења о изабраном кандидату', 'datum_dostavljanja_liste_rukovodiocu_organa', 'достављања листе руководиоцу органа'),
+                        static::makeDateField('datum_stupanja_na_rad', 'Датум ступања на рад', 'datum_donosenja_resenja_o_izabranom_kandidatu', 'доношења решења о изабраном кандидату')
                             ->helperText('Датум ступања на рад првог извршиоца'),
                     ])->columns(3)->collapsible(),
 
