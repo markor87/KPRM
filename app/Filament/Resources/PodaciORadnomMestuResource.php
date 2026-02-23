@@ -410,7 +410,7 @@ class PodaciORadnomMestuResource extends Resource
                                 'lte' => 'Број валидних пријава не може бити већи од укупног броја пријава.',
                             ]),
                         Forms\Components\TextInput::make('broj_validnih_prijava_iz_organa')
-                            ->label('Број валидних пријава из органа')
+                            ->label('Број валидних пријава из органа који расписује конкурс')
                             ->numeric()->minValue(0)
                             ->lte('broj_validnih_prijava')
                             ->validationMessages([
@@ -424,7 +424,7 @@ class PodaciORadnomMestuResource extends Resource
                                 ),
                             ]),
                         Forms\Components\TextInput::make('broj_validnih_prijava_iz_drugog_organa')
-                            ->label('Број валидних пријава из другог органа')
+                            ->label('Број валидних пријава из других органа државне управе')
                             ->numeric()->minValue(0)
                             ->lte('broj_validnih_prijava')
                             ->validationMessages([
@@ -438,7 +438,7 @@ class PodaciORadnomMestuResource extends Resource
                                 ),
                             ]),
                         Forms\Components\TextInput::make('broj_validnih_prijava_van_drzavnih_organa')
-                            ->label('Број валидних пријава ван државних органа')
+                            ->label('Број валидних пријава ван органа државне управе и/или незапослена лица')
                             ->numeric()->minValue(0)
                             ->lte('broj_validnih_prijava')
                             ->validationMessages([
