@@ -460,7 +460,8 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број кандидата за које се заказују ОФК')
                             ->numeric()
                             ->minValue(0),
-                        static::makeDateField('datum_pocetka_provere_ofk', 'Датум почетка провере ОФК', 'datum_slanja_zahteva_za_sprovodjenje_ofk_provera', 'слања захтева за спровођење ОФК провера'),
+                        static::makeDateField('datum_pocetka_provere_ofk', 'Датум спровођења провере ОФК', 'datum_slanja_zahteva_za_sprovodjenje_ofk_provera', 'слања захтева за спровођење ОФК провера')
+                            ->helperText('Уколико је било више дана провере, унети први датум'),
                         static::makeDateField('datum_ofk_izvestaja', 'Датум ОФК извештаја')
                             ->helperText('Датум креирања извештаја СУКа'),
                     ])->columns(2)->collapsible(),
