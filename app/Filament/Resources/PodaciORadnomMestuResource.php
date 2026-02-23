@@ -671,7 +671,8 @@ class PodaciORadnomMestuResource extends Resource
                             ]),
                         Forms\Components\TextInput::make('ocena_sa_vrednovanja')
                             ->label('Оцена са вредновања')
-                            ->numeric()->minValue(0),
+                            ->numeric()->minValue(0)
+                            ->helperText('Уколико је кандидат радио дуже од 6 месеци након ступања на рад.'),
                         Forms\Components\TextInput::make('broj_zalbi_na_resenje_o_odbacaju_prijave')
                             ->label('Број жалби на решење о одбацивању пријаве')
                             ->numeric()->minValue(0),
@@ -683,7 +684,9 @@ class PodaciORadnomMestuResource extends Resource
                             ->numeric()->minValue(0),
                         Forms\Components\TextInput::make('broj_izvrsilaca_ponovno_oglasavanje')
                             ->label('Број извршилаца - поновно оглашавање')
-                            ->numeric()->minValue(0),
+                            ->numeric()->minValue(0)
+                            ->hintIcon('heroicon-m-information-circle')
+                            ->hintIconTooltip('Односи се на број извршилаца за радна места која су у току исте календарске године поново оглашена, услед чињенице да претходним огласом није попуњен планирани број извршилаца.'),
                     ])->columns(2)->collapsible(),
 
                 Forms\Components\Section::make('Кандидати који су испунили мерила')
