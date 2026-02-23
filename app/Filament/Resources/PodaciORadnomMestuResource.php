@@ -264,19 +264,20 @@ class PodaciORadnomMestuResource extends Resource
                             ->relationship('statusKonkursaNaDan1Relation', 'status_konkursa', fn($query) => $query->orderBy('id', 'asc'))
                             ->preload()
                             ->searchable()
+                            ->hidden(fn () => auth()->user()->hasRole('User')),
+                        Forms\Components\Select::make('status_konkursa_na_dan_2')
+                            ->label('Статус конкурса на дан 31/12/' . now()->year)
+                            ->relationship('statusKonkursaNaDan2Relation', 'status_konkursa', fn($query) => $query->orderBy('id', 'asc'))
+                            ->preload()
+                            ->searchable()
                             ->live(),
                         Forms\Components\Select::make('razlog_neuspelog_konkursa')
                             ->label('Разлог неуспелог конкурса')
                             ->relationship('razlogNeuspelogKonkursaRelation', 'razlog', fn($query) => $query->orderBy('id', 'asc'))
                             ->preload()
                             ->searchable()
-                            ->disabled(fn (Forms\Get $get) => $get('status_konkursa_na_dan_1') != 2)
+                            ->disabled(fn (Forms\Get $get) => $get('status_konkursa_na_dan_2') != 2)
                             ->dehydrated(),
-                        Forms\Components\Select::make('status_konkursa_na_dan_2')
-                            ->label('Статус конкурса на дан 31/12/' . now()->year)
-                            ->relationship('statusKonkursaNaDan2Relation', 'status_konkursa', fn($query) => $query->orderBy('id', 'asc'))
-                            ->preload()
-                            ->searchable(),
                     ])->columns(3),
 
                 Forms\Components\Section::make('Покретање поступка')
@@ -660,13 +661,12 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број кандидата који се није одазвао позиву на ПК проверу')
                             ->numeric()
                             ->minValue(0),
-                        Forms\Components\TextInput::make('oblast_rada')
-                            ->label('Област рада')
-                            ->maxLength(255)
-                            ->regex('/^[А-Ша-шЂЈЉЊЋЏђјљњћџ0-9\s.,\-()\/]+$/u')
-                            ->validationMessages([
-                                'regex' => 'Област рада може садржати само ћирилична слова.',
-                            ]),
+                        Forms\Components\Select::make('oblastiRada')
+                            ->label('Претежна област рада')
+                            ->relationship('oblastiRada', 'oblast_rada', fn($query) => $query->orderBy('id', 'asc'))
+                            ->multiple()
+                            ->preload()
+                            ->searchable(),
                         Forms\Components\Select::make('velicina_organa')
                             ->label('Величина органа')
                             ->relationship('velicinaOrganaRelation', 'velicina_organa', fn($query) => $query->orderBy('id', 'asc'))

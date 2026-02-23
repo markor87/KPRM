@@ -87,7 +87,7 @@ class PodaciORadnomMestu extends Model
         'broj_neodazvanih_kandidata_pk',
         'broj_neodazvanih_kandidata_dokumentacija',
         'broj_neodazvanih_kandidata_zavrsni_razgovor',
-        'oblast_rada',
+        // 'oblast_rada', // Uklonjeno - sada je many-to-many relacija
         'velicina_organa',
         'broj_uspelih_postupaka',
         'broj_neuspelih_postupaka',
@@ -182,6 +182,19 @@ class PodaciORadnomMestu extends Model
     public function proveraPfkRelation()
     {
         return $this->belongsTo(SifarnikProveraPfk::class, 'provera_pfk');
+    }
+
+    /**
+     * Relacija sa sifarnik_oblast_rada tabelom (many-to-many)
+     */
+    public function oblastiRada()
+    {
+        return $this->belongsToMany(
+            SifarnikOblastRada::class,
+            'oblast_rada_podaci_o_radnom_mestu',
+            'podaci_o_radnom_mestu_id',
+            'sifarnik_oblast_rada_id'
+        );
     }
 
     /**
