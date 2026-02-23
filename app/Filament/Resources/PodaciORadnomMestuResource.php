@@ -333,13 +333,13 @@ class PodaciORadnomMestuResource extends Resource
                         static::makeDateField('datum_pregleda_prijava', 'Датум прегледа пријава', 'datum_oglasavanja', 'оглашавања'),
                     ])->columns(3)->collapsible(),
 
-                Forms\Components\Section::make('Подаци о пријавама')
+                Forms\Components\Section::make('Пристигле пријаве')
                     ->schema([
                         Forms\Components\TextInput::make('ukupan_broj_prijava')
                             ->label('Укупан број пријава')
                             ->numeric()->minValue(0),
                         Forms\Components\TextInput::make('broj_prijava_iz_organa')
-                            ->label('Број пријава из органа')
+                            ->label('Број пријава из органа који расписује конкурс')
                             ->numeric()->minValue(0)
                             ->lte('ukupan_broj_prijava')
                             ->validationMessages([
@@ -353,7 +353,7 @@ class PodaciORadnomMestuResource extends Resource
                                 ),
                             ]),
                         Forms\Components\TextInput::make('broj_prijava_iz_drugih_organa')
-                            ->label('Број пријава из других органа')
+                            ->label('Број пријава из других органа државне управе')
                             ->numeric()->minValue(0)
                             ->lte('ukupan_broj_prijava')
                             ->validationMessages([
@@ -367,7 +367,7 @@ class PodaciORadnomMestuResource extends Resource
                                 ),
                             ]),
                         Forms\Components\TextInput::make('broj_prijava_van_drzavnih_organa')
-                            ->label('Број пријава ван државних органа')
+                            ->label('Број пријава ван државних органа и/или незапослена лица')
                             ->numeric()->minValue(0)
                             ->lte('ukupan_broj_prijava')
                             ->validationMessages([
