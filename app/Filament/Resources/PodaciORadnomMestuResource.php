@@ -536,9 +536,32 @@ class PodaciORadnomMestuResource extends Resource
 
                 Forms\Components\Section::make('Завршна фаза поступка')
                     ->schema([
-                        static::makeDateField('datum_predaje_dokumentacije', 'Датум предаје документације', 'datum_pocetka_provere_pk', 'почетка провере ПК'),
-                        static::makeDateField('datum_pocetka_sprovodjenja_intervjua', 'Датум почетка спровођења интервјуа', 'datum_predaje_dokumentacije', 'предаје документације'),
-                        static::makeDateField('datum_dostavljanja_liste_rukovodiocu_organa', 'Датум достављања листе руководиоцу органа', 'datum_pocetka_sprovodjenja_intervjua', 'почетка спровођења интервјуа'),
+                        static::makeDateField('datum_predaje_dokumentacije', 'Датум предаје документације', 'datum_pocetka_provere_pk', 'почетка провере ПК')
+                            ->helperText('Докази које прилажу кандидати који су успешно прошли фазе изборног поступка.'),
+                        Forms\Components\TextInput::make('broj_neodazvanih_kandidata_dokumentacija')
+                            ->label('Број кандидата који се није одазвао позиву на доставу документације')
+                            ->numeric()
+                            ->minValue(0),
+                        static::makeDateField('datum_pocetka_sprovodjenja_intervjua', 'Датум спровођења завршног интервјуа', 'datum_predaje_dokumentacije', 'предаје документације'),
+                        static::makeDateField('datum_izvestaja_sa_zavrsnog_intervjua', 'Датум извештаја са завршног интервјуа', 'datum_pocetka_sprovodjenja_intervjua', 'спровођења завршног интервјуа')
+                            ->hintIcon('heroicon-m-information-circle')
+                            ->hintIconTooltip('Иако се ова форма извештаја тренутно не израђује, њено увођење омогућава праћење времена вредновања одговора кандидата и представља важан показатељ ефикасности изборног поступка.'),
+                        Forms\Components\TextInput::make('broj_odazvanih_kandidata_na_zavrsnom_razgovoru')
+                            ->label('Број одазваних кандидата на завршном разговору')
+                            ->numeric()->minValue(0)
+                            ->rules([
+                                fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get) {
+                                    $pk = (int) $get('broj_kandidata_ispunili_merila_pk');
+                                    if ($value && $pk && (int)$value > $pk) {
+                                        $fail('Број одазваних кандидата на завршном разговору не сме бити већи од броја кандидата који су испунили мерила ПК.');
+                                    }
+                                },
+                            ]),
+                        Forms\Components\TextInput::make('broj_neodazvanih_kandidata_zavrsni_razgovor')
+                            ->label('Број кандидата који се није одазвао позиву на завршном разговору')
+                            ->numeric()
+                            ->minValue(0),
+                        static::makeDateField('datum_dostavljanja_liste_rukovodiocu_organa', 'Датум достављања листе руководиоцу органа', 'datum_pocetka_sprovodjenja_intervjua', 'спровођења завршног интервјуа'),
                         static::makeDateField('datum_donosenja_resenja_o_izabranom_kandidatu', 'Датум доношења решења о изабраном кандидату', 'datum_dostavljanja_liste_rukovodiocu_organa', 'достављања листе руководиоцу органа'),
                         static::makeDateField('datum_stupanja_na_rad', 'Датум ступања на рад', 'datum_donosenja_resenja_o_izabranom_kandidatu', 'доношења решења о изабраном кандидату')
                             ->helperText('Датум ступања на рад првог извршиоца'),
@@ -669,31 +692,12 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број кандидата који су испунили мерила ОФК')
                             ->numeric()->minValue(0)
                             ->live(),
-                        Forms\Components\TextInput::make('broj_odazvanih_kandidata_na_zavrsnom_razgovoru')
-                            ->label('Број одазваних кандидата на завршном разговору')
-                            ->numeric()->minValue(0)
-                            ->rules([
-                                fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get) {
-                                    $pk = (int) $get('broj_kandidata_ispunili_merila_pk');
-                                    if ($value && $pk && (int)$value > $pk) {
-                                        $fail('Број одазваних кандидата на завршном разговору не сме бити већи од броја кандидата који су испунили мерила ПК.');
-                                    }
-                                },
-                            ]),
                     ])->columns(3)->collapsible(),
 
                 Forms\Components\Section::make('Додатни подаци о поступку')
                     ->schema([
                         Forms\Components\TextInput::make('broj_neodazvanih_kandidata_ofk')
                             ->label('Број кандидата који се није одазвао позиву на ОФК')
-                            ->numeric()
-                            ->minValue(0),
-                        Forms\Components\TextInput::make('broj_neodazvanih_kandidata_dokumentacija')
-                            ->label('Број кандидата који се није одазвао позиву на доставу документације')
-                            ->numeric()
-                            ->minValue(0),
-                        Forms\Components\TextInput::make('broj_neodazvanih_kandidata_zavrsni_razgovor')
-                            ->label('Број кандидата који се није одазвао позиву на завршном разговору')
                             ->numeric()
                             ->minValue(0),
                         Forms\Components\Select::make('oblastiRada')
