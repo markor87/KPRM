@@ -57,6 +57,46 @@ class PodaciORadnomMestuResource extends Resource
         };
     }
 
+    protected static function dateValidationRule(): \Closure
+    {
+        return function (string $attribute, $value, \Closure $fail) {
+            if (!$value) return;
+            if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
+                $fail('Датум мора бити у формату дд.мм.гггг');
+                return;
+            }
+            [$day, $month, $year] = explode('.', $value);
+            if (!checkdate((int)$month, (int)$day, (int)$year)) {
+                $fail('Унети датум није валидан');
+            }
+        };
+    }
+
+    protected static function makeDateField(string $name, string $label): Forms\Components\TextInput
+    {
+        return Forms\Components\TextInput::make($name)
+            ->label($label)
+            ->mask('99.99.9999')
+            ->placeholder('дд.мм.гггг')
+            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
+            ->rules([fn () => static::dateValidationRule()])
+            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
+            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null);
+    }
+
+    protected static function dateDiffInDays($record, string $startField, string $endField): string
+    {
+        if ($record->$startField && $record->$endField) {
+            return Carbon::parse($record->$startField)->diffInDays(Carbon::parse($record->$endField)) . ' дана';
+        }
+        return 'Н/Д';
+    }
+
+    private static function ofkScoreOptions(): array { return [7 => '7', 8 => '8', 9 => '9']; }
+    private static function pfkScoreOptions(): array { return array_merge([0=>'0',3=>'3',5=>'5',8=>'8'], array_combine(range(10,20),range(10,20))); }
+    private static function pkScoreOptions(): array { return array_combine(range(10,30),range(10,30)); }
+    private static function zavrsniScoreOptions(): array { return [2 => '2', 4 => '4', 6 => '6']; }
+
     /**
      * Apply organ-based filtering globally to all queries
      */
@@ -241,452 +281,72 @@ class PodaciORadnomMestuResource extends Resource
 
                 Forms\Components\Section::make('Покретање поступка')
                     ->schema([
-                        Forms\Components\TextInput::make('datum_dobijanja_saglasnosti_vlade')
-                            ->label('Датум добијања сагласности Владе')
-                            ->mask('99.99.9999')
-                            ->placeholder('дд.мм.гггг')
-                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
-                            ->rules([
-                                fn () => function (string $attribute, $value, \Closure $fail) {
-                                    if (!$value) return;
-                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
-                                        $fail('Датум мора бити у формату дд.мм.гггг');
-                                        return;
-                                    }
-                                    [$day, $month, $year] = explode('.', $value);
-                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
-                                        $fail('Унети датум није валидан');
-                                    }
-                                },
-                            ])
-                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
-                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null),
-                        Forms\Components\TextInput::make('datum_donosenja_resenja_o_pokretanju_postupka')
-                            ->label('Датум доношења решења о покретању поступка')
-                            ->mask('99.99.9999')
-                            ->placeholder('дд.мм.гггг')
-                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
-                            ->rules([
-                                fn () => function (string $attribute, $value, \Closure $fail) {
-                                    if (!$value) return;
-                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
-                                        $fail('Датум мора бити у формату дд.мм.гггг');
-                                        return;
-                                    }
-                                    [$day, $month, $year] = explode('.', $value);
-                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
-                                        $fail('Унети датум није валидан');
-                                    }
-                                },
-                            ])
-                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
-                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                        static::makeDateField('datum_dobijanja_saglasnosti_vlade', 'Датум добијања сагласности Владе'),
+                        static::makeDateField('datum_donosenja_resenja_o_pokretanju_postupka', 'Датум доношења решења о покретању поступка')
                             ->afterOrEqual('datum_dobijanja_saglasnosti_vlade'),
-                        Forms\Components\TextInput::make('datum_dobijanja_obavestenja_od_suka')
-                            ->label('Датум добијања обавештења од СУКа')
-                            ->mask('99.99.9999')
-                            ->placeholder('дд.мм.гггг')
-                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
-                            ->rules([
-                                fn () => function (string $attribute, $value, \Closure $fail) {
-                                    if (!$value) return;
-                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
-                                        $fail('Датум мора бити у формату дд.мм.гггг');
-                                        return;
-                                    }
-                                    [$day, $month, $year] = explode('.', $value);
-                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
-                                        $fail('Унети датум није валидан');
-                                    }
-                                },
-                            ])
-                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
-                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                        static::makeDateField('datum_dobijanja_obavestenja_od_suka', 'Датум добијања обавештења од СУКа')
                             ->afterOrEqual('datum_donosenja_resenja_o_pokretanju_postupka'),
-                        Forms\Components\TextInput::make('datum_odrzavanja_prvog_sastanka')
-                            ->label('Датум одржавања првог састанка')
-                            ->mask('99.99.9999')
-                            ->placeholder('дд.мм.гггг')
-                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
-                            ->rules([
-                                fn () => function (string $attribute, $value, \Closure $fail) {
-                                    if (!$value) return;
-                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
-                                        $fail('Датум мора бити у формату дд.мм.гггг');
-                                        return;
-                                    }
-                                    [$day, $month, $year] = explode('.', $value);
-                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
-                                        $fail('Унети датум није валидан');
-                                    }
-                                },
-                            ])
-                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
-                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                        static::makeDateField('datum_odrzavanja_prvog_sastanka', 'Датум одржавања првог састанка')
                             ->afterOrEqual('datum_dobijanja_obavestenja_od_suka'),
-                        Forms\Components\TextInput::make('datum_oglasavanja')
-                            ->label('Датум оглашавања')
-                            ->mask('99.99.9999')
-                            ->placeholder('дд.мм.гггг')
-                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
-                            ->rules([
-                                fn () => function (string $attribute, $value, \Closure $fail) {
-                                    if (!$value) return;
-                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
-                                        $fail('Датум мора бити у формату дд.мм.гггг');
-                                        return;
-                                    }
-                                    [$day, $month, $year] = explode('.', $value);
-                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
-                                        $fail('Унети датум није валидан');
-                                    }
-                                },
-                            ])
-                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
-                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                        static::makeDateField('datum_oglasavanja', 'Датум оглашавања')
                             ->afterOrEqual('datum_odrzavanja_prvog_sastanka'),
-                        Forms\Components\TextInput::make('datum_pregleda_prijava')
-                            ->label('Датум прегледа пријава')
-                            ->mask('99.99.9999')
-                            ->placeholder('дд.мм.гггг')
-                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
-                            ->rules([
-                                fn () => function (string $attribute, $value, \Closure $fail) {
-                                    if (!$value) return;
-                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
-                                        $fail('Датум мора бити у формату дд.мм.гггг');
-                                        return;
-                                    }
-                                    [$day, $month, $year] = explode('.', $value);
-                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
-                                        $fail('Унети датум није валидан');
-                                    }
-                                },
-                            ])
-                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
-                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                        static::makeDateField('datum_pregleda_prijava', 'Датум прегледа пријава')
                             ->afterOrEqual('datum_oglasavanja'),
                     ])->columns(3)->collapsible(),
 
                 Forms\Components\Section::make('ОФК провера')
                     ->schema([
-                        Forms\Components\TextInput::make('datum_slanja_zahteva_za_sprovodjenje_ofk_provera')
-                            ->label('Датум слања захтева за спровођење ОФК провера')
-                            ->mask('99.99.9999')
-                            ->placeholder('дд.мм.гггг')
-                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
-                            ->rules([
-                                fn () => function (string $attribute, $value, \Closure $fail) {
-                                    if (!$value) return;
-                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
-                                        $fail('Датум мора бити у формату дд.мм.гггг');
-                                        return;
-                                    }
-                                    [$day, $month, $year] = explode('.', $value);
-                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
-                                        $fail('Унети датум није валидан');
-                                    }
-                                },
-                            ])
-                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
-                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                        static::makeDateField('datum_slanja_zahteva_za_sprovodjenje_ofk_provera', 'Датум слања захтева за спровођење ОФК провера')
                             ->afterOrEqual('datum_pregleda_prijava'),
                         Forms\Components\TextInput::make('broj_kandidata_za_koje_se_zakazuju_ofk')
                             ->label('Број кандидата за које се заказују ОФК')
                             ->numeric()
                             ->minValue(0),
-                        Forms\Components\TextInput::make('datum_pocetka_provere_ofk')
-                            ->label('Датум почетка провере ОФК')
-                            ->mask('99.99.9999')
-                            ->placeholder('дд.мм.гггг')
-                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
-                            ->rules([
-                                fn () => function (string $attribute, $value, \Closure $fail) {
-                                    if (!$value) return;
-                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
-                                        $fail('Датум мора бити у формату дд.мм.гггг');
-                                        return;
-                                    }
-                                    [$day, $month, $year] = explode('.', $value);
-                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
-                                        $fail('Унети датум није валидан');
-                                    }
-                                },
-                            ])
-                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
-                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                        static::makeDateField('datum_pocetka_provere_ofk', 'Датум почетка провере ОФК')
                             ->afterOrEqual('datum_slanja_zahteva_za_sprovodjenje_ofk_provera'),
-                        Forms\Components\TextInput::make('datum_ofk_izvestaja')
-                            ->label('Датум ОФК извештаја')
-                            ->mask('99.99.9999')
-                            ->placeholder('дд.мм.гггг')
-                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
-                            ->rules([
-                                fn () => function (string $attribute, $value, \Closure $fail) {
-                                    if (!$value) return;
-                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
-                                        $fail('Датум мора бити у формату дд.мм.гггг');
-                                        return;
-                                    }
-                                    [$day, $month, $year] = explode('.', $value);
-                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
-                                        $fail('Унети датум није валидан');
-                                    }
-                                },
-                            ])
-                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
-                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                        static::makeDateField('datum_ofk_izvestaja', 'Датум ОФК извештаја')
                             ->helperText('Датум креирања извештаја СУКа'),
                     ])->columns(2)->collapsible(),
 
                 Forms\Components\Section::make('ПФК провера')
                     ->schema([
-                        Forms\Components\TextInput::make('datum_slanja_zahteva_za_sprovodjenje_pfk_provera')
-                            ->label('Датум слања захтева за спровођење ПФК провера')
-                            ->mask('99.99.9999')
-                            ->placeholder('дд.мм.гггг')
-                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
-                            ->rules([
-                                fn () => function (string $attribute, $value, \Closure $fail) {
-                                    if (!$value) return;
-                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
-                                        $fail('Датум мора бити у формату дд.мм.гггг');
-                                        return;
-                                    }
-                                    [$day, $month, $year] = explode('.', $value);
-                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
-                                        $fail('Унети датум није валидан');
-                                    }
-                                },
-                            ])
-                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
-                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                        static::makeDateField('datum_slanja_zahteva_za_sprovodjenje_pfk_provera', 'Датум слања захтева за спровођење ПФК провера')
                             ->afterOrEqual('datum_ofk_izvestaja'),
                         Forms\Components\TextInput::make('broj_kandidata_za_koje_se_zakazuju_pfk')
                             ->label('Број кандидата за које се заказују ПФК')
                             ->numeric()
                             ->minValue(0),
-                        Forms\Components\TextInput::make('datum_pocetka_provere_pfk')
-                            ->label('Датум почетка провере ПФК')
-                            ->mask('99.99.9999')
-                            ->placeholder('дд.мм.гггг')
-                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
-                            ->rules([
-                                fn () => function (string $attribute, $value, \Closure $fail) {
-                                    if (!$value) return;
-                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
-                                        $fail('Датум мора бити у формату дд.мм.гггг');
-                                        return;
-                                    }
-                                    [$day, $month, $year] = explode('.', $value);
-                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
-                                        $fail('Унети датум није валидан');
-                                    }
-                                },
-                            ])
-                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
-                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                        static::makeDateField('datum_pocetka_provere_pfk', 'Датум почетка провере ПФК')
                             ->afterOrEqual('datum_slanja_zahteva_za_sprovodjenje_pfk_provera'),
-                        Forms\Components\TextInput::make('datum_pfk_izvestaja')
-                            ->label('Датум ПФК извештаја')
-                            ->mask('99.99.9999')
-                            ->placeholder('дд.мм.гггг')
-                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
-                            ->rules([
-                                fn () => function (string $attribute, $value, \Closure $fail) {
-                                    if (!$value) return;
-                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
-                                        $fail('Датум мора бити у формату дд.мм.гггг');
-                                        return;
-                                    }
-                                    [$day, $month, $year] = explode('.', $value);
-                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
-                                        $fail('Унети датум није валидан');
-                                    }
-                                },
-                            ])
-                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
-                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                        static::makeDateField('datum_pfk_izvestaja', 'Датум ПФК извештаја')
                             ->helperText('Датум креирања извештаја СУКа'),
                     ])->columns(2)->collapsible(),
 
                 Forms\Components\Section::make('ПК провера')
                     ->schema([
-                        Forms\Components\TextInput::make('datum_slanja_zahteva_za_sprovodjenje_pk_provera')
-                            ->label('Датум слања захтева за спровођење ПК провера')
-                            ->mask('99.99.9999')
-                            ->placeholder('дд.мм.гггг')
-                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
-                            ->rules([
-                                fn () => function (string $attribute, $value, \Closure $fail) {
-                                    if (!$value) return;
-                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
-                                        $fail('Датум мора бити у формату дд.мм.гггг');
-                                        return;
-                                    }
-                                    [$day, $month, $year] = explode('.', $value);
-                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
-                                        $fail('Унети датум није валидан');
-                                    }
-                                },
-                            ])
-                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
-                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                        static::makeDateField('datum_slanja_zahteva_za_sprovodjenje_pk_provera', 'Датум слања захтева за спровођење ПК провера')
                             ->afterOrEqual('datum_pfk_izvestaja'),
                         Forms\Components\TextInput::make('broj_kandidata_za_koje_se_zakazuju_pk')
                             ->label('Број кандидата за које се заказују ПК')
                             ->numeric()
                             ->minValue(0),
-                        Forms\Components\TextInput::make('datum_pocetka_provere_pk')
-                            ->label('Датум почетка провере ПК')
-                            ->mask('99.99.9999')
-                            ->placeholder('дд.мм.гггг')
-                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
-                            ->rules([
-                                fn () => function (string $attribute, $value, \Closure $fail) {
-                                    if (!$value) return;
-                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
-                                        $fail('Датум мора бити у формату дд.мм.гггг');
-                                        return;
-                                    }
-                                    [$day, $month, $year] = explode('.', $value);
-                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
-                                        $fail('Унети датум није валидан');
-                                    }
-                                },
-                            ])
-                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
-                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                        static::makeDateField('datum_pocetka_provere_pk', 'Датум почетка провере ПК')
                             ->afterOrEqual('datum_slanja_zahteva_za_sprovodjenje_pk_provera'),
-                        Forms\Components\TextInput::make('datum_pk_izvestaja')
-                            ->label('Датум ПК извештаја')
-                            ->mask('99.99.9999')
-                            ->placeholder('дд.мм.гггг')
-                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
-                            ->rules([
-                                fn () => function (string $attribute, $value, \Closure $fail) {
-                                    if (!$value) return;
-                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
-                                        $fail('Датум мора бити у формату дд.мм.гггг');
-                                        return;
-                                    }
-                                    [$day, $month, $year] = explode('.', $value);
-                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
-                                        $fail('Унети датум није валидан');
-                                    }
-                                },
-                            ])
-                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
-                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                        static::makeDateField('datum_pk_izvestaja', 'Датум ПК извештаја')
                             ->helperText('Датум креирања извештаја СУКа'),
                     ])->columns(2)->collapsible(),
 
                 Forms\Components\Section::make('Завршна фаза поступка')
                     ->schema([
-                        Forms\Components\TextInput::make('datum_predaje_dokumentacije')
-                            ->label('Датум предаје документације')
-                            ->mask('99.99.9999')
-                            ->placeholder('дд.мм.гггг')
-                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
-                            ->rules([
-                                fn () => function (string $attribute, $value, \Closure $fail) {
-                                    if (!$value) return;
-                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
-                                        $fail('Датум мора бити у формату дд.мм.гггг');
-                                        return;
-                                    }
-                                    [$day, $month, $year] = explode('.', $value);
-                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
-                                        $fail('Унети датум није валидан');
-                                    }
-                                },
-                            ])
-                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
-                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                        static::makeDateField('datum_predaje_dokumentacije', 'Датум предаје документације')
                             ->afterOrEqual('datum_pocetka_provere_pk'),
-                        Forms\Components\TextInput::make('datum_pocetka_sprovodjenja_intervjua')
-                            ->label('Датум почетка спровођења интервјуа')
-                            ->mask('99.99.9999')
-                            ->placeholder('дд.мм.гггг')
-                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
-                            ->rules([
-                                fn () => function (string $attribute, $value, \Closure $fail) {
-                                    if (!$value) return;
-                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
-                                        $fail('Датум мора бити у формату дд.мм.гггг');
-                                        return;
-                                    }
-                                    [$day, $month, $year] = explode('.', $value);
-                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
-                                        $fail('Унети датум није валидан');
-                                    }
-                                },
-                            ])
-                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
-                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                        static::makeDateField('datum_pocetka_sprovodjenja_intervjua', 'Датум почетка спровођења интервјуа')
                             ->afterOrEqual('datum_predaje_dokumentacije'),
-                        Forms\Components\TextInput::make('datum_dostavljanja_liste_rukovodiocu_organa')
-                            ->label('Датум достављања листе руководиоцу органа')
-                            ->mask('99.99.9999')
-                            ->placeholder('дд.мм.гггг')
-                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
-                            ->rules([
-                                fn () => function (string $attribute, $value, \Closure $fail) {
-                                    if (!$value) return;
-                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
-                                        $fail('Датум мора бити у формату дд.мм.гггг');
-                                        return;
-                                    }
-                                    [$day, $month, $year] = explode('.', $value);
-                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
-                                        $fail('Унети датум није валидан');
-                                    }
-                                },
-                            ])
-                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
-                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                        static::makeDateField('datum_dostavljanja_liste_rukovodiocu_organa', 'Датум достављања листе руководиоцу органа')
                             ->afterOrEqual('datum_pocetka_sprovodjenja_intervjua'),
-                        Forms\Components\TextInput::make('datum_donosenja_resenja_o_izabranom_kandidatu')
-                            ->label('Датум доношења решења о изабраном кандидату')
-                            ->mask('99.99.9999')
-                            ->placeholder('дд.мм.гггг')
-                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
-                            ->rules([
-                                fn () => function (string $attribute, $value, \Closure $fail) {
-                                    if (!$value) return;
-                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
-                                        $fail('Датум мора бити у формату дд.мм.гггг');
-                                        return;
-                                    }
-                                    [$day, $month, $year] = explode('.', $value);
-                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
-                                        $fail('Унети датум није валидан');
-                                    }
-                                },
-                            ])
-                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
-                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                        static::makeDateField('datum_donosenja_resenja_o_izabranom_kandidatu', 'Датум доношења решења о изабраном кандидату')
                             ->afterOrEqual('datum_dostavljanja_liste_rukovodiocu_organa'),
-                        Forms\Components\TextInput::make('datum_stupanja_na_rad')
-                            ->label('Датум ступања на рад')
-                            ->mask('99.99.9999')
-                            ->placeholder('дд.мм.гггг')
-                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
-                            ->rules([
-                                fn () => function (string $attribute, $value, \Closure $fail) {
-                                    if (!$value) return;
-                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
-                                        $fail('Датум мора бити у формату дд.мм.гггг');
-                                        return;
-                                    }
-                                    [$day, $month, $year] = explode('.', $value);
-                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
-                                        $fail('Унети датум није валидан');
-                                    }
-                                },
-                            ])
-                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
-                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                        static::makeDateField('datum_stupanja_na_rad', 'Датум ступања на рад')
                             ->afterOrEqual('datum_donosenja_resenja_o_izabranom_kandidatu')
                             ->helperText('Датум ступања на рад првог извршиоца'),
                     ])->columns(3)->collapsible(),
@@ -869,32 +529,7 @@ class PodaciORadnomMestuResource extends Resource
 
                 Forms\Components\Section::make('Листа кандидата')
                     ->schema([
-                        Forms\Components\TextInput::make('datum_formiranja_liste_kandidata')
-                            ->label('Дан формирања листе кандидата који учествују у изборном поступку')
-                            ->mask('99.99.9999')
-                            ->placeholder('дд.мм.гггг')
-                            ->regex('/^\d{2}\.\d{2}\.\d{4}$/')
-                            ->rules([
-                                fn () => function (string $attribute, $value, \Closure $fail) {
-                                    if (!$value) return;
-
-                                    // Proveri format
-                                    if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
-                                        $fail('Датум мора бити у формату дд.мм.гггг');
-                                        return;
-                                    }
-
-                                    // Izdvoji dan, mesec, godinu
-                                    [$day, $month, $year] = explode('.', $value);
-
-                                    // Proveri da li je datum validan
-                                    if (!checkdate((int)$month, (int)$day, (int)$year)) {
-                                        $fail('Унети датум није валидан');
-                                    }
-                                },
-                            ])
-                            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
-                            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null)
+                        static::makeDateField('datum_formiranja_liste_kandidata', 'Дан формирања листе кандидата који учествују у изборном поступку')
                             ->columnSpanFull(),
                         Forms\Components\TextInput::make('broj_kandidata_na_listi')
                             ->label('Број кандидата на листи')
@@ -952,27 +587,16 @@ class PodaciORadnomMestuResource extends Resource
                             ->preload(),
                         Forms\Components\Select::make('broj_bodova_izabranog_kandidata_na_ofk')
                             ->label('Број бодова на ОФК')
-                            ->options([
-                                7 => '7',
-                                8 => '8',
-                                9 => '9',
-                            ]),
+                            ->options(static::ofkScoreOptions()),
                         Forms\Components\Select::make('broj_bodova_izabranog_kandidata_na_pfk')
                             ->label('Број бодова на ПФК')
-                            ->options(array_merge(
-                                [0 => '0', 3 => '3', 5 => '5', 8 => '8'],
-                                array_combine(range(10, 20), range(10, 20))
-                            )),
+                            ->options(static::pfkScoreOptions()),
                         Forms\Components\Select::make('broj_bodova_izabranog_kandidata_na_pk')
                             ->label('Број бодова на ПК')
-                            ->options(array_combine(range(10, 30), range(10, 30))),
+                            ->options(static::pkScoreOptions()),
                         Forms\Components\Select::make('broj_bodova_izabranog_kandidata_na_zavrsnom_razgovoru')
                             ->label('Број бодова на завршном разговору')
-                            ->options([
-                                2 => '2',
-                                4 => '4',
-                                6 => '6',
-                            ]),
+                            ->options(static::zavrsniScoreOptions()),
                     ])->columns(3)->collapsible(),
 
                 Forms\Components\Section::make('Другопласирани кандидат')
@@ -984,27 +608,16 @@ class PodaciORadnomMestuResource extends Resource
                             ->preload(),
                         Forms\Components\Select::make('broj_bodova_drugplasiranog_kandidata_na_ofk')
                             ->label('Број бодова на ОФК')
-                            ->options([
-                                7 => '7',
-                                8 => '8',
-                                9 => '9',
-                            ]),
+                            ->options(static::ofkScoreOptions()),
                         Forms\Components\Select::make('broj_bodova_drugplasiranog_kandidata_na_pfk')
                             ->label('Број бодова на ПФК')
-                            ->options(array_merge(
-                                [0 => '0', 3 => '3', 5 => '5', 8 => '8'],
-                                array_combine(range(10, 20), range(10, 20))
-                            )),
+                            ->options(static::pfkScoreOptions()),
                         Forms\Components\Select::make('broj_bodova_drugplasiranog_kandidata_na_pk')
                             ->label('Број бодова на ПК')
-                            ->options(array_combine(range(10, 30), range(10, 30))),
+                            ->options(static::pkScoreOptions()),
                         Forms\Components\Select::make('broj_bodova_drugoplasiranog_kandidata_na_zavrsnom_razgovoru')
                             ->label('Број бодова на завршном разговору')
-                            ->options([
-                                2 => '2',
-                                4 => '4',
-                                6 => '6',
-                            ]),
+                            ->options(static::zavrsniScoreOptions()),
                     ])->columns(3)->collapsible(),
 
                 Forms\Components\Section::make('Додатни подаци о поступку')
@@ -1160,120 +773,43 @@ class PodaciORadnomMestuResource extends Resource
                                 ->schema([
                                     Infolists\Components\TextEntry::make('vreme_trajanja')
                                         ->label('Време трајања конкурсног поступка')
-                                        ->state(function ($record) {
-                                            if ($record->datum_donosenja_resenja_o_pokretanju_postupka
-                                                && $record->datum_stupanja_na_rad) {
-
-                                                $start = Carbon::parse($record->datum_donosenja_resenja_o_pokretanju_postupka);
-                                                $end = Carbon::parse($record->datum_stupanja_na_rad);
-                                                $days = $start->diffInDays($end);
-
-                                                return $days . ' дана';
-                                            }
-                                            return 'Н/Д';
-                                        })
+                                        ->state(fn ($record) => static::dateDiffInDays($record, 'datum_donosenja_resenja_o_pokretanju_postupka', 'datum_stupanja_na_rad'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између доношења решења и ступања на рад'),
 
                                     Infolists\Components\TextEntry::make('vreme_trajanja_izbornog_postupka')
                                         ->label('Време трајања изборног поступка')
-                                        ->state(function ($record) {
-                                            if ($record->datum_pregleda_prijava
-                                                && $record->datum_dostavljanja_liste_rukovodiocu_organa) {
-
-                                                $start = Carbon::parse($record->datum_pregleda_prijava);
-                                                $end = Carbon::parse($record->datum_dostavljanja_liste_rukovodiocu_organa);
-                                                $days = $start->diffInDays($end);
-
-                                                return $days . ' дана';
-                                            }
-                                            return 'Н/Д';
-                                        })
+                                        ->state(fn ($record) => static::dateDiffInDays($record, 'datum_pregleda_prijava', 'datum_dostavljanja_liste_rukovodiocu_organa'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између прегледа пријава и достављања листе'),
 
                                     Infolists\Components\TextEntry::make('vreme_od_saglasnosti_do_resenja')
                                         ->label('Време од сагласности Владе до решења')
-                                        ->state(function ($record) {
-                                            if ($record->datum_dobijanja_saglasnosti_vlade
-                                                && $record->datum_donosenja_resenja_o_pokretanju_postupka) {
-
-                                                $start = Carbon::parse($record->datum_dobijanja_saglasnosti_vlade);
-                                                $end = Carbon::parse($record->datum_donosenja_resenja_o_pokretanju_postupka);
-                                                $days = $start->diffInDays($end);
-
-                                                return $days . ' дана';
-                                            }
-                                            return 'Н/Д';
-                                        })
+                                        ->state(fn ($record) => static::dateDiffInDays($record, 'datum_dobijanja_saglasnosti_vlade', 'datum_donosenja_resenja_o_pokretanju_postupka'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између добијања сагласности и решења'),
 
                                     Infolists\Components\TextEntry::make('vreme_od_obavestenja_suka_do_resenja')
                                         ->label('Време од обавештења СУК-а до решења')
-                                        ->state(function ($record) {
-                                            if ($record->datum_dobijanja_obavestenja_od_suka
-                                                && $record->datum_donosenja_resenja_o_pokretanju_postupka) {
-
-                                                $obavestenje = Carbon::parse($record->datum_dobijanja_obavestenja_od_suka);
-                                                $resenje = Carbon::parse($record->datum_donosenja_resenja_o_pokretanju_postupka);
-                                                $days = $resenje->diffInDays($obavestenje);
-
-                                                return $days . ' дана';
-                                            }
-                                            return 'Н/Д';
-                                        })
+                                        ->state(fn ($record) => static::dateDiffInDays($record, 'datum_dobijanja_obavestenja_od_suka', 'datum_donosenja_resenja_o_pokretanju_postupka'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између обавештења СУК-а и решења'),
 
                                     Infolists\Components\TextEntry::make('vreme_od_obavestenja_suka_do_prvog_sastanka')
                                         ->label('Време од обавештења СУК-а до првог састанка')
-                                        ->state(function ($record) {
-                                            if ($record->datum_dobijanja_obavestenja_od_suka
-                                                && $record->datum_odrzavanja_prvog_sastanka) {
-
-                                                $obavestenje = Carbon::parse($record->datum_dobijanja_obavestenja_od_suka);
-                                                $sastanak = Carbon::parse($record->datum_odrzavanja_prvog_sastanka);
-                                                $days = $obavestenje->diffInDays($sastanak);
-
-                                                return $days . ' дана';
-                                            }
-                                            return 'Н/Д';
-                                        })
+                                        ->state(fn ($record) => static::dateDiffInDays($record, 'datum_dobijanja_obavestenja_od_suka', 'datum_odrzavanja_prvog_sastanka'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између обавештења и првог састанка'),
 
                                     Infolists\Components\TextEntry::make('vreme_od_prvog_sastanka_do_oglasavanja')
                                         ->label('Време од првог састанка до оглашавања')
-                                        ->state(function ($record) {
-                                            if ($record->datum_odrzavanja_prvog_sastanka
-                                                && $record->datum_oglasavanja) {
-
-                                                $sastanak = Carbon::parse($record->datum_odrzavanja_prvog_sastanka);
-                                                $oglasavanje = Carbon::parse($record->datum_oglasavanja);
-                                                $days = $sastanak->diffInDays($oglasavanje);
-
-                                                return $days . ' дана';
-                                            }
-                                            return 'Н/Д';
-                                        })
+                                        ->state(fn ($record) => static::dateDiffInDays($record, 'datum_odrzavanja_prvog_sastanka', 'datum_oglasavanja'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између првог састанка и оглашавања конкурса'),
 
                                     Infolists\Components\TextEntry::make('vreme_od_oglasavanja_do_pregleda_prijava')
                                         ->label('Време од оглашавања до прегледа пријава')
-                                        ->state(function ($record) {
-                                            if ($record->datum_oglasavanja
-                                                && $record->datum_pregleda_prijava) {
-
-                                                $oglasavanje = Carbon::parse($record->datum_oglasavanja);
-                                                $pregled = Carbon::parse($record->datum_pregleda_prijava);
-                                                $days = $oglasavanje->diffInDays($pregled);
-
-                                                return $days . ' дана';
-                                            }
-                                            return 'Н/Д';
-                                        })
+                                        ->state(fn ($record) => static::dateDiffInDays($record, 'datum_oglasavanja', 'datum_pregleda_prijava'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између оглашавања и прегледа пријава'),
                                 ])
@@ -1288,36 +824,14 @@ class PodaciORadnomMestuResource extends Resource
                                 ->schema([
                                     Infolists\Components\TextEntry::make('vreme_od_pregleda_prijava_do_pocetka_provere_ofk')
                                         ->label('Време од прегледа пријава до почетка провере ОФК')
-                                        ->state(function ($record) {
-                                            if ($record->datum_pregleda_prijava
-                                                && $record->datum_pocetka_provere_ofk) {
-
-                                                $pregled = Carbon::parse($record->datum_pregleda_prijava);
-                                                $proveraOfk = Carbon::parse($record->datum_pocetka_provere_ofk);
-                                                $days = $pregled->diffInDays($proveraOfk);
-
-                                                return $days . ' дана';
-                                            }
-                                            return 'Н/Д';
-                                        })
+                                        ->state(fn ($record) => static::dateDiffInDays($record, 'datum_pregleda_prijava', 'datum_pocetka_provere_ofk'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између прегледа пријава и почетка провере ОФК')
                                         ->hidden(fn ($record) => $record->tip_konkursa == 2),
 
                                     Infolists\Components\TextEntry::make('vreme_od_pocetka_provere_ofk_do_pocetka_provere_pfk')
                                         ->label('Време од почетка провере ОФК до почетка провере ПФК')
-                                        ->state(function ($record) {
-                                            if ($record->datum_pocetka_provere_ofk
-                                                && $record->datum_pocetka_provere_pfk) {
-
-                                                $proveraOfk = Carbon::parse($record->datum_pocetka_provere_ofk);
-                                                $proveraPfk = Carbon::parse($record->datum_pocetka_provere_pfk);
-                                                $days = $proveraOfk->diffInDays($proveraPfk);
-
-                                                return $days . ' дана';
-                                            }
-                                            return 'Н/Д';
-                                        })
+                                        ->state(fn ($record) => static::dateDiffInDays($record, 'datum_pocetka_provere_ofk', 'datum_pocetka_provere_pfk'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између почетка провере ОФК и почетка провере ПФК')
                                         ->hidden(fn ($record) => $record->tip_konkursa == 2),
@@ -1325,15 +839,8 @@ class PodaciORadnomMestuResource extends Resource
                                     Infolists\Components\TextEntry::make('vreme_od_pregleda_prijava_do_pocetka_provere_pfk')
                                         ->label('Време трајања од прегледа пријава до ПФК')
                                         ->state(function ($record) {
-                                            if ($record->tip_konkursa == 2
-                                                && $record->datum_pregleda_prijava
-                                                && $record->datum_pocetka_provere_pfk) {
-
-                                                $pregled = Carbon::parse($record->datum_pregleda_prijava);
-                                                $proveraPfk = Carbon::parse($record->datum_pocetka_provere_pfk);
-                                                $days = $pregled->diffInDays($proveraPfk);
-
-                                                return $days . ' дана';
+                                            if ($record->tip_konkursa == 2) {
+                                                return static::dateDiffInDays($record, 'datum_pregleda_prijava', 'datum_pocetka_provere_pfk');
                                             }
                                             return 'Н/Д';
                                         })
@@ -1343,103 +850,37 @@ class PodaciORadnomMestuResource extends Resource
 
                                     Infolists\Components\TextEntry::make('vreme_od_pocetka_provere_pfk_do_pocetka_provere_pk')
                                         ->label('Време од почетка провере ПФК до почетка провере ПК')
-                                        ->state(function ($record) {
-                                            if ($record->datum_pocetka_provere_pfk
-                                                && $record->datum_pocetka_provere_pk) {
-
-                                                $proveraPfk = Carbon::parse($record->datum_pocetka_provere_pfk);
-                                                $proveraPk = Carbon::parse($record->datum_pocetka_provere_pk);
-                                                $days = $proveraPfk->diffInDays($proveraPk);
-
-                                                return $days . ' дана';
-                                            }
-                                            return 'Н/Д';
-                                        })
+                                        ->state(fn ($record) => static::dateDiffInDays($record, 'datum_pocetka_provere_pfk', 'datum_pocetka_provere_pk'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између почетка провере ПФК и почетка провере ПК'),
 
                                     Infolists\Components\TextEntry::make('vreme_od_pocetka_provere_pk_do_predaje_dokumentacije')
                                         ->label('Време од почетка провере ПК до предаје документације')
-                                        ->state(function ($record) {
-                                            if ($record->datum_pocetka_provere_pk
-                                                && $record->datum_predaje_dokumentacije) {
-
-                                                $proveraPk = Carbon::parse($record->datum_pocetka_provere_pk);
-                                                $predajaDok = Carbon::parse($record->datum_predaje_dokumentacije);
-                                                $days = $proveraPk->diffInDays($predajaDok);
-
-                                                return $days . ' дана';
-                                            }
-                                            return 'Н/Д';
-                                        })
+                                        ->state(fn ($record) => static::dateDiffInDays($record, 'datum_pocetka_provere_pk', 'datum_predaje_dokumentacije'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између почетка провере ПК и предаје документације'),
 
                                     Infolists\Components\TextEntry::make('vreme_od_predaje_dokumentacije_do_intervjua')
                                         ->label('Време од предаје документације до спровођења интервјуа')
-                                        ->state(function ($record) {
-                                            if ($record->datum_predaje_dokumentacije
-                                                && $record->datum_pocetka_sprovodjenja_intervjua) {
-
-                                                $predajaDok = Carbon::parse($record->datum_predaje_dokumentacije);
-                                                $intervju = Carbon::parse($record->datum_pocetka_sprovodjenja_intervjua);
-                                                $days = $predajaDok->diffInDays($intervju);
-
-                                                return $days . ' дана';
-                                            }
-                                            return 'Н/Д';
-                                        })
+                                        ->state(fn ($record) => static::dateDiffInDays($record, 'datum_predaje_dokumentacije', 'datum_pocetka_sprovodjenja_intervjua'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између предаје документације и почетка спровођења интервјуа'),
 
                                     Infolists\Components\TextEntry::make('vreme_od_intervjua_do_dostavljanja_liste')
                                         ->label('Време од спровођења интервјуа до достављања листе')
-                                        ->state(function ($record) {
-                                            if ($record->datum_pocetka_sprovodjenja_intervjua
-                                                && $record->datum_dostavljanja_liste_rukovodiocu_organa) {
-
-                                                $intervju = Carbon::parse($record->datum_pocetka_sprovodjenja_intervjua);
-                                                $lista = Carbon::parse($record->datum_dostavljanja_liste_rukovodiocu_organa);
-                                                $days = $intervju->diffInDays($lista);
-
-                                                return $days . ' дана';
-                                            }
-                                            return 'Н/Д';
-                                        })
+                                        ->state(fn ($record) => static::dateDiffInDays($record, 'datum_pocetka_sprovodjenja_intervjua', 'datum_dostavljanja_liste_rukovodiocu_organa'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између почетка спровођења интервјуа и достављања листе руководиоцу'),
 
                                     Infolists\Components\TextEntry::make('vreme_od_dostavljanja_liste_do_resenja')
                                         ->label('Време од достављања листе до доношења решења')
-                                        ->state(function ($record) {
-                                            if ($record->datum_dostavljanja_liste_rukovodiocu_organa
-                                                && $record->datum_donosenja_resenja_o_izabranom_kandidatu) {
-
-                                                $lista = Carbon::parse($record->datum_dostavljanja_liste_rukovodiocu_organa);
-                                                $resenje = Carbon::parse($record->datum_donosenja_resenja_o_izabranom_kandidatu);
-                                                $days = $lista->diffInDays($resenje);
-
-                                                return $days . ' дана';
-                                            }
-                                            return 'Н/Д';
-                                        })
+                                        ->state(fn ($record) => static::dateDiffInDays($record, 'datum_dostavljanja_liste_rukovodiocu_organa', 'datum_donosenja_resenja_o_izabranom_kandidatu'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између достављања листе и доношења решења о изабраном кандидату'),
 
                                     Infolists\Components\TextEntry::make('vreme_od_resenja_do_stupanja_na_rad')
                                         ->label('Време од доношења решења до ступања на рад')
-                                        ->state(function ($record) {
-                                            if ($record->datum_donosenja_resenja_o_izabranom_kandidatu
-                                                && $record->datum_stupanja_na_rad) {
-
-                                                $resenje = Carbon::parse($record->datum_donosenja_resenja_o_izabranom_kandidatu);
-                                                $stupanje = Carbon::parse($record->datum_stupanja_na_rad);
-                                                $days = $resenje->diffInDays($stupanje);
-
-                                                return $days . ' дана';
-                                            }
-                                            return 'Н/Д';
-                                        })
+                                        ->state(fn ($record) => static::dateDiffInDays($record, 'datum_donosenja_resenja_o_izabranom_kandidatu', 'datum_stupanja_na_rad'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између доношења решења и ступања на рад'),
                                 ])
@@ -1454,16 +895,7 @@ class PodaciORadnomMestuResource extends Resource
                                 ->schema([
                                     Infolists\Components\TextEntry::make('vreme_trajanja_iz_ugla_kandidata')
                                         ->label('Време трајања из угла кандидата')
-                                        ->state(function ($record) {
-                                            if ($record->datum_oglasavanja && $record->datum_stupanja_na_rad) {
-                                                $oglasavanje = Carbon::parse($record->datum_oglasavanja);
-                                                $stupanje = Carbon::parse($record->datum_stupanja_na_rad);
-                                                $days = $oglasavanje->diffInDays($stupanje);
-
-                                                return $days . ' дана';
-                                            }
-                                            return 'Н/Д';
-                                        })
+                                        ->state(fn ($record) => static::dateDiffInDays($record, 'datum_oglasavanja', 'datum_stupanja_na_rad'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између оглашавања и ступања на рад')
                                         ->hidden(fn ($record) => $record->tip_konkursa == 2),
