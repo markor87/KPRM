@@ -567,15 +567,17 @@ class PodaciORadnomMestuResource extends Resource
                             ->helperText('Датум ступања на рад првог извршиоца'),
                     ])->columns(3)->collapsible(),
 
-                Forms\Components\Section::make('Листа кандидата')
+                Forms\Components\Section::make('Листа кандидата који су испунили мерила за избор')
                     ->schema([
-                        static::makeDateField('datum_formiranja_liste_kandidata', 'Дан формирања листе кандидата који учествују у изборном поступку')
+                        static::makeDateField('datum_formiranja_liste_kandidata', 'Дан формирања листе кандидата који су испунили мерила у изборном поступку')
+                            ->hintIcon('heroicon-m-information-circle')
+                            ->hintIconTooltip('Члан 57, став 7, Закона о државним службеницима каже: На интернет презентацији органа државне управе који је огласио конкурс и Службе за управљање кадровима објављује се листа кандидата под шифром њихове пријаве и име и презиме кандидата који је изабран у конкурсном поступку.')
                             ->columnSpanFull(),
                         Forms\Components\TextInput::make('broj_kandidata_na_listi')
                             ->label('Број кандидата на листи')
                             ->numeric()->minValue(0),
                         Forms\Components\TextInput::make('broj_kandidata_iz_organa_na_listi')
-                            ->label('Број кандидата из органа на листи')
+                            ->label('Број кандидата из органа који расписује конкурс на листи')
                             ->numeric()->minValue(0)
                             ->lte('broj_kandidata_na_listi')
                             ->validationMessages([
@@ -589,7 +591,7 @@ class PodaciORadnomMestuResource extends Resource
                                 ),
                             ]),
                         Forms\Components\TextInput::make('broj_kandidata_iz_drugog_drzavnog_organa_na_listi')
-                            ->label('Број кандидата из другог државног органа на листи')
+                            ->label('Број кандидата из других органа државне управе на листи')
                             ->numeric()->minValue(0)
                             ->lte('broj_kandidata_na_listi')
                             ->validationMessages([
@@ -603,7 +605,7 @@ class PodaciORadnomMestuResource extends Resource
                                 ),
                             ]),
                         Forms\Components\TextInput::make('broj_kandidata_van_drzavnih_organa_na_listi')
-                            ->label('Број кандидата ван државних органа на листи')
+                            ->label('Број кандидата ван органа државне управе и/или незапослена лица на листи')
                             ->numeric()->minValue(0)
                             ->lte('broj_kandidata_na_listi')
                             ->validationMessages([
