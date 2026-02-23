@@ -294,89 +294,6 @@ class PodaciORadnomMestuResource extends Resource
                             ->afterOrEqual('datum_oglasavanja'),
                     ])->columns(3)->collapsible(),
 
-                Forms\Components\Section::make('ОФК провера')
-                    ->schema([
-                        static::makeDateField('datum_slanja_zahteva_za_sprovodjenje_ofk_provera', 'Датум слања захтева за спровођење ОФК провера')
-                            ->afterOrEqual('datum_pregleda_prijava'),
-                        Forms\Components\TextInput::make('broj_kandidata_za_koje_se_zakazuju_ofk')
-                            ->label('Број кандидата за које се заказују ОФК')
-                            ->numeric()
-                            ->minValue(0),
-                        static::makeDateField('datum_pocetka_provere_ofk', 'Датум почетка провере ОФК')
-                            ->afterOrEqual('datum_slanja_zahteva_za_sprovodjenje_ofk_provera'),
-                        static::makeDateField('datum_ofk_izvestaja', 'Датум ОФК извештаја')
-                            ->helperText('Датум креирања извештаја СУКа'),
-                    ])->columns(2)->collapsible(),
-
-                Forms\Components\Section::make('ПФК провера')
-                    ->schema([
-                        static::makeDateField('datum_slanja_zahteva_za_sprovodjenje_pfk_provera', 'Датум слања захтева за спровођење ПФК провера')
-                            ->afterOrEqual('datum_ofk_izvestaja'),
-                        Forms\Components\TextInput::make('broj_kandidata_za_koje_se_zakazuju_pfk')
-                            ->label('Број кандидата за које се заказују ПФК')
-                            ->numeric()
-                            ->minValue(0),
-                        static::makeDateField('datum_pocetka_provere_pfk', 'Датум почетка провере ПФК')
-                            ->afterOrEqual('datum_slanja_zahteva_za_sprovodjenje_pfk_provera'),
-                        static::makeDateField('datum_pfk_izvestaja', 'Датум ПФК извештаја')
-                            ->helperText('Датум креирања извештаја СУКа'),
-                    ])->columns(2)->collapsible(),
-
-                Forms\Components\Section::make('ПК провера')
-                    ->schema([
-                        static::makeDateField('datum_slanja_zahteva_za_sprovodjenje_pk_provera', 'Датум слања захтева за спровођење ПК провера')
-                            ->afterOrEqual('datum_pfk_izvestaja'),
-                        Forms\Components\TextInput::make('broj_kandidata_za_koje_se_zakazuju_pk')
-                            ->label('Број кандидата за које се заказују ПК')
-                            ->numeric()
-                            ->minValue(0),
-                        static::makeDateField('datum_pocetka_provere_pk', 'Датум почетка провере ПК')
-                            ->afterOrEqual('datum_slanja_zahteva_za_sprovodjenje_pk_provera'),
-                        static::makeDateField('datum_pk_izvestaja', 'Датум ПК извештаја')
-                            ->helperText('Датум креирања извештаја СУКа'),
-                    ])->columns(2)->collapsible(),
-
-                Forms\Components\Section::make('Завршна фаза поступка')
-                    ->schema([
-                        static::makeDateField('datum_predaje_dokumentacije', 'Датум предаје документације')
-                            ->afterOrEqual('datum_pocetka_provere_pk'),
-                        static::makeDateField('datum_pocetka_sprovodjenja_intervjua', 'Датум почетка спровођења интервјуа')
-                            ->afterOrEqual('datum_predaje_dokumentacije'),
-                        static::makeDateField('datum_dostavljanja_liste_rukovodiocu_organa', 'Датум достављања листе руководиоцу органа')
-                            ->afterOrEqual('datum_pocetka_sprovodjenja_intervjua'),
-                        static::makeDateField('datum_donosenja_resenja_o_izabranom_kandidatu', 'Датум доношења решења о изабраном кандидату')
-                            ->afterOrEqual('datum_dostavljanja_liste_rukovodiocu_organa'),
-                        static::makeDateField('datum_stupanja_na_rad', 'Датум ступања на рад')
-                            ->afterOrEqual('datum_donosenja_resenja_o_izabranom_kandidatu')
-                            ->helperText('Датум ступања на рад првог извршиоца'),
-                    ])->columns(3)->collapsible(),
-
-                Forms\Components\Section::make('Статус и жалбе')
-                    ->schema([
-                        Forms\Components\TextInput::make('broj_primljenih_izvrsilaca')
-                            ->label('Број примљених извршилаца')
-                            ->numeric()->minValue(0)
-                            ->lte('broj_izvrsilaca')
-                            ->validationMessages([
-                                'lte' => 'Број примљених извршилаца не може бити већи од броја извршилаца.',
-                            ]),
-                        Forms\Components\TextInput::make('ocena_sa_vrednovanja')
-                            ->label('Оцена са вредновања')
-                            ->numeric()->minValue(0),
-                        Forms\Components\TextInput::make('broj_zalbi_na_resenje_o_odbacaju_prijave')
-                            ->label('Број жалби на решење о одбацивању пријаве')
-                            ->numeric()->minValue(0),
-                        Forms\Components\TextInput::make('broj_zalbi_na_resenje_o_prijemu_u_radni_odnos')
-                            ->label('Број жалби на решење о пријему у радни однос')
-                            ->numeric()->minValue(0),
-                        Forms\Components\TextInput::make('broj_usvojenih_zalbi_na_resenje_o_odbacaju_prijave')
-                            ->label('Број усвојених жалби на решење о одбацивању пријаве')
-                            ->numeric()->minValue(0),
-                        Forms\Components\TextInput::make('broj_izvrsilaca_ponovno_oglasavanje')
-                            ->label('Број извршилаца - поновно оглашавање')
-                            ->numeric()->minValue(0),
-                    ])->columns(2)->collapsible(),
-
                 Forms\Components\Section::make('Подаци о пријавама')
                     ->schema([
                         Forms\Components\TextInput::make('ukupan_broj_prijava')
@@ -424,6 +341,24 @@ class PodaciORadnomMestuResource extends Resource
                                     'Збир пријава мора бити једнак укупном броју пријава.'
                                 ),
                             ]),
+                    ])->columns(2)->collapsible(),
+
+                Forms\Components\Section::make('Старосна структура кандидата')
+                    ->schema([
+                        Forms\Components\TextInput::make('prosecna_starost_kandidata')
+                            ->label('Просечна старост кандидата у изборном поступку')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(100)
+                            ->step(0.01)
+                            ->suffix('година'),
+                        Forms\Components\TextInput::make('udeo_kandidata_mladjih_od_30')
+                            ->label('Удео кандидата млађих од 30 година')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(100)
+                            ->step(0.01)
+                            ->suffix('%'),
                     ])->columns(2)->collapsible(),
 
                 Forms\Components\Section::make('Валидне пријаве')
@@ -479,52 +414,61 @@ class PodaciORadnomMestuResource extends Resource
                             ]),
                     ])->columns(2)->collapsible(),
 
-                Forms\Components\Section::make('Кандидати који су испунили мерила')
+                Forms\Components\Section::make('ОФК провера')
                     ->schema([
-                        Forms\Components\TextInput::make('broj_kandidata_koji_su_ispunlii_merila_ofk')
-                            ->label('Број кандидата који су испунили мерила ОФК')
-                            ->numeric()->minValue(0)
-                            ->live(),
-                        Forms\Components\TextInput::make('broj_kandidata_koji_su_ispunlii_merila_pfk')
-                            ->label('Број кандидата који су испунили мерила ПФК')
-                            ->numeric()->minValue(0)
-                            ->live()
-                            ->rules([
-                                fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get) {
-                                    $ofk = (int) $get('broj_kandidata_koji_su_ispunlii_merila_ofk');
-                                    if ($value && $ofk && (int)$value > $ofk) {
-                                        $fail('Број кандидата који су испунили мерила ПФК не сме бити већи од броја кандидата који су испунили мерила ОФК.');
-                                    }
-                                },
-                            ]),
-                        Forms\Components\Select::make('provera_pfk')
-                            ->label('Провера ПФК')
-                            ->relationship('proveraPfkRelation', 'provera_pfk', fn($query) => $query->orderBy('id', 'asc'))
-                            ->preload()
-                            ->searchable(),
-                        Forms\Components\TextInput::make('broj_kandidata_ispunili_merila_pk')
-                            ->label('Број кандидата који су испунили мерила ПК')
-                            ->numeric()->minValue(0)
-                            ->live()
-                            ->rules([
-                                fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get) {
-                                    $pfk = (int) $get('broj_kandidata_koji_su_ispunlii_merila_pfk');
-                                    if ($value && $pfk && (int)$value > $pfk) {
-                                        $fail('Број кандидата који су испунили мерила ПК не сме бити већи од броја кандидата који су испунили мерила ПФК.');
-                                    }
-                                },
-                            ]),
-                        Forms\Components\TextInput::make('broj_odazvanih_kandidata_na_zavrsnom_razgovoru')
-                            ->label('Број одазваних кандидата на завршном разговору')
-                            ->numeric()->minValue(0)
-                            ->rules([
-                                fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get) {
-                                    $pk = (int) $get('broj_kandidata_ispunili_merila_pk');
-                                    if ($value && $pk && (int)$value > $pk) {
-                                        $fail('Број одазваних кандидата на завршном разговору не сме бити већи од броја кандидата који су испунили мерила ПК.');
-                                    }
-                                },
-                            ]),
+                        static::makeDateField('datum_slanja_zahteva_za_sprovodjenje_ofk_provera', 'Датум слања захтева за спровођење ОФК провера')
+                            ->afterOrEqual('datum_pregleda_prijava'),
+                        Forms\Components\TextInput::make('broj_kandidata_za_koje_se_zakazuju_ofk')
+                            ->label('Број кандидата за које се заказују ОФК')
+                            ->numeric()
+                            ->minValue(0),
+                        static::makeDateField('datum_pocetka_provere_ofk', 'Датум почетка провере ОФК')
+                            ->afterOrEqual('datum_slanja_zahteva_za_sprovodjenje_ofk_provera'),
+                        static::makeDateField('datum_ofk_izvestaja', 'Датум ОФК извештаја')
+                            ->helperText('Датум креирања извештаја СУКа'),
+                    ])->columns(2)->collapsible(),
+
+                Forms\Components\Section::make('ПФК провера')
+                    ->schema([
+                        static::makeDateField('datum_slanja_zahteva_za_sprovodjenje_pfk_provera', 'Датум слања захтева за спровођење ПФК провера')
+                            ->afterOrEqual('datum_ofk_izvestaja'),
+                        Forms\Components\TextInput::make('broj_kandidata_za_koje_se_zakazuju_pfk')
+                            ->label('Број кандидата за које се заказују ПФК')
+                            ->numeric()
+                            ->minValue(0),
+                        static::makeDateField('datum_pocetka_provere_pfk', 'Датум почетка провере ПФК')
+                            ->afterOrEqual('datum_slanja_zahteva_za_sprovodjenje_pfk_provera'),
+                        static::makeDateField('datum_pfk_izvestaja', 'Датум ПФК извештаја')
+                            ->helperText('Датум креирања извештаја СУКа'),
+                    ])->columns(2)->collapsible(),
+
+                Forms\Components\Section::make('ПК провера')
+                    ->schema([
+                        static::makeDateField('datum_slanja_zahteva_za_sprovodjenje_pk_provera', 'Датум слања захтева за спровођење ПК провера')
+                            ->afterOrEqual('datum_pfk_izvestaja'),
+                        Forms\Components\TextInput::make('broj_kandidata_za_koje_se_zakazuju_pk')
+                            ->label('Број кандидата за које се заказују ПК')
+                            ->numeric()
+                            ->minValue(0),
+                        static::makeDateField('datum_pocetka_provere_pk', 'Датум почетка провере ПК')
+                            ->afterOrEqual('datum_slanja_zahteva_za_sprovodjenje_pk_provera'),
+                        static::makeDateField('datum_pk_izvestaja', 'Датум ПК извештаја')
+                            ->helperText('Датум креирања извештаја СУКа'),
+                    ])->columns(2)->collapsible(),
+
+                Forms\Components\Section::make('Завршна фаза поступка')
+                    ->schema([
+                        static::makeDateField('datum_predaje_dokumentacije', 'Датум предаје документације')
+                            ->afterOrEqual('datum_pocetka_provere_pk'),
+                        static::makeDateField('datum_pocetka_sprovodjenja_intervjua', 'Датум почетка спровођења интервјуа')
+                            ->afterOrEqual('datum_predaje_dokumentacije'),
+                        static::makeDateField('datum_dostavljanja_liste_rukovodiocu_organa', 'Датум достављања листе руководиоцу органа')
+                            ->afterOrEqual('datum_pocetka_sprovodjenja_intervjua'),
+                        static::makeDateField('datum_donosenja_resenja_o_izabranom_kandidatu', 'Датум доношења решења о изабраном кандидату')
+                            ->afterOrEqual('datum_dostavljanja_liste_rukovodiocu_organa'),
+                        static::makeDateField('datum_stupanja_na_rad', 'Датум ступања на рад')
+                            ->afterOrEqual('datum_donosenja_resenja_o_izabranom_kandidatu')
+                            ->helperText('Датум ступања на рад првог извршиоца'),
                     ])->columns(3)->collapsible(),
 
                 Forms\Components\Section::make('Листа кандидата')
@@ -620,6 +564,80 @@ class PodaciORadnomMestuResource extends Resource
                             ->options(static::zavrsniScoreOptions()),
                     ])->columns(3)->collapsible(),
 
+                Forms\Components\Section::make('Статус и жалбе')
+                    ->schema([
+                        Forms\Components\TextInput::make('broj_primljenih_izvrsilaca')
+                            ->label('Број примљених извршилаца')
+                            ->numeric()->minValue(0)
+                            ->lte('broj_izvrsilaca')
+                            ->validationMessages([
+                                'lte' => 'Број примљених извршилаца не може бити већи од броја извршилаца.',
+                            ]),
+                        Forms\Components\TextInput::make('ocena_sa_vrednovanja')
+                            ->label('Оцена са вредновања')
+                            ->numeric()->minValue(0),
+                        Forms\Components\TextInput::make('broj_zalbi_na_resenje_o_odbacaju_prijave')
+                            ->label('Број жалби на решење о одбацивању пријаве')
+                            ->numeric()->minValue(0),
+                        Forms\Components\TextInput::make('broj_zalbi_na_resenje_o_prijemu_u_radni_odnos')
+                            ->label('Број жалби на решење о пријему у радни однос')
+                            ->numeric()->minValue(0),
+                        Forms\Components\TextInput::make('broj_usvojenih_zalbi_na_resenje_o_odbacaju_prijave')
+                            ->label('Број усвојених жалби на решење о одбацивању пријаве')
+                            ->numeric()->minValue(0),
+                        Forms\Components\TextInput::make('broj_izvrsilaca_ponovno_oglasavanje')
+                            ->label('Број извршилаца - поновно оглашавање')
+                            ->numeric()->minValue(0),
+                    ])->columns(2)->collapsible(),
+
+                Forms\Components\Section::make('Кандидати који су испунили мерила')
+                    ->schema([
+                        Forms\Components\TextInput::make('broj_kandidata_koji_su_ispunlii_merila_ofk')
+                            ->label('Број кандидата који су испунили мерила ОФК')
+                            ->numeric()->minValue(0)
+                            ->live(),
+                        Forms\Components\TextInput::make('broj_kandidata_koji_su_ispunlii_merila_pfk')
+                            ->label('Број кандидата који су испунили мерила ПФК')
+                            ->numeric()->minValue(0)
+                            ->live()
+                            ->rules([
+                                fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get) {
+                                    $ofk = (int) $get('broj_kandidata_koji_su_ispunlii_merila_ofk');
+                                    if ($value && $ofk && (int)$value > $ofk) {
+                                        $fail('Број кандидата који су испунили мерила ПФК не сме бити већи од броја кандидата који су испунили мерила ОФК.');
+                                    }
+                                },
+                            ]),
+                        Forms\Components\Select::make('provera_pfk')
+                            ->label('Провера ПФК')
+                            ->relationship('proveraPfkRelation', 'provera_pfk', fn($query) => $query->orderBy('id', 'asc'))
+                            ->preload()
+                            ->searchable(),
+                        Forms\Components\TextInput::make('broj_kandidata_ispunili_merila_pk')
+                            ->label('Број кандидата који су испунили мерила ПК')
+                            ->numeric()->minValue(0)
+                            ->live()
+                            ->rules([
+                                fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get) {
+                                    $pfk = (int) $get('broj_kandidata_koji_su_ispunlii_merila_pfk');
+                                    if ($value && $pfk && (int)$value > $pfk) {
+                                        $fail('Број кандидата који су испунили мерила ПК не сме бити већи од броја кандидата који су испунили мерила ПФК.');
+                                    }
+                                },
+                            ]),
+                        Forms\Components\TextInput::make('broj_odazvanih_kandidata_na_zavrsnom_razgovoru')
+                            ->label('Број одазваних кандидата на завршном разговору')
+                            ->numeric()->minValue(0)
+                            ->rules([
+                                fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get) {
+                                    $pk = (int) $get('broj_kandidata_ispunili_merila_pk');
+                                    if ($value && $pk && (int)$value > $pk) {
+                                        $fail('Број одазваних кандидата на завршном разговору не сме бити већи од броја кандидата који су испунили мерила ПК.');
+                                    }
+                                },
+                            ]),
+                    ])->columns(3)->collapsible(),
+
                 Forms\Components\Section::make('Додатни подаци о поступку')
                     ->schema([
                         Forms\Components\TextInput::make('broj_neodazvanih_kandidata_ofk')
@@ -675,24 +693,6 @@ class PodaciORadnomMestuResource extends Resource
                             ->numeric()
                             ->minValue(0),
                     ])->columns(4)->collapsible(),
-
-                Forms\Components\Section::make('Старосна структура кандидата')
-                    ->schema([
-                        Forms\Components\TextInput::make('prosecna_starost_kandidata')
-                            ->label('Просечна старост кандидата у изборном поступку')
-                            ->numeric()
-                            ->minValue(0)
-                            ->maxValue(100)
-                            ->step(0.01)
-                            ->suffix('година'),
-                        Forms\Components\TextInput::make('udeo_kandidata_mladjih_od_30')
-                            ->label('Удео кандидата млађих од 30 година')
-                            ->numeric()
-                            ->minValue(0)
-                            ->maxValue(100)
-                            ->step(0.01)
-                            ->suffix('%'),
-                    ])->columns(2)->collapsible(),
             ]);
     }
 
