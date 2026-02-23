@@ -462,7 +462,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->minValue(0),
                         static::makeDateField('datum_pocetka_provere_ofk', 'Датум спровођења провере ОФК', 'datum_slanja_zahteva_za_sprovodjenje_ofk_provera', 'слања захтева за спровођење ОФК провера')
                             ->helperText('Уколико је било више дана провере, унети први датум'),
-                        static::makeDateField('datum_ofk_izvestaja', 'Датум ОФК извештаја')
+                        static::makeDateField('datum_ofk_izvestaja', 'Датум ОФК извештаја', 'datum_pocetka_provere_ofk', 'спровођења провере ОФК')
                             ->helperText('Датум креирања извештаја СУКа'),
                     ])->columns(2)->collapsible(),
 
@@ -474,7 +474,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->numeric()
                             ->minValue(0),
                         static::makeDateField('datum_pocetka_provere_pfk', 'Датум почетка провере ПФК', 'datum_slanja_zahteva_za_sprovodjenje_pfk_provera', 'слања захтева за спровођење ПФК провера'),
-                        static::makeDateField('datum_pfk_izvestaja', 'Датум ПФК извештаја')
+                        static::makeDateField('datum_pfk_izvestaja', 'Датум ПФК извештаја', 'datum_pocetka_provere_pfk', 'почетка провере ПФК')
                             ->helperText('Датум креирања извештаја СУКа'),
                     ])->columns(2)->collapsible(),
 
@@ -486,7 +486,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->numeric()
                             ->minValue(0),
                         static::makeDateField('datum_pocetka_provere_pk', 'Датум почетка провере ПК', 'datum_slanja_zahteva_za_sprovodjenje_pk_provera', 'слања захтева за спровођење ПК провера'),
-                        static::makeDateField('datum_pk_izvestaja', 'Датум ПК извештаја')
+                        static::makeDateField('datum_pk_izvestaja', 'Датум ПК извештаја', 'datum_pocetka_provere_pk', 'почетка провере ПК')
                             ->helperText('Датум креирања извештаја СУКа'),
                     ])->columns(2)->collapsible(),
 
