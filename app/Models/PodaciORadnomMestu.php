@@ -90,11 +90,6 @@ class PodaciORadnomMestu extends Model
         'broj_neodazvanih_kandidata_dokumentacija',
         'broj_neodazvanih_kandidata_zavrsni_razgovor',
         // 'oblast_rada', // Uklonjeno - sada je many-to-many relacija
-        'velicina_organa',
-        'broj_uspelih_postupaka',
-        'broj_neuspelih_postupaka',
-        'broj_obustavljenih_postupaka',
-        'broj_ponistenih_postupaka',
         'prosecna_starost_kandidata',
         'udeo_kandidata_mladjih_od_30',
     ];
@@ -200,14 +195,6 @@ class PodaciORadnomMestu extends Model
     }
 
     /**
-     * Relacija sa sifarnik_velicina_organa tabelom
-     */
-    public function velicinaOrganaRelation()
-    {
-        return $this->belongsTo(SifarnikVelicinaOrgana::class, 'velicina_organa');
-    }
-
-    /**
      * Relacija sa sifarnik_razlog_neuspelih_konkursa tabelom
      */
     public function razlogNeuspelogKonkursaRelation()
@@ -299,11 +286,6 @@ class PodaciORadnomMestu extends Model
                 'broj_neodazvanih_kandidata_dokumentacija',
                 'broj_neodazvanih_kandidata_zavrsni_razgovor',
                 'oblast_rada',
-                'velicina_organa',
-                'broj_uspelih_postupaka',
-                'broj_neuspelih_postupaka',
-                'broj_obustavljenih_postupaka',
-                'broj_ponistenih_postupaka',
                 'prosecna_starost_kandidata',
                 'udeo_kandidata_mladjih_od_30',
             ])

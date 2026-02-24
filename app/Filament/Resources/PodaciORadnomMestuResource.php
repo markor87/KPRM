@@ -711,32 +711,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->multiple()
                             ->preload()
                             ->searchable(),
-                        Forms\Components\Select::make('velicina_organa')
-                            ->label('Величина органа')
-                            ->relationship('velicinaOrganaRelation', 'velicina_organa', fn($query) => $query->orderBy('id', 'asc'))
-                            ->preload()
-                            ->searchable(),
                     ])->columns(2)->collapsible(),
-
-                Forms\Components\Section::make('Исходи конкурсних поступака, према врсти радних места (извршиоци и положаји)')
-                    ->schema([
-                        Forms\Components\TextInput::make('broj_uspelih_postupaka')
-                            ->label('Број успелих поступака')
-                            ->numeric()
-                            ->minValue(0),
-                        Forms\Components\TextInput::make('broj_neuspelih_postupaka')
-                            ->label('Број неуспелих поступака')
-                            ->numeric()
-                            ->minValue(0),
-                        Forms\Components\TextInput::make('broj_obustavljenih_postupaka')
-                            ->label('Број обустављених поступака')
-                            ->numeric()
-                            ->minValue(0),
-                        Forms\Components\TextInput::make('broj_ponistenih_postupaka')
-                            ->label('Број поништених поступака')
-                            ->numeric()
-                            ->minValue(0),
-                    ])->columns(4)->collapsible(),
             ]);
     }
 
