@@ -125,7 +125,7 @@ class PodaciORadnomMestuResource extends Resource
                     $current  = \Carbon\Carbon::createFromFormat('d.m.Y', $value);
                     $previous = \Carbon\Carbon::createFromFormat('d.m.Y', $get($afterField));
                     if ($current->lt($previous)) {
-                        $fail("Датум мора бити после илиједнак датуму {$afterLabel}");
+                        $fail("Датум мора бити после или једнак датуму {$afterLabel}");
                     }
                 } catch (\Exception $e) {}
             };
@@ -162,7 +162,7 @@ class PodaciORadnomMestuResource extends Resource
                         $current  = \Carbon\Carbon::createFromFormat('d.m.Y', $state);
                         $previous = \Carbon\Carbon::createFromFormat('d.m.Y', $get($afterField));
                         if ($current->lt($previous)) {
-                            $livewire->addError($path, "Датум мора бити после илиједнак датуму {$afterLabel}");
+                            $livewire->addError($path, "Датум мора бити после или једнак датуму {$afterLabel}");
                         }
                     } catch (\Exception $e) {}
                 }
@@ -543,11 +543,15 @@ class PodaciORadnomMestuResource extends Resource
                             ->minValue(0),
                         static::makeDateField('datum_pocetka_provere_ofk', 'Датум спровођења провере ОФК', 'datum_slanja_zahteva_za_sprovodjenje_ofk_provera', 'слања захтева за спровођење ОФК провера')
                             ->helperText('Уколико је било више дана провере, унети први датум'),
+                        Forms\Components\TextInput::make('broj_neodazvanih_kandidata_ofk')
+                            ->label('Број кандидата који се није одазвао позиву на ОФК')
+                            ->numeric()
+                            ->minValue(0),
                         Forms\Components\TextInput::make('broj_kandidata_koji_su_ispunlii_merila_ofk')
                             ->label('Број кандидата који су испунили мерила ОФК')
                             ->numeric()->minValue(0)
                             ->live()
-                            ->helperText('укључујући и кандидате којима су се оцене признале')
+                            ->helperText('Укључујући и кандидате којима су се оцене признале')
                             ->hintIcon('heroicon-m-information-circle')
                             ->hintIconTooltip('Укупан број кандидата се може пронаћи у извештају СУК-а'),
                         static::makeDateField('datum_ofk_izvestaja', 'Датум ОФК извештаја', 'datum_pocetka_provere_ofk', 'спровођења провере ОФК')
@@ -782,10 +786,6 @@ class PodaciORadnomMestuResource extends Resource
 
                 Forms\Components\Section::make('Додатни подаци о поступку')
                     ->schema([
-                        Forms\Components\TextInput::make('broj_neodazvanih_kandidata_ofk')
-                            ->label('Број кандидата који се није одазвао позиву на ОФК')
-                            ->numeric()
-                            ->minValue(0),
                         Forms\Components\Select::make('oblastiRada')
                             ->label('Претежна област рада')
                             ->relationship('oblastiRada', 'oblast_rada', fn($query) => $query->orderBy('id', 'asc'))
