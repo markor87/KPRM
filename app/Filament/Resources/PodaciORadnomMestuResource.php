@@ -57,6 +57,50 @@ class PodaciORadnomMestuResource extends Resource
         };
     }
 
+    /**
+     * Validacija: uspešno završen javni konkurs mora imati popunjena sva datumska polja (osim 3 izuzeta).
+     */
+    protected static function uspesnoZavrsenValidationRule(): \Closure
+    {
+        $requiredDates = [
+            'datum_dobijanja_saglasnosti_vlade'               => 'Датум добијања сагласности Владе',
+            'datum_donosenja_resenja_o_pokretanju_postupka'   => 'Датум доношења решења о покретању поступка',
+            'datum_dobijanja_obavestenja_od_suka'             => 'Датум добијања обавештења од СУКа',
+            'datum_odrzavanja_prvog_sastanka'                 => 'Датум одржавања првог састанка',
+            'datum_oglasavanja'                               => 'Датум оглашавања',
+            'datum_pregleda_prijava'                          => 'Датум прегледа пријава',
+            'datum_pocetka_provere_ofk'                       => 'Датум спровођења провере ОФК',
+            'datum_ofk_izvestaja'                             => 'Датум ОФК извештаја',
+            'datum_pocetka_provere_pfk'                       => 'Датум почетка провере ПФК',
+            'datum_pfk_izvestaja'                             => 'Датум ПФК извештаја',
+            'datum_pocetka_provere_pk'                        => 'Датум почетка провере ПК',
+            'datum_pk_izvestaja'                              => 'Датум ПК извештаја',
+            'datum_predaje_dokumentacije'                     => 'Датум предаје документације',
+            'datum_pocetka_sprovodjenja_intervjua'            => 'Датум спровођења завршног интервјуа',
+            'datum_izvestaja_sa_zavrsnog_intervjua'           => 'Датум извештаја са завршног интервјуа',
+            'datum_dostavljanja_liste_rukovodiocu_organa'     => 'Датум достављања листе руководиоцу органа',
+            'datum_donosenja_resenja_o_izabranom_kandidatu'   => 'Датум доношења решења о изабраном кандидату',
+            'datum_stupanja_na_rad'                           => 'Датум ступања на рад',
+            'datum_formiranja_liste_kandidata'                => 'Дан формирања листе кандидата',
+        ];
+
+        return fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get, $requiredDates) {
+            if ($value != 1) return;
+            if ($get('tip_konkursa') != 1) return;
+
+            $missing = [];
+            foreach ($requiredDates as $field => $label) {
+                if (empty($get($field))) {
+                    $missing[] = $label;
+                }
+            }
+
+            if (!empty($missing)) {
+                $fail('Успешно завршен јавни конкурс мора да има попуњена следећа датумска поља: ' . implode(', ', $missing) . '.');
+            }
+        };
+    }
+
     protected static function makeDateField(string $name, string $label, string $afterField = null, string $afterLabel = null): Forms\Components\TextInput
     {
         // Submit-time validation (prevents saving bad data)
@@ -307,13 +351,15 @@ class PodaciORadnomMestuResource extends Resource
                             ->relationship('statusKonkursaNaDan1Relation', 'status_konkursa', fn($query) => $query->orderBy('id', 'asc'))
                             ->preload()
                             ->searchable()
-                            ->hidden(fn () => auth()->user()->hasRole('User')),
+                            ->hidden(fn () => auth()->user()->hasRole('User'))
+                            ->rules([static::uspesnoZavrsenValidationRule()]),
                         Forms\Components\Select::make('status_konkursa_na_dan_2')
                             ->label('Статус конкурса на дан 31/12/' . now()->year)
                             ->relationship('statusKonkursaNaDan2Relation', 'status_konkursa', fn($query) => $query->orderBy('id', 'asc'))
                             ->preload()
                             ->searchable()
-                            ->live(),
+                            ->live()
+                            ->rules([static::uspesnoZavrsenValidationRule()]),
                         Forms\Components\Select::make('razlog_neuspelog_konkursa')
                             ->label('Разлог неуспелог конкурса')
                             ->relationship('razlogNeuspelogKonkursaRelation', 'razlog', fn($query) => $query->orderBy('id', 'asc'))
