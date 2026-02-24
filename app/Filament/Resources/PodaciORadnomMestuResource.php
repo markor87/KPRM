@@ -383,6 +383,17 @@ class PodaciORadnomMestuResource extends Resource
                     ])->columns(2)->collapsible(),
 
                 Forms\Components\Section::make('Старосна структура кандидата')
+                    ->headerActions([
+                        \Filament\Forms\Components\Actions\Action::make('info_starosna')
+                            ->icon('heroicon-m-information-circle')
+                            ->label('')
+                            ->color('gray')
+                            ->modalHeading('Старосна структура кандидата')
+                            ->modalContent(new \Illuminate\Support\HtmlString('<p class="text-sm">Ови подаци се прикупљају ради израчунавања кључних показатеља учинка (КПИ) у изборном поступку, пре свега у циљу праћења старосне структуре пријављених кандидата и анализе атрактивности радних места за млађе категорије становништва. Прикупљање и извештавање о овим подацима представља захтев Министарства државне управе и локалне самоуправе (МДУЛС). Подаци се могу израчунати на основу података из образаца пријаве, односно из матичног броја кандидата (датум рођења).</p>'))
+                            ->modalSubmitAction(false)
+                            ->modalCancelActionLabel('Затвори')
+                            ->modalWidth('lg'),
+                    ])
                     ->schema([
                         Forms\Components\TextInput::make('prosecna_starost_kandidata')
                             ->label('Просечна старост кандидата у изборном поступку')
