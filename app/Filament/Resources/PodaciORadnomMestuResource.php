@@ -401,14 +401,38 @@ class PodaciORadnomMestuResource extends Resource
                             ->minValue(0)
                             ->maxValue(100)
                             ->step(0.01)
-                            ->suffix('година'),
+                            ->suffix('година')
+                            ->hintAction(
+                                \Filament\Forms\Components\Actions\Action::make('info_prosecna_starost')
+                                    ->icon('heroicon-m-information-circle')
+                                    ->label('')
+                                    ->color('gray')
+                                    ->extraAttributes(['style' => 'padding:0;background:transparent;box-shadow:none;min-height:unset;color:rgb(156,163,175);'])
+                                    ->modalHeading('Просечна старост кандидата у изборном поступку')
+                                    ->modalContent(new \Illuminate\Support\HtmlString('<div class="space-y-3 text-sm"><div><p class="font-semibold">Шта представља?</p><p>Просечан број година свих кандидата који су се пријавили за конкретно радно место.</p></div><div><p class="font-semibold">Како се рачуна?</p><ol class="list-decimal list-inside space-y-2 mt-1"><li>Из матичног броја (ЈМБГ) издвојити датум рођења кандидата.</li><li>За сваког кандидата израчунати старост: Старост кандидата = Текућа година − Година рођења</li><li>Израчунава се просек:<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin:10px 0;flex-wrap:nowrap;"><em>Просечна старост</em> = <span style="display:inline-flex;flex-direction:column;text-align:center;"><span style="border-bottom:1px solid currentColor;padding:2px 12px;font-style:italic;">Збир година свих кандидата</span><span style="padding:2px 12px;font-style:italic;">Укупан број кандидата</span></span></div></li></ol></div></div>'))
+                                    ->modalSubmitAction(false)
+                                    ->modalCancelActionLabel('Затвори')
+                                    ->modalWidth('lg')
+                            ),
                         Forms\Components\TextInput::make('udeo_kandidata_mladjih_od_30')
                             ->label('Удео кандидата млађих од 30 година')
                             ->numeric()
                             ->minValue(0)
                             ->maxValue(100)
                             ->step(0.01)
-                            ->suffix('%'),
+                            ->suffix('%')
+                            ->hintAction(
+                                \Filament\Forms\Components\Actions\Action::make('info_udeo_mladjih')
+                                    ->icon('heroicon-m-information-circle')
+                                    ->label('')
+                                    ->color('gray')
+                                    ->extraAttributes(['style' => 'padding:0;background:transparent;box-shadow:none;min-height:unset;color:rgb(156,163,175);'])
+                                    ->modalHeading('Удео кандидата млађих од 30 година')
+                                    ->modalContent(new \Illuminate\Support\HtmlString('<div class="space-y-3 text-sm"><div><p class="font-semibold">Шта представља?</p><p>Проценат кандидата који у тренутку расписивања конкурса имају мање од 30 година.</p></div><div><p class="font-semibold">Како се рачуна?</p><ol class="list-decimal list-inside space-y-2 mt-1"><li>На основу датума рођења утврдити који кандидати су млађи од 30 година.</li><li>Применити формулу:<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin:10px 0;flex-wrap:nowrap;"><em>Удео млађих од 30</em> = <span style="display:inline-flex;flex-direction:column;text-align:center;"><span style="border-bottom:1px solid currentColor;padding:2px 12px;font-style:italic;">Број кандидата млађих од 30 година</span><span style="padding:2px 12px;font-style:italic;">Укупан број кандидата</span></span><span style="white-space:nowrap;">× 100</span></div></li></ol></div><p>Резултат се исказује у процентима (%).</p></div>'))
+                                    ->modalSubmitAction(false)
+                                    ->modalCancelActionLabel('Затвори')
+                                    ->modalWidth('lg')
+                            ),
                     ])->columns(2)->collapsible(),
 
                 Forms\Components\Section::make('Валидне пријаве')
