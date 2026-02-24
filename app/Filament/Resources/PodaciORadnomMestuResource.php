@@ -543,6 +543,13 @@ class PodaciORadnomMestuResource extends Resource
                             ->minValue(0),
                         static::makeDateField('datum_pocetka_provere_ofk', 'Датум спровођења провере ОФК', 'datum_slanja_zahteva_za_sprovodjenje_ofk_provera', 'слања захтева за спровођење ОФК провера')
                             ->helperText('Уколико је било више дана провере, унети први датум'),
+                        Forms\Components\TextInput::make('broj_kandidata_koji_su_ispunlii_merila_ofk')
+                            ->label('Број кандидата који су испунили мерила ОФК')
+                            ->numeric()->minValue(0)
+                            ->live()
+                            ->helperText('укључујући и кандидате којима су се оцене признале')
+                            ->hintIcon('heroicon-m-information-circle')
+                            ->hintIconTooltip('Укупан број кандидата се може пронаћи у извештају СУК-а'),
                         static::makeDateField('datum_ofk_izvestaja', 'Датум ОФК извештаја', 'datum_pocetka_provere_ofk', 'спровођења провере ОФК')
                             ->helperText('Датум креирања извештаја СУКа'),
                     ])->columns(2)->collapsible(),
@@ -772,13 +779,6 @@ class PodaciORadnomMestuResource extends Resource
                             ->hintIconTooltip('Односи се на број извршилаца за радна места која су у току исте календарске године поново оглашена, услед чињенице да претходним огласом није попуњен планирани број извршилаца.'),
                     ])->columns(2)->collapsible(),
 
-                Forms\Components\Section::make('Кандидати који су испунили мерила')
-                    ->schema([
-                        Forms\Components\TextInput::make('broj_kandidata_koji_su_ispunlii_merila_ofk')
-                            ->label('Број кандидата који су испунили мерила ОФК')
-                            ->numeric()->minValue(0)
-                            ->live(),
-                    ])->columns(3)->collapsible(),
 
                 Forms\Components\Section::make('Додатни подаци о поступку')
                     ->schema([
