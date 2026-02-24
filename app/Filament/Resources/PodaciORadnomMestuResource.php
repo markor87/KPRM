@@ -136,7 +136,7 @@ class PodaciORadnomMestuResource extends Resource
     }
 
     private static function ofkScoreOptions(): array { return [7 => '7', 8 => '8', 9 => '9']; }
-    private static function pfkScoreOptions(): array { return array_merge([0=>'0',3=>'3',5=>'5',8=>'8'], array_combine(range(10,20),range(10,20))); }
+    private static function pfkScoreOptions(): array { return array_merge([3=>'3',5=>'5',8=>'8'], array_combine(range(10,20),range(10,20))); }
     private static function pkScoreOptions(): array { return array_combine(range(10,30),range(10,30)); }
     private static function zavrsniScoreOptions(): array { return [2 => '2', 4 => '4', 6 => '6']; }
 
