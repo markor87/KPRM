@@ -272,6 +272,12 @@ class PodaciORadnomMestuResource extends Resource
                             ->required()
                             ->preload()
                             ->searchable(),
+                        Forms\Components\Select::make('oblastiRada')
+                            ->label('Претежна област рада')
+                            ->relationship('oblastiRada', 'oblast_rada', fn($query) => $query->orderBy('id', 'asc'))
+                            ->multiple()
+                            ->preload()
+                            ->searchable(),
                         Forms\Components\Repeater::make('mestaRada')
                             ->label('Места рада са бројем извршилаца')
                             ->schema([
@@ -783,16 +789,6 @@ class PodaciORadnomMestuResource extends Resource
                             ->hintIconTooltip('Односи се на број извршилаца за радна места која су у току исте календарске године поново оглашена, услед чињенице да претходним огласом није попуњен планирани број извршилаца.'),
                     ])->columns(2)->collapsible(),
 
-
-                Forms\Components\Section::make('Додатни подаци о поступку')
-                    ->schema([
-                        Forms\Components\Select::make('oblastiRada')
-                            ->label('Претежна област рада')
-                            ->relationship('oblastiRada', 'oblast_rada', fn($query) => $query->orderBy('id', 'asc'))
-                            ->multiple()
-                            ->preload()
-                            ->searchable(),
-                    ])->columns(2)->collapsible(),
             ]);
     }
 
