@@ -845,14 +845,10 @@ class PodaciORadnomMestuResource extends Resource
                 TextColumn::make('mestaRada.mesto')
                     ->label('Место рада')
                     ->searchable()
-                    ->formatStateUsing(function ($record) {
-                        return $record->mestaRada->unique('id')->pluck('mesto')->join(', ');
-                    })
+                    ->state(fn ($record) => $record->mestaRada->unique('id')->pluck('mesto')->join(', '))
                     ->tooltip(function ($record) {
                         $mesta = $record->mestaRada->unique('id')->pluck('mesto');
-                        return $mesta->count() > 3
-                            ? $mesta->join(', ')
-                            : null;
+                        return $mesta->count() > 3 ? $mesta->join(', ') : null;
                     }),
             ])
             ->filters([
@@ -1041,6 +1037,9 @@ class PodaciORadnomMestuResource extends Resource
                         ->label('Преглед'),
                     ReplicateAction::make()
                         ->label('Дуплирај')
+                        ->modalHeading('Дуплирај радно место?')
+                        ->modalSubmitActionLabel('Дуплирај')
+                        ->modalCancelActionLabel('Откажи')
                         ->after(function ($replica, $record) {
                             // Kopiraj mestaRada relaciju (many-to-many)
                             $mestaRadaIds = $record->mestaRada()->pluck('sifarnik_mesta.id')->toArray();
