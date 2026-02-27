@@ -104,6 +104,16 @@ class TrajanjePostupakaChart extends ApexChartWidget
     {
         return RawJs::make(<<<'JS'
         {
+            chart: {
+                events: {
+                    updated: function(ctx) {
+                        var isDark = document.documentElement.classList.contains('dark');
+                        var c = isDark ? '#e5e7eb' : '#111827';
+                        if (ctx.w.config.dataLabels.style.colors && ctx.w.config.dataLabels.style.colors[0] === c) return;
+                        ctx.updateOptions({ dataLabels: { style: { colors: Array(20).fill(c) } } }, false, false, false);
+                    }
+                }
+            },
             dataLabels: {
                 style: {
                     colors: Array(20).fill(document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#111827')
