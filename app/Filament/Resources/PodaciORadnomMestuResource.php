@@ -616,7 +616,15 @@ class PodaciORadnomMestuResource extends Resource
                         TextInput::make('broj_neodazvanih_kandidata_pfk')
                             ->label('Број кандидата који се није одазвао позиву на ПФК')
                             ->numeric()
-                            ->minValue(0),
+                            ->minValue(0)
+                            ->rules([
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    $pfk = (int) $get('broj_kandidata_koji_su_ispunlii_merila_pfk');
+                                    if ($value !== null && $value !== '' && $pfk && (int)$value > $pfk) {
+                                        $fail('Број кандидата који се није одазвао позиву на ПФК не сме бити већи од броја кандидата који су испунили мерила ПФК.');
+                                    }
+                                },
+                            ]),
                         Select::make('provera_pfk')
                             ->label('Провера ПФК')
                             ->relationship('proveraPfkRelation', 'provera_pfk', fn($query) => $query->orderBy('id', 'asc'))
@@ -630,7 +638,16 @@ class PodaciORadnomMestuResource extends Resource
                         TextInput::make('broj_kandidata_za_koje_se_zakazuju_pk')
                             ->label('Број кандидата за које се заказују ПК')
                             ->numeric()
-                            ->minValue(0),
+                            ->minValue(0)
+                            ->live()
+                            ->rules([
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    $pfk = (int) $get('broj_kandidata_koji_su_ispunlii_merila_pfk');
+                                    if ($value !== null && $value !== '' && $pfk && (int)$value > $pfk) {
+                                        $fail('Број кандидата за које се заказују ПК не сме бити већи од броја кандидата који су испунили мерила ПФК.');
+                                    }
+                                },
+                            ]),
                         static::makeDateField('datum_pocetka_provere_pk', 'Датум почетка провере ПК', 'datum_slanja_zahteva_za_sprovodjenje_pk_provera', 'слања захтева за спровођење ПК провера')
                             ->helperText('Уколико је било више дана провере, унети први датум.'),
                         static::makeDateField('datum_pk_izvestaja', 'Датум ПК извештаја', 'datum_pocetka_provere_pk', 'почетка провере ПК')
@@ -646,11 +663,26 @@ class PodaciORadnomMestuResource extends Resource
                                         $fail('Број кандидата који су испунили мерила ПК не сме бити већи од броја кандидата који су испунили мерила ПФК.');
                                     }
                                 },
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    $pk = (int) $get('broj_kandidata_za_koje_se_zakazuju_pk');
+                                    if ($value !== null && $value !== '' && $pk && (int)$value > $pk) {
+                                        $fail('Број кандидата koji су испунили мерила на ПК не сме бити већи од броја кандидата за које се заказују ПК.');
+                                    }
+                                },
                             ]),
                         TextInput::make('broj_neodazvanih_kandidata_pk')
                             ->label('Број кандидата који се нису одазвали на проверу ПК')
                             ->numeric()
-                            ->minValue(0),
+                            ->minValue(0)
+                            ->rules([
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    $zakazani = (int) $get('broj_kandidata_za_koje_se_zakazuju_pk');
+                                    $ispunili = (int) $get('broj_kandidata_ispunili_merila_pk');
+                                    if ($value !== null && $value !== '' && $zakazani && ($ispunili + (int)$value) > $zakazani) {
+                                        $fail('Збир кандидата koji су испунили мерила ПК и кандидата koji се нису одазвали на ПК не сме бити већи од броја кандидата за које се заказују ПК.');
+                                    }
+                                },
+                            ]),
                         TextInput::make('broj_dana_sprovodjenja_pk_provera')
                             ->label('Број дана спровођења ПК провера')
                             ->numeric()
@@ -664,7 +696,16 @@ class PodaciORadnomMestuResource extends Resource
                         TextInput::make('broj_neodazvanih_kandidata_dokumentacija')
                             ->label('Број кандидата који се није одазвао позиву на доставу документације')
                             ->numeric()
-                            ->minValue(0),
+                            ->minValue(0)
+                            ->live()
+                            ->rules([
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    $pk = (int) $get('broj_kandidata_ispunili_merila_pk');
+                                    if ($value !== null && $value !== '' && $pk && (int)$value > $pk) {
+                                        $fail('Број кандидата који се није одазвао позиву на доставу документације не сме бити већи од броја кандидата који су испунили мерила ПК.');
+                                    }
+                                },
+                            ]),
                         static::makeDateField('datum_pocetka_sprovodjenja_intervjua', 'Датум спровођења завршног интервјуа', 'datum_predaje_dokumentacije', 'предаје документације'),
                         static::makeDateField('datum_izvestaja_sa_zavrsnog_intervjua', 'Датум извештаја са завршног интервјуа', 'datum_pocetka_sprovodjenja_intervjua', 'спровођења завршног интервјуа')
                             ->hintIcon('heroicon-m-information-circle')
@@ -672,18 +713,29 @@ class PodaciORadnomMestuResource extends Resource
                         TextInput::make('broj_odazvanih_kandidata_na_zavrsnom_razgovoru')
                             ->label('Број одазваних кандидата на завршном разговору')
                             ->numeric()->minValue(0)
+                            ->live()
                             ->rules([
                                 fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
                                     $pk = (int) $get('broj_kandidata_ispunili_merila_pk');
-                                    if ($value && $pk && (int)$value > $pk) {
-                                        $fail('Број одазваних кандидата на завршном разговору не сме бити већи од броја кандидата који су испунили мерила ПК.');
+                                    $neodazvani = (int) $get('broj_neodazvanih_kandidata_dokumentacija');
+                                    $max = $pk - $neodazvani;
+                                    if ($value !== null && $value !== '' && $pk && (int)$value > $max) {
+                                        $fail('Број одазваних кандидата на завршном разговору не сме бити већи од разлике броја кандидата koji су испунили мерила ПК и броја кандидата koji се нису одазвали на доставу документације.');
                                     }
                                 },
                             ]),
                         TextInput::make('broj_neodazvanih_kandidata_zavrsni_razgovor')
                             ->label('Број кандидата који се није одазвао позиву на завршном разговору')
                             ->numeric()
-                            ->minValue(0),
+                            ->minValue(0)
+                            ->rules([
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    $odazvani = (int) $get('broj_odazvanih_kandidata_na_zavrsnom_razgovoru');
+                                    if ($value !== null && $value !== '' && $odazvani && (int)$value > $odazvani) {
+                                        $fail('Број кандидата koji се нису одазвали на завршном разговору не сме бити већи од броја одазваних кандидата на завршном разговору.');
+                                    }
+                                },
+                            ]),
                         static::makeDateField('datum_dostavljanja_liste_rukovodiocu_organa', 'Датум достављања листе руководиоцу органа', 'datum_pocetka_sprovodjenja_intervjua', 'спровођења завршног интервјуа'),
                         static::makeDateField('datum_donosenja_resenja_o_izabranom_kandidatu', 'Датум доношења решења о изабраном кандидату', 'datum_dostavljanja_liste_rukovodiocu_organa', 'достављања листе руководиоцу органа'),
                         static::makeDateField('datum_stupanja_na_rad', 'Датум ступања на рад', 'datum_donosenja_resenja_o_izabranom_kandidatu', 'доношења решења о изабраном кандидату')
@@ -698,7 +750,16 @@ class PodaciORadnomMestuResource extends Resource
                             ->columnSpanFull(),
                         TextInput::make('broj_kandidata_na_listi')
                             ->label('Број кандидата на листи')
-                            ->numeric()->minValue(0),
+                            ->numeric()->minValue(0)
+                            ->live()
+                            ->rules([
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    $odazvani = (int) $get('broj_odazvanih_kandidata_na_zavrsnom_razgovoru');
+                                    if ($value !== null && $value !== '' && $odazvani && (int)$value > $odazvani) {
+                                        $fail('Број кандидата на листи не сме бити већи од броја одазваних кандидата на завршном разговору.');
+                                    }
+                                },
+                            ]),
                         TextInput::make('broj_kandidata_iz_organa_na_listi')
                             ->label('Број кандидата из органа који расписује конкурс на листи')
                             ->numeric()->minValue(0)
@@ -793,6 +854,14 @@ class PodaciORadnomMestuResource extends Resource
                             ->lte('broj_izvrsilaca')
                             ->validationMessages([
                                 'lte' => 'Број примљених извршилаца не може бити већи од броја извршилаца.',
+                            ])
+                            ->rules([
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    $lista = (int) $get('broj_kandidata_na_listi');
+                                    if ($value !== null && $value !== '' && $lista && (int)$value > $lista) {
+                                        $fail('Број примљених извршилаца не сме бити већи од броја кандидата на листи.');
+                                    }
+                                },
                             ]),
                         TextInput::make('ocena_sa_vrednovanja')
                             ->label('Оцена са вредновања')
