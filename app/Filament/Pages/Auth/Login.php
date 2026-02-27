@@ -2,19 +2,20 @@
 
 namespace App\Filament\Pages\Auth;
 
+use Filament\Schemas\Components\Component;
+use Filament\Forms\Components\Placeholder;
+use Filament\Auth\Http\Responses\Contracts\LoginResponse;
+use App\Models\User;
 use App\Mail\TwoFactorCodeMail;
 use App\Models\Setting;
 use Filament\Facades\Filament;
-use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Checkbox;
-use Filament\Http\Responses\Auth\Contracts\LoginResponse;
-use Filament\Pages\Auth\Login as BaseLogin;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use Illuminate\Support\HtmlString;
 
-class Login extends BaseLogin
+class Login extends \Filament\Auth\Pages\Login
 {
     public function mount(): void
     {
@@ -34,7 +35,7 @@ class Login extends BaseLogin
         return [
             'form' => $this->form(
                 $this->makeForm()
-                    ->schema([
+                    ->components([
                         $this->getImageComponent(),
                         $this->getEmailFormComponent(),
                         $this->getPasswordFormComponent(),
@@ -53,7 +54,7 @@ class Login extends BaseLogin
 
     protected function getImageComponent(): Component
     {
-        return \Filament\Forms\Components\Placeholder::make('')
+        return Placeholder::make('')
             ->label('')
             ->content(new HtmlString('
                 <div style="text-align: center; margin-bottom: 1rem;">
@@ -112,7 +113,7 @@ class Login extends BaseLogin
             }
 
             // Get user without logging them in
-            $user = \App\Models\User::where('email', $credentials['email'])->first();
+            $user = User::where('email', $credentials['email'])->first();
 
             // Generate 6-digit code
             $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
@@ -130,7 +131,7 @@ class Login extends BaseLogin
             session(['2fa_user_id' => $user->id]);
 
             // Redirect to 2FA verification page
-            $this->redirect(route('two-factor.login'));
+            $this->redirect(route('filament.admin.two-factor-challenge'));
             return null;
         } else {
             // 2FA is NOT enabled, login normally WITHOUT remember me

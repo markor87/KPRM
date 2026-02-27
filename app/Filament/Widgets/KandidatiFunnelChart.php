@@ -8,7 +8,7 @@ use App\Services\OrganFilterService;
 
 class KandidatiFunnelChart extends Widget
 {
-    protected static string $view = 'filament.widgets.kandidati-funnel-chart';
+    protected string $view = 'filament.widgets.kandidati-funnel-chart';
 
     protected static ?int $sort = 6;
 

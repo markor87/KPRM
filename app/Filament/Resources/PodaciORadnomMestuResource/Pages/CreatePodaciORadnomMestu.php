@@ -2,6 +2,10 @@
 
 namespace App\Filament\Resources\PodaciORadnomMestuResource\Pages;
 
+use ReflectionClass;
+use ReflectionMethod;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Throwable;
 use App\Filament\Resources\PodaciORadnomMestuResource;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
@@ -55,8 +59,8 @@ class CreatePodaciORadnomMestu extends CreateRecord
 
         // Затим логирај релације
         // Pronađi sve belongsToMany relacije na modelu
-        $reflection = new \ReflectionClass($this->record);
-        foreach ($reflection->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
+        $reflection = new ReflectionClass($this->record);
+        foreach ($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
             if ($method->class === get_class($this->record) &&
                 $method->getNumberOfParameters() === 0 &&
                 !in_array($method->name, ['getKey', 'getMorphClass', 'getTable'])) {
@@ -65,7 +69,7 @@ class CreatePodaciORadnomMestu extends CreateRecord
                     $relation = $this->record->{$method->name}();
 
                     // Proveravamo da li je belongsToMany relacija
-                    if ($relation instanceof \Illuminate\Database\Eloquent\Relations\BelongsToMany) {
+                    if ($relation instanceof BelongsToMany) {
                         $relationName = $method->name;
 
                         // Učitaj nove vrednosti sa nazivima
@@ -93,7 +97,7 @@ class CreatePodaciORadnomMestu extends CreateRecord
                                 ->log('Dodato ' . $this->getRelationLabel($relationName));
                         }
                     }
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     // Logiraj greške umesto tihog ignorisanja
                     Log::warning('Greška pri logiranju relacije u CreatePodaciORadnomMestu', [
                         'method' => $method->name,

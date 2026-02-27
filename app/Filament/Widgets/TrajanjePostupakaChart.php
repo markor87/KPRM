@@ -9,7 +9,7 @@ use Carbon\Carbon;
 
 class TrajanjePostupakaChart extends Widget
 {
-    protected static string $view = 'filament.widgets.trajanje-postupaka-chart';
+    protected string $view = 'filament.widgets.trajanje-postupaka-chart';
 
     protected static ?int $sort = 7;
 

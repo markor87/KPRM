@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 
 class ProsecnoVremeTrajanjaChart extends Widget
 {
-    protected static string $view = 'filament.widgets.prosecno-vreme-trajanja-chart';
+    protected string $view = 'filament.widgets.prosecno-vreme-trajanja-chart';
 
     protected static ?int $sort = 5;
 

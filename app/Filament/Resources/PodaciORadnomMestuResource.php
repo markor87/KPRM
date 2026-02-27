@@ -2,12 +2,37 @@
 
 namespace App\Filament\Resources;
 
+use Closure;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Forms\Components\TextInput;
+use Exception;
+use App\Services\OrganFilterService;
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\Select;
+use App\Models\SifarnikOrgani;
+use Filament\Forms\Components\Repeater;
+use App\Models\SifarnikMesta;
+use Filament\Actions\Action;
+use Illuminate\Support\HtmlString;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Actions\ActionGroup;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Actions\ViewAction;
+use Filament\Actions\ReplicateAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\PodaciORadnomMestuResource\Pages\ListPodaciORadnomMestus;
+use App\Filament\Resources\PodaciORadnomMestuResource\Pages\CreatePodaciORadnomMestu;
+use App\Filament\Resources\PodaciORadnomMestuResource\Pages\EditPodaciORadnomMestu;
 use App\Filament\Resources\PodaciORadnomMestuResource\Pages;
 use App\Filament\Resources\PodaciORadnomMestuResource\RelationManagers;
 use App\Models\PodaciORadnomMestu;
 use App\Exports\PodaciORadnomMestuExport;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -21,7 +46,7 @@ class PodaciORadnomMestuResource extends Resource
 {
     protected static ?string $model = PodaciORadnomMestu::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-briefcase';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-briefcase';
 
     protected static ?string $navigationLabel = 'Радна Места';
 
@@ -40,7 +65,7 @@ class PodaciORadnomMestuResource extends Resource
         string $totalField,
         array $sumFields,
         string $errorMessage
-    ): \Closure {
+    ): Closure {
         return function ($get) use ($totalField, $sumFields, $errorMessage) {
             return function (string $attribute, $value, $fail) use ($get, $totalField, $sumFields, $errorMessage) {
                 $ukupan = $get($totalField) ?? 0;
@@ -60,7 +85,7 @@ class PodaciORadnomMestuResource extends Resource
     /**
      * Validacija: uspešno završen javni konkurs mora imati popunjena sva datumska polja (osim 3 izuzeta).
      */
-    protected static function uspesnoZavrsenValidationRule(): \Closure
+    protected static function uspesnoZavrsenValidationRule(): Closure
     {
         $requiredDates = [
             'datum_dobijanja_saglasnosti_vlade'               => 'Датум добијања сагласности Владе',
@@ -84,7 +109,7 @@ class PodaciORadnomMestuResource extends Resource
             'datum_formiranja_liste_kandidata'                => 'Дан формирања листе кандидата',
         ];
 
-        return fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get, $requiredDates) {
+        return fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get, $requiredDates) {
             if ($value != 1) return;
             if ($get('tip_konkursa') != 1) return;
 
@@ -101,11 +126,11 @@ class PodaciORadnomMestuResource extends Resource
         };
     }
 
-    protected static function makeDateField(string $name, string $label, string $afterField = null, string $afterLabel = null): Forms\Components\TextInput
+    protected static function makeDateField(string $name, string $label, string $afterField = null, string $afterLabel = null): TextInput
     {
         // Submit-time validation (prevents saving bad data)
         $rules = [
-            fn () => function (string $attribute, $value, \Closure $fail) {
+            fn () => function (string $attribute, $value, Closure $fail) {
                 if (!$value) return;
                 if (!preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $value)) {
                     $fail('Датум мора бити у формату дд.мм.гггг');
@@ -119,19 +144,19 @@ class PodaciORadnomMestuResource extends Resource
         ];
 
         if ($afterField && $afterLabel) {
-            $rules[] = fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get, $afterField, $afterLabel) {
+            $rules[] = fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get, $afterField, $afterLabel) {
                 if (!$value || !$get($afterField)) return;
                 try {
-                    $current  = \Carbon\Carbon::createFromFormat('d.m.Y', $value);
-                    $previous = \Carbon\Carbon::createFromFormat('d.m.Y', $get($afterField));
+                    $current  = Carbon::createFromFormat('d.m.Y', $value);
+                    $previous = Carbon::createFromFormat('d.m.Y', $get($afterField));
                     if ($current->lt($previous)) {
                         $fail("Датум мора бити после или једнак датуму {$afterLabel}");
                     }
-                } catch (\Exception $e) {}
+                } catch (Exception $e) {}
             };
         }
 
-        return Forms\Components\TextInput::make($name)
+        return TextInput::make($name)
             ->label($label)
             ->mask('99.99.9999')
             ->placeholder('дд.мм.гггг')
@@ -159,16 +184,16 @@ class PodaciORadnomMestuResource extends Resource
                 // Real-time comparison validation
                 if ($afterField && $afterLabel && $get($afterField)) {
                     try {
-                        $current  = \Carbon\Carbon::createFromFormat('d.m.Y', $state);
-                        $previous = \Carbon\Carbon::createFromFormat('d.m.Y', $get($afterField));
+                        $current  = Carbon::createFromFormat('d.m.Y', $state);
+                        $previous = Carbon::createFromFormat('d.m.Y', $get($afterField));
                         if ($current->lt($previous)) {
                             $livewire->addError($path, "Датум мора бити после или једнак датуму {$afterLabel}");
                         }
-                    } catch (\Exception $e) {}
+                    } catch (Exception $e) {}
                 }
             })
-            ->dehydrateStateUsing(fn ($state) => $state ? \Carbon\Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
-            ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d.m.Y') : null);
+            ->dehydrateStateUsing(fn ($state) => $state ? Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
+            ->formatStateUsing(fn ($state) => $state ? Carbon::parse($state)->format('d.m.Y') : null);
     }
 
     protected static function dateDiffInDays($record, string $startField, string $endField): string
@@ -195,7 +220,7 @@ class PodaciORadnomMestuResource extends Resource
             'organRelation',
             'zvanjeRelation',
         ]);
-        return app(\App\Services\OrganFilterService::class)->applyOrganFilter($query, 'organ');
+        return app(OrganFilterService::class)->applyOrganFilter($query, 'organ');
     }
 
     /**
@@ -208,13 +233,13 @@ class PodaciORadnomMestuResource extends Resource
             || false;
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\Section::make('Основни подаци о конкурсу')
+        return $schema
+            ->components([
+                Section::make('Основни подаци о конкурсу')
                     ->schema([
-                        Forms\Components\TextInput::make('naziv_radnog_mesta')
+                        TextInput::make('naziv_radnog_mesta')
                             ->label('Назив радног места')
                             ->maxLength(255)
                             ->required()
@@ -223,7 +248,7 @@ class PodaciORadnomMestuResource extends Resource
                                 'regex' => 'Назив радног места може садржати само ћирилична слова.',
                             ])
                             ->columnSpanFull(),
-                        Forms\Components\Select::make('vrsta_organa')
+                        Select::make('vrsta_organa')
                             ->label('Врста органа')
                             ->relationship('vrstaOrganaRelation', 'vrsta_organa', fn($query) => $query->orderBy('id', 'asc'))
                             ->required()
@@ -236,14 +261,14 @@ class PodaciORadnomMestuResource extends Resource
                                 $user = auth()->user();
                                 return $user && $user->organ ? $user->organ->vrsta_organ_id : null;
                             }),
-                        Forms\Components\Select::make('organ')
+                        Select::make('organ')
                             ->label('Орган')
                             ->options(function (callable $get) {
                                 $vrstaOrganaId = $get('vrsta_organa');
                                 if (!$vrstaOrganaId) {
-                                    return \App\Models\SifarnikOrgani::pluck('organ', 'id');
+                                    return SifarnikOrgani::pluck('organ', 'id');
                                 }
-                                return \App\Models\SifarnikOrgani::where('vrsta_organ_id', $vrstaOrganaId)
+                                return SifarnikOrgani::where('vrsta_organ_id', $vrstaOrganaId)
                                     ->pluck('organ', 'id');
                             })
                             ->required()
@@ -254,42 +279,42 @@ class PodaciORadnomMestuResource extends Resource
                             ->default(function () {
                                 return auth()->user()?->organ_id;
                             }),
-                        Forms\Components\Select::make('tip_konkursa')
+                        Select::make('tip_konkursa')
                             ->label('Тип конкурса')
                             ->relationship('tipKonkursaRelation', 'tip_konkursa')
                             ->required()
                             ->preload()
                             ->searchable(),
-                        Forms\Components\TextInput::make('broj_izvrsilaca')
+                        TextInput::make('broj_izvrsilaca')
                             ->label('Број извршилаца')
                             ->required()
                             ->numeric()
                             ->minValue(1)
                             ->live(),
-                        Forms\Components\Select::make('zvanje')
+                        Select::make('zvanje')
                             ->label('Звање')
                             ->relationship('zvanjeRelation', 'zvanje', fn($query) => $query->orderBy('id', 'asc'))
                             ->required()
                             ->preload()
                             ->searchable(),
-                        Forms\Components\Select::make('oblastiRada')
+                        Select::make('oblastiRada')
                             ->label('Претежна област рада')
                             ->relationship('oblastiRada', 'oblast_rada', fn($query) => $query->orderBy('id', 'asc'))
                             ->multiple()
                             ->preload()
                             ->searchable(),
-                        Forms\Components\Repeater::make('mestaRada')
+                        Repeater::make('mestaRada')
                             ->label('Места рада са бројем извршилаца')
                             ->schema([
-                                Forms\Components\Select::make('sifarnik_mesta_id')
+                                Select::make('sifarnik_mesta_id')
                                     ->label('Место рада')
-                                    ->options(\App\Models\SifarnikMesta::whereNotNull('mesto')->where('mesto', '!=', '')->orderBy('mesto')->pluck('mesto', 'id'))
+                                    ->options(SifarnikMesta::whereNotNull('mesto')->where('mesto', '!=', '')->orderBy('mesto')->pluck('mesto', 'id'))
                                     ->required()
                                     ->searchable()
                                     ->distinct()
                                     ->live(),
 
-                                Forms\Components\TextInput::make('broj_izvrsilaca')
+                                TextInput::make('broj_izvrsilaca')
                                     ->label('Број извршилаца')
                                     ->numeric()
                                     ->required()
@@ -306,7 +331,7 @@ class PodaciORadnomMestuResource extends Resource
                                 $brojIzvrsilaca = $state['broj_izvrsilaca'] ?? 1;
 
                                 if ($mestoId) {
-                                    $mesto = \App\Models\SifarnikMesta::find($mestoId);
+                                    $mesto = SifarnikMesta::find($mestoId);
                                     if ($mesto) {
                                         return "{$mesto->mesto} ({$brojIzvrsilaca})";
                                     }
@@ -315,7 +340,7 @@ class PodaciORadnomMestuResource extends Resource
                                 return 'Место рада';
                             })
                             ->collapsible()
-                            ->afterStateHydrated(function (Forms\Components\Repeater $component, $state, $record) {
+                            ->afterStateHydrated(function (Repeater $component, $state, $record) {
                                 if ($record && $record->mestaRada) {
                                     $data = $record->mestaRada->map(function ($mesto) {
                                         return [
@@ -329,7 +354,7 @@ class PodaciORadnomMestuResource extends Resource
                             })
                             ->dehydrated(false)
                             ->rules([
-                                fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get) {
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
                                     $ukupanBrojIzvrsilaca = (int) $get('broj_izvrsilaca') ?: 0;
 
                                     if (!is_array($value) || empty($value)) {
@@ -351,31 +376,31 @@ class PodaciORadnomMestuResource extends Resource
                                     }
                                 },
                             ])
-                            ->helperText(fn (Forms\Get $get) => 'Укупан број извршилаца: ' . ($get('broj_izvrsilaca') ?: 0) . '. Збир по градовима мора бити једнак овом броју.'),
-                        Forms\Components\Select::make('status_konkursa_na_dan_1')
+                            ->helperText(fn (Get $get) => 'Укупан број извршилаца: ' . ($get('broj_izvrsilaca') ?: 0) . '. Збир по градовима мора бити једнак овом броју.'),
+                        Select::make('status_konkursa_na_dan_1')
                             ->label('Статус конкурса на дан 31/12/' . (now()->year - 1))
                             ->relationship('statusKonkursaNaDan1Relation', 'status_konkursa', fn($query) => $query->orderBy('id', 'asc'))
                             ->preload()
                             ->searchable()
                             ->hidden(fn () => auth()->user()->hasRole('User'))
                             ->rules([static::uspesnoZavrsenValidationRule()]),
-                        Forms\Components\Select::make('status_konkursa_na_dan_2')
+                        Select::make('status_konkursa_na_dan_2')
                             ->label('Статус конкурса на дан 31/12/' . now()->year)
                             ->relationship('statusKonkursaNaDan2Relation', 'status_konkursa', fn($query) => $query->orderBy('id', 'asc'))
                             ->preload()
                             ->searchable()
                             ->live()
                             ->rules([static::uspesnoZavrsenValidationRule()]),
-                        Forms\Components\Select::make('razlog_neuspelog_konkursa')
+                        Select::make('razlog_neuspelog_konkursa')
                             ->label('Разлог неуспелог конкурса')
                             ->relationship('razlogNeuspelogKonkursaRelation', 'razlog', fn($query) => $query->orderBy('id', 'asc'))
                             ->preload()
                             ->searchable()
-                            ->disabled(fn (Forms\Get $get) => $get('status_konkursa_na_dan_2') != 2)
+                            ->disabled(fn (Get $get) => $get('status_konkursa_na_dan_2') != 2)
                             ->dehydrated(),
-                    ])->columns(3),
+                    ])->columns(3)->columnSpanFull(),
 
-                Forms\Components\Section::make('Покретање поступка')
+                Section::make('Покретање поступка')
                     ->schema([
                         static::makeDateField('datum_dobijanja_saglasnosti_vlade', 'Датум добијања сагласности Владе'),
                         static::makeDateField('datum_donosenja_resenja_o_pokretanju_postupka', 'Датум доношења решења о покретању поступка', 'datum_dobijanja_saglasnosti_vlade', 'добијања сагласности Владе'),
@@ -383,14 +408,14 @@ class PodaciORadnomMestuResource extends Resource
                         static::makeDateField('datum_odrzavanja_prvog_sastanka', 'Датум одржавања првог састанка', 'datum_dobijanja_obavestenja_od_suka', 'добијања обавештења од СУКа'),
                         static::makeDateField('datum_oglasavanja', 'Датум оглашавања', 'datum_odrzavanja_prvog_sastanka', 'одржавања првог sastanka'),
                         static::makeDateField('datum_pregleda_prijava', 'Датум прегледа пријава', 'datum_oglasavanja', 'оглашавања'),
-                    ])->columns(3)->collapsible(),
+                    ])->columns(3)->collapsible()->columnSpanFull(),
 
-                Forms\Components\Section::make('Пристигле пријаве')
+                Section::make('Пристигле пријаве')
                     ->schema([
-                        Forms\Components\TextInput::make('ukupan_broj_prijava')
+                        TextInput::make('ukupan_broj_prijava')
                             ->label('Укупан број пријава')
                             ->numeric()->minValue(0),
-                        Forms\Components\TextInput::make('broj_prijava_iz_organa')
+                        TextInput::make('broj_prijava_iz_organa')
                             ->label('Број пријава из органа који расписује конкурс')
                             ->numeric()->minValue(0)
                             ->lte('ukupan_broj_prijava')
@@ -404,7 +429,7 @@ class PodaciORadnomMestuResource extends Resource
                                     'Збир пријава мора бити једнак укупном броју пријава.'
                                 ),
                             ]),
-                        Forms\Components\TextInput::make('broj_prijava_iz_drugih_organa')
+                        TextInput::make('broj_prijava_iz_drugih_organa')
                             ->label('Број пријава из других органа државне управе')
                             ->numeric()->minValue(0)
                             ->lte('ukupan_broj_prijava')
@@ -418,7 +443,7 @@ class PodaciORadnomMestuResource extends Resource
                                     'Збир пријава мора бити једнак укупном броју пријава.'
                                 ),
                             ]),
-                        Forms\Components\TextInput::make('broj_prijava_van_drzavnih_organa')
+                        TextInput::make('broj_prijava_van_drzavnih_organa')
                             ->label('Број пријава ван државних органа и/или незапослена лица')
                             ->numeric()->minValue(0)
                             ->lte('ukupan_broj_prijava')
@@ -432,22 +457,22 @@ class PodaciORadnomMestuResource extends Resource
                                     'Збир пријава мора бити једнак укупном броју пријава.'
                                 ),
                             ]),
-                    ])->columns(2)->collapsible(),
+                    ])->columns(2)->collapsible()->columnSpanFull(),
 
-                Forms\Components\Section::make('Старосна структура кандидата')
+                Section::make('Старосна структура кандидата')
                     ->headerActions([
-                        \Filament\Forms\Components\Actions\Action::make('info_starosna')
+                        Action::make('info_starosna')
                             ->icon('heroicon-m-information-circle')
                             ->label('')
                             ->color('gray')
                             ->modalHeading('Старосна структура кандидата')
-                            ->modalContent(new \Illuminate\Support\HtmlString('<p class="text-sm">Ови подаци се прикупљају ради израчунавања кључних показатеља учинка (КПИ) у изборном поступку, пре свега у циљу праћења старосне структуре пријављених кандидата и анализе атрактивности радних места за млађе категорије становништва. Прикупљање и извештавање о овим подацима представља захтев Министарства државне управе и локалне самоуправе (МДУЛС). Подаци се могу израчунати на основу података из образаца пријаве, односно из матичног броја кандидата (датум рођења).</p>'))
+                            ->modalContent(new HtmlString('<p class="text-sm">Ови подаци се прикупљају ради израчунавања кључних показатеља учинка (КПИ) у изборном поступку, пре свега у циљу праћења старосне структуре пријављених кандидата и анализе атрактивности радних места за млађе категорије становништва. Прикупљање и извештавање о овим подацима представља захтев Министарства државне управе и локалне самоуправе (МДУЛС). Подаци се могу израчунати на основу података из образаца пријаве, односно из матичног броја кандидата (датум рођења).</p>'))
                             ->modalSubmitAction(false)
                             ->modalCancelActionLabel('Затвори')
                             ->modalWidth('lg'),
                     ])
                     ->schema([
-                        Forms\Components\TextInput::make('prosecna_starost_kandidata')
+                        TextInput::make('prosecna_starost_kandidata')
                             ->label('Просечна старост кандидата у изборном поступку')
                             ->numeric()
                             ->minValue(0)
@@ -455,18 +480,18 @@ class PodaciORadnomMestuResource extends Resource
                             ->step(0.01)
                             ->suffix('година')
                             ->hintAction(
-                                \Filament\Forms\Components\Actions\Action::make('info_prosecna_starost')
+                                Action::make('info_prosecna_starost')
                                     ->icon('heroicon-m-information-circle')
                                     ->label('')
                                     ->color('gray')
                                     ->extraAttributes(['style' => 'padding:0;background:transparent;box-shadow:none;min-height:unset;color:rgb(156,163,175);'])
                                     ->modalHeading('Просечна старост кандидата у изборном поступку')
-                                    ->modalContent(new \Illuminate\Support\HtmlString('<div class="space-y-3 text-sm"><div><p class="font-semibold">Шта представља?</p><p>Просечан број година свих кандидата који су се пријавили за конкретно радно место.</p></div><div><p class="font-semibold">Како се рачуна?</p><ol class="list-decimal list-inside space-y-2 mt-1"><li>Из матичног броја (ЈМБГ) издвојити датум рођења кандидата.</li><li>За сваког кандидата израчунати старост: Старост кандидата = Текућа година − Година рођења</li><li>Израчунава се просек:<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin:10px 0;flex-wrap:nowrap;"><em>Просечна старост</em> = <span style="display:inline-flex;flex-direction:column;text-align:center;"><span style="border-bottom:1px solid currentColor;padding:2px 12px;font-style:italic;">Збир година свих кандидата</span><span style="padding:2px 12px;font-style:italic;">Укупан број кандидата</span></span></div></li></ol></div></div>'))
+                                    ->modalContent(new HtmlString('<div class="space-y-3 text-sm"><div><p class="font-semibold">Шта представља?</p><p>Просечан број година свих кандидата који су се пријавили за конкретно радно место.</p></div><div><p class="font-semibold">Како се рачуна?</p><ol class="list-decimal list-inside space-y-2 mt-1"><li>Из матичног броја (ЈМБГ) издвојити датум рођења кандидата.</li><li>За сваког кандидата израчунати старост: Старост кандидата = Текућа година − Година рођења</li><li>Израчунава се просек:<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin:10px 0;flex-wrap:nowrap;"><em>Просечна старост</em> = <span style="display:inline-flex;flex-direction:column;text-align:center;"><span style="border-bottom:1px solid currentColor;padding:2px 12px;font-style:italic;">Збир година свих кандидата</span><span style="padding:2px 12px;font-style:italic;">Укупан број кандидата</span></span></div></li></ol></div></div>'))
                                     ->modalSubmitAction(false)
                                     ->modalCancelActionLabel('Затвори')
                                     ->modalWidth('lg')
                             ),
-                        Forms\Components\TextInput::make('udeo_kandidata_mladjih_od_30')
+                        TextInput::make('udeo_kandidata_mladjih_od_30')
                             ->label('Удео кандидата млађих од 30 година')
                             ->numeric()
                             ->minValue(0)
@@ -474,29 +499,29 @@ class PodaciORadnomMestuResource extends Resource
                             ->step(0.01)
                             ->suffix('%')
                             ->hintAction(
-                                \Filament\Forms\Components\Actions\Action::make('info_udeo_mladjih')
+                                Action::make('info_udeo_mladjih')
                                     ->icon('heroicon-m-information-circle')
                                     ->label('')
                                     ->color('gray')
                                     ->extraAttributes(['style' => 'padding:0;background:transparent;box-shadow:none;min-height:unset;color:rgb(156,163,175);'])
                                     ->modalHeading('Удео кандидата млађих од 30 година')
-                                    ->modalContent(new \Illuminate\Support\HtmlString('<div class="space-y-3 text-sm"><div><p class="font-semibold">Шта представља?</p><p>Проценат кандидата који у тренутку расписивања конкурса имају мање од 30 година.</p></div><div><p class="font-semibold">Како се рачуна?</p><ol class="list-decimal list-inside space-y-2 mt-1"><li>На основу датума рођења утврдити који кандидати су млађи од 30 година.</li><li>Применити формулу:<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin:10px 0;flex-wrap:nowrap;"><em>Удео млађих од 30</em> = <span style="display:inline-flex;flex-direction:column;text-align:center;"><span style="border-bottom:1px solid currentColor;padding:2px 12px;font-style:italic;">Број кандидата млађих од 30 година</span><span style="padding:2px 12px;font-style:italic;">Укупан број кандидата</span></span><span style="white-space:nowrap;">× 100</span></div></li></ol></div><p>Резултат се исказује у процентима (%).</p></div>'))
+                                    ->modalContent(new HtmlString('<div class="space-y-3 text-sm"><div><p class="font-semibold">Шта представља?</p><p>Проценат кандидата који у тренутку расписивања конкурса имају мање од 30 година.</p></div><div><p class="font-semibold">Како се рачуна?</p><ol class="list-decimal list-inside space-y-2 mt-1"><li>На основу датума рођења утврдити који кандидати су млађи од 30 година.</li><li>Применити формулу:<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin:10px 0;flex-wrap:nowrap;"><em>Удео млађих од 30</em> = <span style="display:inline-flex;flex-direction:column;text-align:center;"><span style="border-bottom:1px solid currentColor;padding:2px 12px;font-style:italic;">Број кандидата млађих од 30 година</span><span style="padding:2px 12px;font-style:italic;">Укупан број кандидата</span></span><span style="white-space:nowrap;">× 100</span></div></li></ol></div><p>Резултат се исказује у процентима (%).</p></div>'))
                                     ->modalSubmitAction(false)
                                     ->modalCancelActionLabel('Затвори')
                                     ->modalWidth('lg')
                             ),
-                    ])->columns(2)->collapsible(),
+                    ])->columns(2)->collapsible()->columnSpanFull(),
 
-                Forms\Components\Section::make('Валидне пријаве')
+                Section::make('Валидне пријаве')
                     ->schema([
-                        Forms\Components\TextInput::make('broj_validnih_prijava')
+                        TextInput::make('broj_validnih_prijava')
                             ->label('Број валидних пријава')
                             ->numeric()->minValue(0)
                             ->lte('ukupan_broj_prijava')
                             ->validationMessages([
                                 'lte' => 'Број валидних пријава не може бити већи од укупног броја пријава.',
                             ]),
-                        Forms\Components\TextInput::make('broj_validnih_prijava_iz_organa')
+                        TextInput::make('broj_validnih_prijava_iz_organa')
                             ->label('Број валидних пријава из органа који расписује конкурс')
                             ->numeric()->minValue(0)
                             ->lte('broj_validnih_prijava')
@@ -510,7 +535,7 @@ class PodaciORadnomMestuResource extends Resource
                                     'Збир валидних пријава мора бити једнак укупном броју валидних пријава.'
                                 ),
                             ]),
-                        Forms\Components\TextInput::make('broj_validnih_prijava_iz_drugog_organa')
+                        TextInput::make('broj_validnih_prijava_iz_drugog_organa')
                             ->label('Број валидних пријава из других органа државне управе')
                             ->numeric()->minValue(0)
                             ->lte('broj_validnih_prijava')
@@ -524,7 +549,7 @@ class PodaciORadnomMestuResource extends Resource
                                     'Збир валидних пријава мора бити једнак укупном броју валидних пријава.'
                                 ),
                             ]),
-                        Forms\Components\TextInput::make('broj_validnih_prijava_van_drzavnih_organa')
+                        TextInput::make('broj_validnih_prijava_van_drzavnih_organa')
                             ->label('Број валидних пријава ван органа државне управе и/или незапослена лица')
                             ->numeric()->minValue(0)
                             ->lte('broj_validnih_prijava')
@@ -538,22 +563,22 @@ class PodaciORadnomMestuResource extends Resource
                                     'Збир валидних пријава мора бити једнак укупном броју валидних пријава.'
                                 ),
                             ]),
-                    ])->columns(2)->collapsible(),
+                    ])->columns(2)->collapsible()->columnSpanFull(),
 
-                Forms\Components\Section::make('ОФК провера')
+                Section::make('ОФК провера')
                     ->schema([
                         static::makeDateField('datum_slanja_zahteva_za_sprovodjenje_ofk_provera', 'Датум слања захтева за спровођење ОФК провера', 'datum_pregleda_prijava', 'прегледа пријава'),
-                        Forms\Components\TextInput::make('broj_kandidata_za_koje_se_zakazuju_ofk')
+                        TextInput::make('broj_kandidata_za_koje_se_zakazuju_ofk')
                             ->label('Број кандидата за које се заказују ОФК')
                             ->numeric()
                             ->minValue(0),
                         static::makeDateField('datum_pocetka_provere_ofk', 'Датум спровођења провере ОФК', 'datum_slanja_zahteva_za_sprovodjenje_ofk_provera', 'слања захтева за спровођење ОФК провера')
                             ->helperText('Уколико је било више дана провере, унети први датум'),
-                        Forms\Components\TextInput::make('broj_neodazvanih_kandidata_ofk')
+                        TextInput::make('broj_neodazvanih_kandidata_ofk')
                             ->label('Број кандидата који се није одазвао позиву на ОФК')
                             ->numeric()
                             ->minValue(0),
-                        Forms\Components\TextInput::make('broj_kandidata_koji_su_ispunlii_merila_ofk')
+                        TextInput::make('broj_kandidata_koji_su_ispunlii_merila_ofk')
                             ->label('Број кандидата који су испунили мерила ОФК')
                             ->numeric()->minValue(0)
                             ->live()
@@ -562,12 +587,12 @@ class PodaciORadnomMestuResource extends Resource
                             ->hintIconTooltip('Укупан број кандидата се може пронаћи у извештају СУК-а'),
                         static::makeDateField('datum_ofk_izvestaja', 'Датум ОФК извештаја', 'datum_pocetka_provere_ofk', 'спровођења провере ОФК')
                             ->helperText('Датум креирања извештаја СУКа'),
-                    ])->columns(2)->collapsible(),
+                    ])->columns(2)->collapsible()->columnSpanFull(),
 
-                Forms\Components\Section::make('ПФК провера')
+                Section::make('ПФК провера')
                     ->schema([
                         static::makeDateField('datum_slanja_zahteva_za_sprovodjenje_pfk_provera', 'Датум слања захтева за спровођење ПФК провера', 'datum_ofk_izvestaja', 'ОФК извештаја'),
-                        Forms\Components\TextInput::make('broj_kandidata_za_koje_se_zakazuju_pfk')
+                        TextInput::make('broj_kandidata_za_koje_se_zakazuju_pfk')
                             ->label('Број кандидата за које се заказују ПФК')
                             ->numeric()
                             ->minValue(0),
@@ -576,33 +601,33 @@ class PodaciORadnomMestuResource extends Resource
                         static::makeDateField('datum_pfk_izvestaja', 'Датум ПФК извештаја', 'datum_pocetka_provere_pfk', 'почетка провере ПФК')
                             ->hintIcon('heroicon-m-information-circle')
                             ->hintIconTooltip('Иако се ова форма извештаја тренутно не израђује, њено увођење омогућава праћење времена вредновања одговора кандидата и представља важан показатељ ефикасности изборног поступка.'),
-                        Forms\Components\TextInput::make('broj_kandidata_koji_su_ispunlii_merila_pfk')
+                        TextInput::make('broj_kandidata_koji_su_ispunlii_merila_pfk')
                             ->label('Број кандидата који су испунили мерила ПФК')
                             ->numeric()->minValue(0)
                             ->live()
                             ->rules([
-                                fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get) {
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
                                     $ofk = (int) $get('broj_kandidata_koji_su_ispunlii_merila_ofk');
                                     if ($value && $ofk && (int)$value > $ofk) {
                                         $fail('Број кандидата који су испунили мерила ПФК не сме бити већи од броја кандидата који су испунили мерила ОФК.');
                                     }
                                 },
                             ]),
-                        Forms\Components\TextInput::make('broj_neodazvanih_kandidata_pfk')
+                        TextInput::make('broj_neodazvanih_kandidata_pfk')
                             ->label('Број кандидата који се није одазвао позиву на ПФК')
                             ->numeric()
                             ->minValue(0),
-                        Forms\Components\Select::make('provera_pfk')
+                        Select::make('provera_pfk')
                             ->label('Провера ПФК')
                             ->relationship('proveraPfkRelation', 'provera_pfk', fn($query) => $query->orderBy('id', 'asc'))
                             ->preload()
                             ->searchable(),
-                    ])->columns(2)->collapsible(),
+                    ])->columns(2)->collapsible()->columnSpanFull(),
 
-                Forms\Components\Section::make('ПК провера')
+                Section::make('ПК провера')
                     ->schema([
                         static::makeDateField('datum_slanja_zahteva_za_sprovodjenje_pk_provera', 'Датум слања захтева за спровођење ПК провера', 'datum_pfk_izvestaja', 'ПФК извештаја'),
-                        Forms\Components\TextInput::make('broj_kandidata_za_koje_se_zakazuju_pk')
+                        TextInput::make('broj_kandidata_za_koje_se_zakazuju_pk')
                             ->label('Број кандидата за које се заказују ПК')
                             ->numeric()
                             ->minValue(0),
@@ -610,33 +635,33 @@ class PodaciORadnomMestuResource extends Resource
                             ->helperText('Уколико је било више дана провере, унети први датум.'),
                         static::makeDateField('datum_pk_izvestaja', 'Датум ПК извештаја', 'datum_pocetka_provere_pk', 'почетка провере ПК')
                             ->helperText('Датум креирања извештаја СУКа'),
-                        Forms\Components\TextInput::make('broj_kandidata_ispunili_merila_pk')
+                        TextInput::make('broj_kandidata_ispunili_merila_pk')
                             ->label('Број кандидата који су испунили мерила на ПК')
                             ->numeric()->minValue(0)
                             ->live()
                             ->rules([
-                                fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get) {
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
                                     $pfk = (int) $get('broj_kandidata_koji_su_ispunlii_merila_pfk');
                                     if ($value && $pfk && (int)$value > $pfk) {
                                         $fail('Број кандидата који су испунили мерила ПК не сме бити већи од броја кандидата који су испунили мерила ПФК.');
                                     }
                                 },
                             ]),
-                        Forms\Components\TextInput::make('broj_neodazvanih_kandidata_pk')
+                        TextInput::make('broj_neodazvanih_kandidata_pk')
                             ->label('Број кандидата који се нису одазвали на проверу ПК')
                             ->numeric()
                             ->minValue(0),
-                        Forms\Components\TextInput::make('broj_dana_sprovodjenja_pk_provera')
+                        TextInput::make('broj_dana_sprovodjenja_pk_provera')
                             ->label('Број дана спровођења ПК провера')
                             ->numeric()
                             ->minValue(0),
-                    ])->columns(2)->collapsible(),
+                    ])->columns(2)->collapsible()->columnSpanFull(),
 
-                Forms\Components\Section::make('Завршна фаза поступка')
+                Section::make('Завршна фаза поступка')
                     ->schema([
                         static::makeDateField('datum_predaje_dokumentacije', 'Датум предаје документације', 'datum_pocetka_provere_pk', 'почетка провере ПК')
                             ->helperText('Докази које прилажу кандидати који су успешно прошли фазе изборног поступка.'),
-                        Forms\Components\TextInput::make('broj_neodazvanih_kandidata_dokumentacija')
+                        TextInput::make('broj_neodazvanih_kandidata_dokumentacija')
                             ->label('Број кандидата који се није одазвао позиву на доставу документације')
                             ->numeric()
                             ->minValue(0),
@@ -644,18 +669,18 @@ class PodaciORadnomMestuResource extends Resource
                         static::makeDateField('datum_izvestaja_sa_zavrsnog_intervjua', 'Датум извештаја са завршног интервјуа', 'datum_pocetka_sprovodjenja_intervjua', 'спровођења завршног интервјуа')
                             ->hintIcon('heroicon-m-information-circle')
                             ->hintIconTooltip('Иако се ова форма извештаја тренутно не израђује, њено увођење омогућава праћење времена вредновања одговора кандидата и представља важан показатељ ефикасности изборног поступка.'),
-                        Forms\Components\TextInput::make('broj_odazvanih_kandidata_na_zavrsnom_razgovoru')
+                        TextInput::make('broj_odazvanih_kandidata_na_zavrsnom_razgovoru')
                             ->label('Број одазваних кандидата на завршном разговору')
                             ->numeric()->minValue(0)
                             ->rules([
-                                fn (Forms\Get $get) => function (string $attribute, $value, \Closure $fail) use ($get) {
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
                                     $pk = (int) $get('broj_kandidata_ispunili_merila_pk');
                                     if ($value && $pk && (int)$value > $pk) {
                                         $fail('Број одазваних кандидата на завршном разговору не сме бити већи од броја кандидата који су испунили мерила ПК.');
                                     }
                                 },
                             ]),
-                        Forms\Components\TextInput::make('broj_neodazvanih_kandidata_zavrsni_razgovor')
+                        TextInput::make('broj_neodazvanih_kandidata_zavrsni_razgovor')
                             ->label('Број кандидата који се није одазвао позиву на завршном разговору')
                             ->numeric()
                             ->minValue(0),
@@ -663,18 +688,18 @@ class PodaciORadnomMestuResource extends Resource
                         static::makeDateField('datum_donosenja_resenja_o_izabranom_kandidatu', 'Датум доношења решења о изабраном кандидату', 'datum_dostavljanja_liste_rukovodiocu_organa', 'достављања листе руководиоцу органа'),
                         static::makeDateField('datum_stupanja_na_rad', 'Датум ступања на рад', 'datum_donosenja_resenja_o_izabranom_kandidatu', 'доношења решења о изабраном кандидату')
                             ->helperText('Датум ступања на рад првог извршиоца'),
-                    ])->columns(3)->collapsible(),
+                    ])->columns(3)->collapsible()->columnSpanFull(),
 
-                Forms\Components\Section::make('Листа кандидата који су испунили мерила за избор')
+                Section::make('Листа кандидата који су испунили мерила за избор')
                     ->schema([
                         static::makeDateField('datum_formiranja_liste_kandidata', 'Дан формирања листе кандидата који су испунили мерила у изборном поступку')
                             ->hintIcon('heroicon-m-information-circle')
                             ->hintIconTooltip('Члан 57, став 7, Закона о државним службеницима каже: На интернет презентацији органа државне управе који је огласио конкурс и Службе за управљање кадровима објављује се листа кандидата под шифром њихове пријаве и име и презиме кандидата који је изабран у конкурсном поступку.')
                             ->columnSpanFull(),
-                        Forms\Components\TextInput::make('broj_kandidata_na_listi')
+                        TextInput::make('broj_kandidata_na_listi')
                             ->label('Број кандидата на листи')
                             ->numeric()->minValue(0),
-                        Forms\Components\TextInput::make('broj_kandidata_iz_organa_na_listi')
+                        TextInput::make('broj_kandidata_iz_organa_na_listi')
                             ->label('Број кандидата из органа који расписује конкурс на листи')
                             ->numeric()->minValue(0)
                             ->lte('broj_kandidata_na_listi')
@@ -688,7 +713,7 @@ class PodaciORadnomMestuResource extends Resource
                                     'Збир кандидата на листи мора бити једнак укупном броју кандидата на листи.'
                                 ),
                             ]),
-                        Forms\Components\TextInput::make('broj_kandidata_iz_drugog_drzavnog_organa_na_listi')
+                        TextInput::make('broj_kandidata_iz_drugog_drzavnog_organa_na_listi')
                             ->label('Број кандидата из других органа државне управе на листи')
                             ->numeric()->minValue(0)
                             ->lte('broj_kandidata_na_listi')
@@ -702,7 +727,7 @@ class PodaciORadnomMestuResource extends Resource
                                     'Збир кандидата на листи мора бити једнак укупном броју кандидата на листи.'
                                 ),
                             ]),
-                        Forms\Components\TextInput::make('broj_kandidata_van_drzavnih_organa_na_listi')
+                        TextInput::make('broj_kandidata_van_drzavnih_organa_na_listi')
                             ->label('Број кандидата ван органа државне управе и/или незапослена лица на листи')
                             ->numeric()->minValue(0)
                             ->lte('broj_kandidata_na_listi')
@@ -716,78 +741,78 @@ class PodaciORadnomMestuResource extends Resource
                                     'Збир кандидата на листи мора бити једнак укупном броју кандидата на листи.'
                                 ),
                             ]),
-                    ])->columns(2)->collapsible(),
+                    ])->columns(2)->collapsible()->columnSpanFull(),
 
-                Forms\Components\Section::make('Изабрани кандидат')
+                Section::make('Изабрани кандидат')
                     ->schema([
-                        Forms\Components\Select::make('izabrani_kandidat')
+                        Select::make('izabrani_kandidat')
                             ->label('Изабрани кандидат је из:')
                             ->relationship('izabraniKandidatRelation', 'izabrani_kandidat')
                             ->searchable()
                             ->preload(),
-                        Forms\Components\Select::make('broj_bodova_izabranog_kandidata_na_ofk')
+                        Select::make('broj_bodova_izabranog_kandidata_na_ofk')
                             ->label('Број бодова на ОФК')
                             ->options(static::ofkScoreOptions()),
-                        Forms\Components\Select::make('broj_bodova_izabranog_kandidata_na_pfk')
+                        Select::make('broj_bodova_izabranog_kandidata_na_pfk')
                             ->label('Број бодова на ПФК')
                             ->options(static::pfkScoreOptions()),
-                        Forms\Components\Select::make('broj_bodova_izabranog_kandidata_na_pk')
+                        Select::make('broj_bodova_izabranog_kandidata_na_pk')
                             ->label('Број бодова на ПК')
                             ->options(static::pkScoreOptions()),
-                        Forms\Components\Select::make('broj_bodova_izabranog_kandidata_na_zavrsnom_razgovoru')
+                        Select::make('broj_bodova_izabranog_kandidata_na_zavrsnom_razgovoru')
                             ->label('Број бодова на завршном разговору')
                             ->options(static::zavrsniScoreOptions()),
-                    ])->columns(3)->collapsible(),
+                    ])->columns(3)->collapsible()->columnSpanFull(),
 
-                Forms\Components\Section::make('Другопласирани кандидат')
+                Section::make('Другопласирани кандидат')
                     ->schema([
-                        Forms\Components\Select::make('drugoplasirani_kandidat')
+                        Select::make('drugoplasirani_kandidat')
                             ->label('Другопласирани кандидат је из:')
                             ->relationship('drugoplasiraniKandidatRelation', 'izabrani_kandidat')
                             ->searchable()
                             ->preload(),
-                        Forms\Components\Select::make('broj_bodova_drugplasiranog_kandidata_na_ofk')
+                        Select::make('broj_bodova_drugplasiranog_kandidata_na_ofk')
                             ->label('Број бодова на ОФК')
                             ->options(static::ofkScoreOptions()),
-                        Forms\Components\Select::make('broj_bodova_drugplasiranog_kandidata_na_pfk')
+                        Select::make('broj_bodova_drugplasiranog_kandidata_na_pfk')
                             ->label('Број бодова на ПФК')
                             ->options(static::pfkScoreOptions()),
-                        Forms\Components\Select::make('broj_bodova_drugplasiranog_kandidata_na_pk')
+                        Select::make('broj_bodova_drugplasiranog_kandidata_na_pk')
                             ->label('Број бодова на ПК')
                             ->options(static::pkScoreOptions()),
-                        Forms\Components\Select::make('broj_bodova_drugoplasiranog_kandidata_na_zavrsnom_razgovoru')
+                        Select::make('broj_bodova_drugoplasiranog_kandidata_na_zavrsnom_razgovoru')
                             ->label('Број бодова на завршном разговору')
                             ->options(static::zavrsniScoreOptions()),
-                    ])->columns(3)->collapsible(),
+                    ])->columns(3)->collapsible()->columnSpanFull(),
 
-                Forms\Components\Section::make('Статус и жалбе')
+                Section::make('Статус и жалбе')
                     ->schema([
-                        Forms\Components\TextInput::make('broj_primljenih_izvrsilaca')
+                        TextInput::make('broj_primljenih_izvrsilaca')
                             ->label('Број примљених извршилаца')
                             ->numeric()->minValue(0)
                             ->lte('broj_izvrsilaca')
                             ->validationMessages([
                                 'lte' => 'Број примљених извршилаца не може бити већи од броја извршилаца.',
                             ]),
-                        Forms\Components\TextInput::make('ocena_sa_vrednovanja')
+                        TextInput::make('ocena_sa_vrednovanja')
                             ->label('Оцена са вредновања')
                             ->numeric()->minValue(0)
                             ->helperText('Уколико је кандидат радио дуже од 6 месеци након ступања на рад.'),
-                        Forms\Components\TextInput::make('broj_zalbi_na_resenje_o_odbacaju_prijave')
+                        TextInput::make('broj_zalbi_na_resenje_o_odbacaju_prijave')
                             ->label('Број жалби на решење о одбацивању пријаве')
                             ->numeric()->minValue(0),
-                        Forms\Components\TextInput::make('broj_zalbi_na_resenje_o_prijemu_u_radni_odnos')
+                        TextInput::make('broj_zalbi_na_resenje_o_prijemu_u_radni_odnos')
                             ->label('Број жалби на решење о пријему у радни однос')
                             ->numeric()->minValue(0),
-                        Forms\Components\TextInput::make('broj_usvojenih_zalbi_na_resenje_o_odbacaju_prijave')
+                        TextInput::make('broj_usvojenih_zalbi_na_resenje_o_odbacaju_prijave')
                             ->label('Број усвојених жалби на решење о одбацивању пријаве')
                             ->numeric()->minValue(0),
-                        Forms\Components\TextInput::make('broj_izvrsilaca_ponovno_oglasavanje')
+                        TextInput::make('broj_izvrsilaca_ponovno_oglasavanje')
                             ->label('Број извршилаца - поновно оглашавање')
                             ->numeric()->minValue(0)
                             ->hintIcon('heroicon-m-information-circle')
                             ->hintIconTooltip('Односи се на број извршилаца за радна места која су у току исте календарске године поново оглашена, услед чињенице да претходним огласом није попуњен планирани број извршилаца.'),
-                    ])->columns(2)->collapsible(),
+                    ])->columns(2)->collapsible()->columnSpanFull(),
 
             ]);
     }
@@ -796,63 +821,63 @@ class PodaciORadnomMestuResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')
+                TextColumn::make('id')
                     ->label('ID')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('vrstaOrganaRelation.vrsta_organa')
+                TextColumn::make('vrstaOrganaRelation.vrsta_organa')
                     ->label('Врста органа')
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('organRelation.organ')
+                TextColumn::make('organRelation.organ')
                     ->label('Орган')
                     ->sortable()
                     ->searchable()
                     ->wrap(),
-                Tables\Columns\TextColumn::make('naziv_radnog_mesta')
+                TextColumn::make('naziv_radnog_mesta')
                     ->label('Назив радног места')
                     ->searchable()
                     ->sortable()
                     ->wrap(),
-                Tables\Columns\TextColumn::make('zvanjeRelation.zvanje')
+                TextColumn::make('zvanjeRelation.zvanje')
                     ->label('Звање')
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('mestaRada.mesto')
+                TextColumn::make('mestaRada.mesto')
                     ->label('Место рада')
                     ->searchable()
                     ->formatStateUsing(function ($record) {
-                        return $record->mestaRada->pluck('mesto')->join(', ');
+                        return $record->mestaRada->unique('id')->pluck('mesto')->join(', ');
                     })
                     ->tooltip(function ($record) {
-                        $mesta = $record->mestaRada->pluck('mesto');
+                        $mesta = $record->mestaRada->unique('id')->pluck('mesto');
                         return $mesta->count() > 3
                             ? $mesta->join(', ')
                             : null;
                     }),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('organ')
+                SelectFilter::make('organ')
                     ->label('Орган')
                     ->relationship('organRelation', 'organ')
                     ->searchable()
                     ->preload()
                     ->multiple(),
-                Tables\Filters\SelectFilter::make('zvanje')
+                SelectFilter::make('zvanje')
                     ->label('Звање')
                     ->relationship('zvanjeRelation', 'zvanje', fn ($query) => $query->orderBy('id', 'asc'))
                     ->searchable()
                     ->preload()
                     ->multiple(),
-                Tables\Filters\SelectFilter::make('mestaRada')
+                SelectFilter::make('mestaRada')
                     ->label('Место рада')
                     ->relationship('mestaRada', 'mesto')
                     ->searchable()
                     ->preload()
                     ->multiple(),
             ])
-            ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\Action::make('statistika')
+            ->recordActions([
+                ActionGroup::make([
+                    Action::make('statistika')
                         ->label('Статистика')
                         ->icon('heroicon-o-chart-bar')
                         ->color('info')
@@ -861,49 +886,49 @@ class PodaciORadnomMestuResource extends Resource
                         ->modalWidth('7xl')
                         ->modalSubmitAction(false)
                         ->modalCancelActionLabel('Затвори')
-                        ->infolist(fn ($record) => [
+                        ->schema(fn ($record) => [
                             // SEKCIJA 1: Временски периоди
-                            Infolists\Components\Section::make('Временски периоди')
+                            Section::make('Временски периоди')
                                 ->description('Периоди трајања конкурсних поступака')
                                 ->icon('heroicon-o-clock')
                                 ->schema([
-                                    Infolists\Components\TextEntry::make('vreme_trajanja')
+                                    TextEntry::make('vreme_trajanja')
                                         ->label('Време трајања конкурсног поступка')
                                         ->state(fn ($record) => static::dateDiffInDays($record, 'datum_donosenja_resenja_o_pokretanju_postupka', 'datum_stupanja_na_rad'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између доношења решења и ступања на рад'),
 
-                                    Infolists\Components\TextEntry::make('vreme_trajanja_izbornog_postupka')
+                                    TextEntry::make('vreme_trajanja_izbornog_postupka')
                                         ->label('Време трајања изборног поступка')
                                         ->state(fn ($record) => static::dateDiffInDays($record, 'datum_pregleda_prijava', 'datum_dostavljanja_liste_rukovodiocu_organa'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између прегледа пријава и достављања листе'),
 
-                                    Infolists\Components\TextEntry::make('vreme_od_saglasnosti_do_resenja')
+                                    TextEntry::make('vreme_od_saglasnosti_do_resenja')
                                         ->label('Време од сагласности Владе до решења')
                                         ->state(fn ($record) => static::dateDiffInDays($record, 'datum_dobijanja_saglasnosti_vlade', 'datum_donosenja_resenja_o_pokretanju_postupka'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између добијања сагласности и решења'),
 
-                                    Infolists\Components\TextEntry::make('vreme_od_obavestenja_suka_do_resenja')
+                                    TextEntry::make('vreme_od_obavestenja_suka_do_resenja')
                                         ->label('Време од обавештења СУК-а до решења')
                                         ->state(fn ($record) => static::dateDiffInDays($record, 'datum_dobijanja_obavestenja_od_suka', 'datum_donosenja_resenja_o_pokretanju_postupka'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између обавештења СУК-а и решења'),
 
-                                    Infolists\Components\TextEntry::make('vreme_od_obavestenja_suka_do_prvog_sastanka')
+                                    TextEntry::make('vreme_od_obavestenja_suka_do_prvog_sastanka')
                                         ->label('Време од обавештења СУК-а до првог састанка')
                                         ->state(fn ($record) => static::dateDiffInDays($record, 'datum_dobijanja_obavestenja_od_suka', 'datum_odrzavanja_prvog_sastanka'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између обавештења и првог састанка'),
 
-                                    Infolists\Components\TextEntry::make('vreme_od_prvog_sastanka_do_oglasavanja')
+                                    TextEntry::make('vreme_od_prvog_sastanka_do_oglasavanja')
                                         ->label('Време од првог састанка до оглашавања')
                                         ->state(fn ($record) => static::dateDiffInDays($record, 'datum_odrzavanja_prvog_sastanka', 'datum_oglasavanja'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између првог састанка и оглашавања конкурса'),
 
-                                    Infolists\Components\TextEntry::make('vreme_od_oglasavanja_do_pregleda_prijava')
+                                    TextEntry::make('vreme_od_oglasavanja_do_pregleda_prijava')
                                         ->label('Време од оглашавања до прегледа пријава')
                                         ->state(fn ($record) => static::dateDiffInDays($record, 'datum_oglasavanja', 'datum_pregleda_prijava'))
                                         ->placeholder('Нема података')
@@ -914,25 +939,25 @@ class PodaciORadnomMestuResource extends Resource
                                 ->collapsed(false),
 
                             // SEKCIJA 2: Интервали између датума
-                            Infolists\Components\Section::make('Интервали између датума')
+                            Section::make('Интервали између датума')
                                 ->description('Временски размаци између кључних догађаја')
                                 ->icon('heroicon-o-calendar-days')
                                 ->schema([
-                                    Infolists\Components\TextEntry::make('vreme_od_pregleda_prijava_do_pocetka_provere_ofk')
+                                    TextEntry::make('vreme_od_pregleda_prijava_do_pocetka_provere_ofk')
                                         ->label('Време од прегледа пријава до почетка провере ОФК')
                                         ->state(fn ($record) => static::dateDiffInDays($record, 'datum_pregleda_prijava', 'datum_pocetka_provere_ofk'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између прегледа пријава и почетка провере ОФК')
                                         ->hidden(fn ($record) => $record->tip_konkursa == 2),
 
-                                    Infolists\Components\TextEntry::make('vreme_od_pocetka_provere_ofk_do_pocetka_provere_pfk')
+                                    TextEntry::make('vreme_od_pocetka_provere_ofk_do_pocetka_provere_pfk')
                                         ->label('Време од почетка провере ОФК до почетка провере ПФК')
                                         ->state(fn ($record) => static::dateDiffInDays($record, 'datum_pocetka_provere_ofk', 'datum_pocetka_provere_pfk'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између почетка провере ОФК и почетка провере ПФК')
                                         ->hidden(fn ($record) => $record->tip_konkursa == 2),
 
-                                    Infolists\Components\TextEntry::make('vreme_od_pregleda_prijava_do_pocetka_provere_pfk')
+                                    TextEntry::make('vreme_od_pregleda_prijava_do_pocetka_provere_pfk')
                                         ->label('Време трајања од прегледа пријава до ПФК')
                                         ->state(function ($record) {
                                             if ($record->tip_konkursa == 2) {
@@ -944,37 +969,37 @@ class PodaciORadnomMestuResource extends Resource
                                         ->helperText('Број дана између прегледа пријава и почетка провере ПФК')
                                         ->hidden(fn ($record) => $record->tip_konkursa == 1),
 
-                                    Infolists\Components\TextEntry::make('vreme_od_pocetka_provere_pfk_do_pocetka_provere_pk')
+                                    TextEntry::make('vreme_od_pocetka_provere_pfk_do_pocetka_provere_pk')
                                         ->label('Време од почетка провере ПФК до почетка провере ПК')
                                         ->state(fn ($record) => static::dateDiffInDays($record, 'datum_pocetka_provere_pfk', 'datum_pocetka_provere_pk'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између почетка провере ПФК и почетка провере ПК'),
 
-                                    Infolists\Components\TextEntry::make('vreme_od_pocetka_provere_pk_do_predaje_dokumentacije')
+                                    TextEntry::make('vreme_od_pocetka_provere_pk_do_predaje_dokumentacije')
                                         ->label('Време од почетка провере ПК до предаје документације')
                                         ->state(fn ($record) => static::dateDiffInDays($record, 'datum_pocetka_provere_pk', 'datum_predaje_dokumentacije'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између почетка провере ПК и предаје документације'),
 
-                                    Infolists\Components\TextEntry::make('vreme_od_predaje_dokumentacije_do_intervjua')
+                                    TextEntry::make('vreme_od_predaje_dokumentacije_do_intervjua')
                                         ->label('Време од предаје документације до спровођења интервјуа')
                                         ->state(fn ($record) => static::dateDiffInDays($record, 'datum_predaje_dokumentacije', 'datum_pocetka_sprovodjenja_intervjua'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између предаје документације и почетка спровођења интервјуа'),
 
-                                    Infolists\Components\TextEntry::make('vreme_od_intervjua_do_dostavljanja_liste')
+                                    TextEntry::make('vreme_od_intervjua_do_dostavljanja_liste')
                                         ->label('Време од спровођења интервјуа до достављања листе')
                                         ->state(fn ($record) => static::dateDiffInDays($record, 'datum_pocetka_sprovodjenja_intervjua', 'datum_dostavljanja_liste_rukovodiocu_organa'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између почетка спровођења интервјуа и достављања листе руководиоцу'),
 
-                                    Infolists\Components\TextEntry::make('vreme_od_dostavljanja_liste_do_resenja')
+                                    TextEntry::make('vreme_od_dostavljanja_liste_do_resenja')
                                         ->label('Време од достављања листе до доношења решења')
                                         ->state(fn ($record) => static::dateDiffInDays($record, 'datum_dostavljanja_liste_rukovodiocu_organa', 'datum_donosenja_resenja_o_izabranom_kandidatu'))
                                         ->placeholder('Нема података')
                                         ->helperText('Број дана између достављања листе и доношења решења о изабраном кандидату'),
 
-                                    Infolists\Components\TextEntry::make('vreme_od_resenja_do_stupanja_na_rad')
+                                    TextEntry::make('vreme_od_resenja_do_stupanja_na_rad')
                                         ->label('Време од доношења решења до ступања на рад')
                                         ->state(fn ($record) => static::dateDiffInDays($record, 'datum_donosenja_resenja_o_izabranom_kandidatu', 'datum_stupanja_na_rad'))
                                         ->placeholder('Нема података')
@@ -985,11 +1010,11 @@ class PodaciORadnomMestuResource extends Resource
                                 ->collapsed(false),
 
                             // SEKCIJA 3: Додатне статистике
-                            Infolists\Components\Section::make('Додатне статистике')
+                            Section::make('Додатне статистике')
                                 ->description('Додатне анализе конкурсног поступка')
                                 ->icon('heroicon-o-chart-bar')
                                 ->schema([
-                                    Infolists\Components\TextEntry::make('vreme_trajanja_iz_ugla_kandidata')
+                                    TextEntry::make('vreme_trajanja_iz_ugla_kandidata')
                                         ->label('Време трајања из угла кандидата')
                                         ->state(fn ($record) => static::dateDiffInDays($record, 'datum_oglasavanja', 'datum_stupanja_na_rad'))
                                         ->placeholder('Нема података')
@@ -1001,7 +1026,7 @@ class PodaciORadnomMestuResource extends Resource
                                 ->collapsed(false),
 
                             // SEKCIJA 4: Напредна анализа (за више статистика)
-                            Infolists\Components\Section::make('Напредна анализа')
+                            Section::make('Напредна анализа')
                                 ->description('Детаљна анализа података')
                                 ->icon('heroicon-o-calculator')
                                 ->schema([
@@ -1012,9 +1037,9 @@ class PodaciORadnomMestuResource extends Resource
                                 ->collapsed(true)
                                 ->hidden(fn () => true), // Sakrij dok je prazna
                         ]),
-                    Tables\Actions\ViewAction::make()
+                    ViewAction::make()
                         ->label('Преглед'),
-                    Tables\Actions\ReplicateAction::make()
+                    ReplicateAction::make()
                         ->label('Дуплирај')
                         ->after(function ($replica, $record) {
                             // Kopiraj mestaRada relaciju (many-to-many)
@@ -1035,15 +1060,15 @@ class PodaciORadnomMestuResource extends Resource
                                 })
                                 ->log('Duplirano radno mesto');
                         }),
-                    Tables\Actions\EditAction::make()
+                    EditAction::make()
                         ->label('Измени'),
-                    Tables\Actions\DeleteAction::make()
+                    DeleteAction::make()
                         ->label('Обриши'),
                 ]),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make()
                         ->label('Обриши означене'),
                 ]),
             ])
@@ -1064,9 +1089,9 @@ class PodaciORadnomMestuResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListPodaciORadnomMestus::route('/'),
-            'create' => Pages\CreatePodaciORadnomMestu::route('/create'),
-            'edit' => Pages\EditPodaciORadnomMestu::route('/{record}/edit'),
+            'index' => ListPodaciORadnomMestus::route('/'),
+            'create' => CreatePodaciORadnomMestu::route('/create'),
+            'edit' => EditPodaciORadnomMestu::route('/{record}/edit'),
         ];
     }
 }

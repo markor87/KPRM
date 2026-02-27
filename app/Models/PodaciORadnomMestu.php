@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\Contracts\Activity;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
@@ -303,7 +304,7 @@ class PodaciORadnomMestu extends Model
     /**
      * Tap into activity before logging to add IP address
      */
-    public function tapActivity(\Spatie\Activitylog\Contracts\Activity $activity, string $eventName)
+    public function tapActivity(Activity $activity, string $eventName)
     {
         $activity->ip_address = request()->ip();
     }

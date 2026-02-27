@@ -8,7 +8,7 @@ use App\Services\OrganFilterService;
 
 class StepenUspesnostiChart extends Widget
 {
-    protected static string $view = 'filament.widgets.stepen-uspesnosti-chart';
+    protected string $view = 'filament.widgets.stepen-uspesnosti-chart';
 
     protected static ?int $sort = 4;
 

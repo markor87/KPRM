@@ -2,11 +2,12 @@
 
 namespace App\Filament\Pages\Auth;
 
+use Filament\Schemas\Schema;
+use App\Models\SifarnikOrgani;
 use App\Models\Invitation;
 use App\Models\User;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Pages\SimplePage;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Hash;
@@ -14,7 +15,7 @@ use Illuminate\Validation\ValidationException;
 
 class RegisterInvite extends SimplePage
 {
-    protected static string $view = 'filament.pages.auth.register-invite';
+    protected string $view = 'filament.pages.auth.register-invite';
 
     protected static ?string $title = 'Завршите регистрацију';
 
@@ -72,10 +73,10 @@ class RegisterInvite extends SimplePage
         }
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 TextInput::make('name')
                     ->label('Име и презиме')
                     ->required()
@@ -83,7 +84,7 @@ class RegisterInvite extends SimplePage
 
                 Select::make('organ_id')
                     ->label('Орган')
-                    ->options(fn() => \App\Models\SifarnikOrgani::orderBy('organ', 'asc')->pluck('organ', 'id')->toArray())
+                    ->options(fn() => SifarnikOrgani::orderBy('organ', 'asc')->pluck('organ', 'id')->toArray())
                     ->required()
                     ->searchable(),
 

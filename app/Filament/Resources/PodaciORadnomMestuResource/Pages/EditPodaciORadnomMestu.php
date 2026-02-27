@@ -2,6 +2,11 @@
 
 namespace App\Filament\Resources\PodaciORadnomMestuResource\Pages;
 
+use Filament\Actions\DeleteAction;
+use ReflectionClass;
+use ReflectionMethod;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Throwable;
 use App\Filament\Resources\PodaciORadnomMestuResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
@@ -21,7 +26,7 @@ class EditPodaciORadnomMestu extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            DeleteAction::make(),
         ];
     }
 
@@ -52,8 +57,8 @@ class EditPodaciORadnomMestu extends EditRecord
         parent::mount($record);
 
         // Pronađi sve belongsToMany relacije na modelu
-        $reflection = new \ReflectionClass($this->record);
-        foreach ($reflection->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
+        $reflection = new ReflectionClass($this->record);
+        foreach ($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
             if ($method->class === get_class($this->record) &&
                 $method->getNumberOfParameters() === 0 &&
                 !in_array($method->name, ['getKey', 'getMorphClass', 'getTable'])) {
@@ -62,7 +67,7 @@ class EditPodaciORadnomMestu extends EditRecord
                     $relation = $this->record->{$method->name}();
 
                     // Proveravamo da li je belongsToMany relacija
-                    if ($relation instanceof \Illuminate\Database\Eloquent\Relations\BelongsToMany) {
+                    if ($relation instanceof BelongsToMany) {
                         $relationName = $method->name;
 
                         // Sačuvaj stare vrednosti sa nazivima
@@ -72,7 +77,7 @@ class EditPodaciORadnomMestu extends EditRecord
 
                         $this->oldRelationships[$relationName] = $oldValues;
                     }
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     Log::warning('Greška pri učitavanju relacije u EditPodaciORadnomMestu::mount', [
                         'method' => $method->name,
                         'record_id' => $this->record->id ?? null,
@@ -137,7 +142,7 @@ class EditPodaciORadnomMestu extends EditRecord
                         })
                         ->log('Ažurirana ' . $this->getRelationLabel($relationName));
                 }
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 Log::warning('Greška pri logiranju relacije u EditPodaciORadnomMestu::afterSave', [
                     'relation' => $relationName,
                     'record_id' => $this->record->id ?? null,

@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources\InvitationResource\Pages;
 
+use Filament\Actions\CreateAction;
+use Filament\Notifications\Notification;
+use Str;
 use App\Filament\Resources\InvitationResource;
 use App\Models\Invitation;
 use App\Mail\InvitationMail;
@@ -17,7 +20,7 @@ class ManageInvitations extends ManageRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make()
+            CreateAction::make()
                 ->label('Пошаљи позивнице')
                 ->icon('heroicon-o-paper-airplane')
                 ->using(function (array $data) {
@@ -28,7 +31,7 @@ class ManageInvitations extends ManageRecords
                         $seconds = RateLimiter::availableIn($rateLimitKey);
                         $minutes = ceil($seconds / 60);
 
-                        \Filament\Notifications\Notification::make()
+                        Notification::make()
                             ->title('Превише позивница')
                             ->body("Достигли сте лимит слања позивница. Покушајте поново за {$minutes} минута.")
                             ->danger()
@@ -47,7 +50,7 @@ class ManageInvitations extends ManageRecords
                         // Kreiraj pozivnicu
                         $invitation = Invitation::create([
                             'email' => $email,
-                            'token' => \Str::random(64),
+                            'token' => Str::random(64),
                             'expires_at' => now()->addDays(7),
                             'invited_by' => auth()->id(),
                         ]);
@@ -62,7 +65,7 @@ class ManageInvitations extends ManageRecords
                     }
 
                     // Notifikacija
-                    \Filament\Notifications\Notification::make()
+                    Notification::make()
                         ->title('Позивнице успешно послате')
                         ->body("Послато је {$invitationCount} позивница.")
                         ->success()

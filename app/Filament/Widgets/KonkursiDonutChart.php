@@ -8,7 +8,7 @@ use App\Services\OrganFilterService;
 
 class KonkursiDonutChart extends Widget
 {
-    protected static string $view = 'filament.widgets.konkursi-donut-chart';
+    protected string $view = 'filament.widgets.konkursi-donut-chart';
 
     protected static ?int $sort = 3;
 

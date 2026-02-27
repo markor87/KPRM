@@ -2,24 +2,35 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\BadgeColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\Filter;
+use Filament\Forms\Components\DatePicker;
+use Carbon\Carbon;
+use Filament\Actions\ViewAction;
+use Filament\Schemas\Components\Section;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\KeyValueEntry;
+use App\Filament\Resources\ActivityResource\Pages\ListActivities;
+use App\Filament\Resources\ActivityResource\Pages\ViewActivity;
 use App\Filament\Resources\ActivityResource\Pages;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Spatie\Activitylog\Models\Activity;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Infolists;
-use Filament\Infolists\Infolist;
 use Illuminate\Database\Eloquent\Builder;
 
 class ActivityResource extends Resource
 {
     protected static ?string $model = Activity::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-document-text';
 
     protected static ?string $navigationLabel = 'Евиденција активности';
 
@@ -27,7 +38,7 @@ class ActivityResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Евиденција активности';
 
-    protected static ?string $navigationGroup = 'Администрација';
+    protected static string | \UnitEnum | null $navigationGroup = 'Администрација';
 
     protected static ?int $navigationSort = 4;
 
@@ -56,10 +67,10 @@ class ActivityResource extends Resource
         return auth()->user()?->hasRole('Super Admin') ?? false;
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 //
             ]);
     }
@@ -68,12 +79,12 @@ class ActivityResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')
+                TextColumn::make('id')
                     ->label('ID')
                     ->sortable()
                     ->searchable(),
 
-                Tables\Columns\BadgeColumn::make('log_name')
+                BadgeColumn::make('log_name')
                     ->label('Тип')
                     ->sortable()
                     ->searchable()
@@ -92,31 +103,31 @@ class ActivityResource extends Resource
                         };
                     }),
 
-                Tables\Columns\TextColumn::make('description')
+                TextColumn::make('description')
                     ->label('Акција')
                     ->searchable()
                     ->wrap()
                     ->limit(50),
 
-                Tables\Columns\TextColumn::make('causer.email')
+                TextColumn::make('causer.email')
                     ->label('Корисник')
                     ->searchable()
                     ->sortable()
                     ->default('Систем')
                     ->tooltip(fn ($record) => $record->causer?->name),
 
-                Tables\Columns\TextColumn::make('subject_type')
+                TextColumn::make('subject_type')
                     ->label('Табела')
                     ->searchable()
                     ->formatStateUsing(fn ($state) => class_basename($state))
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                Tables\Columns\TextColumn::make('ip_address')
+                TextColumn::make('ip_address')
                     ->label('IP Адреса')
                     ->searchable()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->label('Датум и време')
                     ->dateTime('d/m/Y H:i:s')
                     ->sortable()
@@ -124,7 +135,7 @@ class ActivityResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
-                Tables\Filters\SelectFilter::make('log_name')
+                SelectFilter::make('log_name')
                     ->label('Тип активности')
                     ->options([
                         'auth' => 'Аутентификација',
@@ -133,16 +144,16 @@ class ActivityResource extends Resource
                     ])
                     ->multiple(),
 
-                Tables\Filters\SelectFilter::make('causer_id')
+                SelectFilter::make('causer_id')
                     ->label('Корисник')
                     ->options(fn () => Cache::remember('activity_users_filter', 3600, fn () => User::pluck('email', 'id')->toArray()))
                     ->searchable(),
 
-                Tables\Filters\Filter::make('created_at')
-                    ->form([
-                        Forms\Components\DatePicker::make('created_from')
+                Filter::make('created_at')
+                    ->schema([
+                        DatePicker::make('created_from')
                             ->label('Од датума'),
-                        Forms\Components\DatePicker::make('created_until')
+                        DatePicker::make('created_until')
                             ->label('До датума'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
@@ -159,32 +170,32 @@ class ActivityResource extends Resource
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
                         if ($data['created_from'] ?? null) {
-                            $indicators['created_from'] = 'Од: ' . \Carbon\Carbon::parse($data['created_from'])->format('d/m/Y');
+                            $indicators['created_from'] = 'Од: ' . Carbon::parse($data['created_from'])->format('d/m/Y');
                         }
                         if ($data['created_until'] ?? null) {
-                            $indicators['created_until'] = 'До: ' . \Carbon\Carbon::parse($data['created_until'])->format('d/m/Y');
+                            $indicators['created_until'] = 'До: ' . Carbon::parse($data['created_until'])->format('d/m/Y');
                         }
                         return $indicators;
                     }),
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make()
+            ->recordActions([
+                ViewAction::make()
                     ->label('Преглед'),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 // No bulk actions for audit log
             ]);
     }
 
-    public static function infolist(Infolist $infolist): Infolist
+    public static function infolist(Schema $schema): Schema
     {
-        return $infolist
-            ->schema([
-                Infolists\Components\Section::make('Опште информације')
+        return $schema
+            ->components([
+                Section::make('Опште информације')
                     ->schema([
-                        Infolists\Components\TextEntry::make('id')
+                        TextEntry::make('id')
                             ->label('ID'),
-                        Infolists\Components\TextEntry::make('log_name')
+                        TextEntry::make('log_name')
                             ->label('Тип')
                             ->badge()
                             ->color(fn ($state) => match($state) {
@@ -201,38 +212,38 @@ class ActivityResource extends Resource
                                     default => ucfirst($state),
                                 };
                             }),
-                        Infolists\Components\TextEntry::make('description')
+                        TextEntry::make('description')
                             ->label('Опис'),
-                        Infolists\Components\TextEntry::make('causer.email')
+                        TextEntry::make('causer.email')
                             ->label('Извршио')
                             ->default('Систем'),
-                        Infolists\Components\TextEntry::make('causer.name')
+                        TextEntry::make('causer.name')
                             ->label('Име корисника')
                             ->default('Систем'),
-                        Infolists\Components\TextEntry::make('ip_address')
+                        TextEntry::make('ip_address')
                             ->label('IP Адреса')
                             ->default('N/A'),
-                        Infolists\Components\TextEntry::make('created_at')
+                        TextEntry::make('created_at')
                             ->label('Датум и време')
                             ->dateTime('d/m/Y H:i:s'),
                     ])
                     ->columns(2),
 
-                Infolists\Components\Section::make('Информације о субјекту')
+                Section::make('Информације о субјекту')
                     ->schema([
-                        Infolists\Components\TextEntry::make('subject_type')
+                        TextEntry::make('subject_type')
                             ->label('Тип модела')
                             ->formatStateUsing(fn ($state) => $state ? class_basename($state) : 'Н/Д'),
-                        Infolists\Components\TextEntry::make('subject_id')
+                        TextEntry::make('subject_id')
                             ->label('ID модела')
                             ->default('Н/Д'),
                     ])
                     ->columns(2)
                     ->visible(fn ($record) => $record->subject_type !== null),
 
-                Infolists\Components\Section::make('Старе вредности')
+                Section::make('Старе вредности')
                     ->schema([
-                        Infolists\Components\KeyValueEntry::make('properties.old')
+                        KeyValueEntry::make('properties.old')
                             ->label('')
                             ->keyLabel('Поље')
                             ->valueLabel('Вредност')
@@ -240,9 +251,9 @@ class ActivityResource extends Resource
                     ])
                     ->visible(fn ($record) => !empty($record->properties['old'] ?? null)),
 
-                Infolists\Components\Section::make('Нове вредности')
+                Section::make('Нове вредности')
                     ->schema([
-                        Infolists\Components\KeyValueEntry::make('properties.attributes')
+                        KeyValueEntry::make('properties.attributes')
                             ->label('')
                             ->keyLabel('Поље')
                             ->valueLabel('Вредност')
@@ -250,9 +261,9 @@ class ActivityResource extends Resource
                     ])
                     ->visible(fn ($record) => !empty($record->properties['attributes'] ?? null)),
 
-                Infolists\Components\Section::make('Додатне информације')
+                Section::make('Додатне информације')
                     ->schema([
-                        Infolists\Components\KeyValueEntry::make('properties')
+                        KeyValueEntry::make('properties')
                             ->label('')
                             ->columnSpanFull()
                             ->hiddenLabel(),
@@ -275,8 +286,8 @@ class ActivityResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListActivities::route('/'),
-            'view' => Pages\ViewActivity::route('/{record}'),
+            'index' => ListActivities::route('/'),
+            'view' => ViewActivity::route('/{record}'),
         ];
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\PodaciORadnomMestuResource\Pages;
 
+use Filament\Actions\Action;
+use Filament\Actions\CreateAction;
 use App\Filament\Resources\PodaciORadnomMestuResource;
 use App\Exports\PodaciORadnomMestuExport;
 use Filament\Actions;
@@ -15,7 +17,7 @@ class ListPodaciORadnomMestus extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\Action::make('export')
+            Action::make('export')
                 ->label('Извоз у Excel')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('success')
@@ -27,7 +29,7 @@ class ListPodaciORadnomMestus extends ListRecords
                         'radna-mesta-' . now()->format('Y-m-d-His') . '.xlsx'
                     );
                 }),
-            Actions\CreateAction::make()
+            CreateAction::make()
                 ->label('Ново радно место'),
         ];
     }

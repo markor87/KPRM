@@ -2,11 +2,25 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\Textarea;
+use Closure;
+use App\Models\User;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Actions\Action;
+use Mail;
+use App\Mail\InvitationMail;
+use Filament\Notifications\Notification;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\InvitationResource\Pages\ManageInvitations;
 use App\Filament\Resources\InvitationResource\Pages;
 use App\Filament\Resources\InvitationResource\RelationManagers;
 use App\Models\Invitation;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -17,9 +31,9 @@ class InvitationResource extends Resource
 {
     protected static ?string $model = Invitation::class;
 
-    protected static ?string $navigationGroup = 'Администрација';
+    protected static string | \UnitEnum | null $navigationGroup = 'Администрација';
 
-    protected static ?string $navigationIcon = 'heroicon-o-envelope';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-envelope';
 
     protected static ?string $navigationLabel = 'Позивнице';
 
@@ -36,11 +50,11 @@ class InvitationResource extends Resource
             || false;
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\Textarea::make('emails')
+        return $schema
+            ->components([
+                Textarea::make('emails')
                     ->label('Email адресе')
                     ->required()
                     ->rows(5)
@@ -48,7 +62,7 @@ class InvitationResource extends Resource
                     ->rules([
                         'required',
                         function () {
-                            return function (string $attribute, $value, \Closure $fail) {
+                            return function (string $attribute, $value, Closure $fail) {
                                 // Podeli email-ove po novim redovima ili zarezima
                                 $emails = preg_split('/[\n,]+/', $value);
                                 $emails = array_filter(array_map('trim', $emails));
@@ -61,13 +75,13 @@ class InvitationResource extends Resource
                                     }
 
                                     // Proveri da li email već postoji u users tabeli
-                                    if (\App\Models\User::where('email', $email)->exists()) {
+                                    if (User::where('email', $email)->exists()) {
                                         $fail("Корисник са email адресом '{$email}' већ постоји.");
                                         return;
                                     }
 
                                     // Proveri da li već postoji aktivna pozivnica za ovaj email
-                                    $existingInvitation = \App\Models\Invitation::where('email', $email)
+                                    $existingInvitation = Invitation::where('email', $email)
                                         ->whereNull('accepted_at')
                                         ->where('expires_at', '>', now())
                                         ->first();
@@ -87,15 +101,15 @@ class InvitationResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('email')
+                TextColumn::make('email')
                     ->label('Email')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('invitedBy.name')
+                TextColumn::make('invitedBy.name')
                     ->label('Послао')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\IconColumn::make('status')
+                IconColumn::make('status')
                     ->label('Статус')
                     ->getStateUsing(function ($record) {
                         if ($record->isAccepted()) {
@@ -115,23 +129,23 @@ class InvitationResource extends Resource
                         'expired' => 'danger',
                         'pending' => 'warning',
                     }),
-                Tables\Columns\TextColumn::make('expires_at')
+                TextColumn::make('expires_at')
                     ->label('Истиче')
                     ->dateTime('d.m.Y H:i')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('accepted_at')
+                TextColumn::make('accepted_at')
                     ->label('Прихваћено')
                     ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->placeholder('Није прихваћено'),
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->label('Креирано')
                     ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('status')
+                SelectFilter::make('status')
                     ->label('Статус')
                     ->options([
                         'pending' => 'На чекању',
@@ -150,26 +164,26 @@ class InvitationResource extends Resource
                         };
                     }),
             ])
-            ->actions([
-                Tables\Actions\Action::make('resend')
+            ->recordActions([
+                Action::make('resend')
                     ->label('Поново пошаљи')
                     ->icon('heroicon-o-arrow-path')
                     ->color('info')
                     ->visible(fn ($record) => $record->isExpired() && !$record->isAccepted())
                     ->action(function ($record) {
                         $record->update(['expires_at' => now()->addDays(7)]);
-                        \Mail::to($record->email)->send(new \App\Mail\InvitationMail($record));
-                        \Filament\Notifications\Notification::make()
+                        Mail::to($record->email)->send(new InvitationMail($record));
+                        Notification::make()
                             ->title('Позивница поново послата')
                             ->success()
                             ->send();
                     }),
-                Tables\Actions\DeleteAction::make()
+                DeleteAction::make()
                     ->label('Обриши'),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make()
                         ->label('Обриши означене'),
                 ]),
             ])
@@ -179,7 +193,7 @@ class InvitationResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ManageInvitations::route('/'),
+            'index' => ManageInvitations::route('/'),
         ];
     }
 }

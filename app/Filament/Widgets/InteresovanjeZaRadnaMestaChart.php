@@ -8,7 +8,7 @@ use App\Services\OrganFilterService;
 
 class InteresovanjeZaRadnaMestaChart extends Widget
 {
-    protected static string $view = 'filament.widgets.interesovanje-za-radna-mesta-chart';
+    protected string $view = 'filament.widgets.interesovanje-za-radna-mesta-chart';
 
     protected static ?int $sort = 6;
 
