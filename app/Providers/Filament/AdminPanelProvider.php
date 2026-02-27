@@ -23,6 +23,7 @@ use Andreia\FilamentNordTheme\FilamentNordThemePlugin;
 use App\Filament\Pages\Auth\TwoFactorChallenge;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Illuminate\Support\Facades\Route;
+use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -68,6 +69,7 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->plugin(FilamentNordThemePlugin::make())
-            ->plugin(FilamentShieldPlugin::make());
+            ->plugin(FilamentShieldPlugin::make())
+            ->plugin(FilamentApexChartsPlugin::make());
     }
 }
