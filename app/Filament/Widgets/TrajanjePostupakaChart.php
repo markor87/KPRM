@@ -2,72 +2,116 @@
 
 namespace App\Filament\Widgets;
 
-use Filament\Widgets\Widget;
 use App\Models\PodaciORadnomMestu;
 use App\Services\OrganFilterService;
 use Carbon\Carbon;
+use Filament\Support\RawJs;
+use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
-class TrajanjePostupakaChart extends Widget
+class TrajanjePostupakaChart extends ApexChartWidget
 {
-    protected string $view = 'filament.widgets.trajanje-postupaka-chart';
-
     protected static ?int $sort = 7;
 
-    protected int | string | array $columnSpan = 12;
+    protected int|string|array $columnSpan = 12;
 
-    public function getData(): array
+    protected function getHeading(): ?string
+    {
+        return 'Трајање јавних конкурсних и изборних поступака (' . (now()->year - 1) . ')';
+    }
+
+    protected function getOptions(): array
     {
         $organFilterService = app(OrganFilterService::class);
-        $godina = now()->year - 1; // tekuca godina - 1
+        $godina = now()->year - 1;
 
-        // Bazni query sa filtrom po organu
-        $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina);
+        $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina)
+            ->where('tip_konkursa', 1);
         $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ');
 
-        // JAVNI KONKURSI - Vreme trajanja konkursnog postupka
-        $javniQuery = (clone $baseQuery)->where('tip_konkursa', 1);
-        $javniKonkursi = $javniQuery->get();
+        $podaci = $baseQuery->get();
 
         $javniDurations = [];
-        foreach ($javniKonkursi as $konkurs) {
-            if ($konkurs->datum_donosenja_resenja_o_pokretanju_postupka && $konkurs->datum_stupanja_na_rad) {
-                $start = Carbon::parse($konkurs->datum_donosenja_resenja_o_pokretanju_postupka);
-                $end = Carbon::parse($konkurs->datum_stupanja_na_rad);
-                $days = $start->diffInDays($end);
-                $javniDurations[] = $days;
-            }
-        }
-
-        $javniStats = [
-            'min' => !empty($javniDurations) ? min($javniDurations) : 0,
-            'avg' => !empty($javniDurations) ? round(array_sum($javniDurations) / count($javniDurations), 2) : 0,
-            'max' => !empty($javniDurations) ? max($javniDurations) : 0,
-        ];
-
-        // JAVNI KONKURSI - Vreme trajanja izbornog postupka
-        $izbornaQuery = (clone $baseQuery)->where('tip_konkursa', 1);
-        $izbornaKonkursi = $izbornaQuery->get();
-
         $izborniDurations = [];
-        foreach ($izbornaKonkursi as $konkurs) {
+
+        foreach ($podaci as $konkurs) {
+            if ($konkurs->datum_donosenja_resenja_o_pokretanju_postupka && $konkurs->datum_stupanja_na_rad) {
+                $javniDurations[] = Carbon::parse($konkurs->datum_donosenja_resenja_o_pokretanju_postupka)
+                    ->diffInDays(Carbon::parse($konkurs->datum_stupanja_na_rad));
+            }
+
             if ($konkurs->datum_pregleda_prijava && $konkurs->datum_dostavljanja_liste_rukovodiocu_organa) {
-                $start = Carbon::parse($konkurs->datum_pregleda_prijava);
-                $end = Carbon::parse($konkurs->datum_dostavljanja_liste_rukovodiocu_organa);
-                $days = $start->diffInDays($end);
-                $izborniDurations[] = $days;
+                $izborniDurations[] = Carbon::parse($konkurs->datum_pregleda_prijava)
+                    ->diffInDays(Carbon::parse($konkurs->datum_dostavljanja_liste_rukovodiocu_organa));
             }
         }
 
-        $izbornaStats = [
-            'min' => !empty($izborniDurations) ? min($izborniDurations) : 0,
-            'avg' => !empty($izborniDurations) ? round(array_sum($izborniDurations) / count($izborniDurations), 2) : 0,
-            'max' => !empty($izborniDurations) ? max($izborniDurations) : 0,
-        ];
+        $javniMin = !empty($javniDurations) ? min($javniDurations) : 0;
+        $javniAvg = !empty($javniDurations) ? round(array_sum($javniDurations) / count($javniDurations)) : 0;
+        $javniMax = !empty($javniDurations) ? max($javniDurations) : 0;
+
+        $izbornaMin = !empty($izborniDurations) ? min($izborniDurations) : 0;
+        $izbornaAvg = !empty($izborniDurations) ? round(array_sum($izborniDurations) / count($izborniDurations)) : 0;
+        $izbornaMax = !empty($izborniDurations) ? max($izborniDurations) : 0;
 
         return [
-            'javni' => $javniStats,
-            'izborna' => $izbornaStats,
-            'godina' => $godina,
+            'series' => [
+                [
+                    'name' => 'Конкурсни поступак',
+                    'data' => [$javniMin, $javniAvg, $javniMax],
+                ],
+                [
+                    'name' => 'Изборни поступак',
+                    'data' => [$izbornaMin, $izbornaAvg, $izbornaMax],
+                ],
+            ],
+            'chart' => [
+                'type' => 'bar',
+                'height' => 320,
+                'toolbar' => ['show' => false],
+                'background' => 'transparent',
+            ],
+            'plotOptions' => [
+                'bar' => [
+                    'horizontal' => false,
+                    'columnWidth' => '50%',
+                    'borderRadius' => 4,
+                    'dataLabels' => ['position' => 'top'],
+                ],
+            ],
+            'dataLabels' => [
+                'enabled' => true,
+                'offsetY' => -20,
+                'style' => [
+                    'fontSize' => '13px',
+                    'fontWeight' => 'bold',
+                ],
+            ],
+            'xaxis' => [
+                'categories' => ['Најкраћи', 'Просек', 'Најдужи'],
+            ],
+            'colors' => ['#dc2626', '#1d4ed8'],
+            'grid' => [
+                'strokeDashArray' => 3,
+            ],
+            'legend' => [
+                'show' => true,
+                'position' => 'top',
+            ],
         ];
+    }
+
+    protected function extraJsOptions(): ?RawJs
+    {
+        return RawJs::make(<<<'JS'
+        {
+            tooltip: {
+                y: {
+                    formatter: function(val) {
+                        return val + ' дана';
+                    }
+                }
+            }
+        }
+        JS);
     }
 }
