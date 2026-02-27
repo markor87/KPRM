@@ -104,6 +104,11 @@ class TrajanjePostupakaChart extends ApexChartWidget
     {
         return RawJs::make(<<<'JS'
         {
+            dataLabels: {
+                formatter: function(val) {
+                    return val + ' дана';
+                }
+            },
             tooltip: {
                 y: {
                     formatter: function(val) {
