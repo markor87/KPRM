@@ -105,6 +105,9 @@ class TrajanjePostupakaChart extends ApexChartWidget
         return RawJs::make(<<<'JS'
         {
             dataLabels: {
+                style: {
+                    colors: Array(20).fill(document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#111827')
+                },
                 formatter: function(val) {
                     return val + ' дана';
                 }

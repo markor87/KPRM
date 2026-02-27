@@ -78,6 +78,11 @@ class InteresovanjeZaRadnaMestaChart extends ApexChartWidget
     {
         return RawJs::make(<<<'JS'
         {
+            dataLabels: {
+                style: {
+                    colors: Array(20).fill(document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#111827')
+                }
+            },
             tooltip: {
                 y: {
                     formatter: function(val) {
