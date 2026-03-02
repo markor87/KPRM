@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\Contracts\Activity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -92,7 +93,7 @@ class User extends Authenticatable implements FilamentUser
     /**
      * Tap into activity before logging to add IP address
      */
-    public function tapActivity(\Spatie\Activitylog\Contracts\Activity $activity, string $eventName)
+    public function tapActivity(Activity $activity, string $eventName)
     {
         $activity->ip_address = request()->ip();
     }
