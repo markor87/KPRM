@@ -1,108 +1,70 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
-use App\Models\User;
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Invitation;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class InvitationPolicy
 {
     use HandlesAuthorization;
-
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    
+    public function viewAny(AuthUser $authUser): bool
     {
-        return $user->can('view_any_invitation');
+        return $authUser->can('ViewAny:Invitation');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, Invitation $invitation): bool
+    public function view(AuthUser $authUser, Invitation $invitation): bool
     {
-        return $user->can('view_invitation');
+        return $authUser->can('View:Invitation');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(AuthUser $authUser): bool
     {
-        return $user->can('create_invitation');
+        return $authUser->can('Create:Invitation');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Invitation $invitation): bool
+    public function update(AuthUser $authUser, Invitation $invitation): bool
     {
-        return $user->can('update_invitation');
+        return $authUser->can('Update:Invitation');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Invitation $invitation): bool
+    public function delete(AuthUser $authUser, Invitation $invitation): bool
     {
-        return $user->can('delete_invitation');
+        return $authUser->can('Delete:Invitation');
     }
 
-    /**
-     * Determine whether the user can bulk delete.
-     */
-    public function deleteAny(User $user): bool
+    public function restore(AuthUser $authUser, Invitation $invitation): bool
     {
-        return $user->can('delete_any_invitation');
+        return $authUser->can('Restore:Invitation');
     }
 
-    /**
-     * Determine whether the user can permanently delete.
-     */
-    public function forceDelete(User $user, Invitation $invitation): bool
+    public function forceDelete(AuthUser $authUser, Invitation $invitation): bool
     {
-        return $user->can('force_delete_invitation');
+        return $authUser->can('ForceDelete:Invitation');
     }
 
-    /**
-     * Determine whether the user can permanently bulk delete.
-     */
-    public function forceDeleteAny(User $user): bool
+    public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $user->can('force_delete_any_invitation');
+        return $authUser->can('ForceDeleteAny:Invitation');
     }
 
-    /**
-     * Determine whether the user can restore.
-     */
-    public function restore(User $user, Invitation $invitation): bool
+    public function restoreAny(AuthUser $authUser): bool
     {
-        return $user->can('restore_invitation');
+        return $authUser->can('RestoreAny:Invitation');
     }
 
-    /**
-     * Determine whether the user can bulk restore.
-     */
-    public function restoreAny(User $user): bool
+    public function replicate(AuthUser $authUser, Invitation $invitation): bool
     {
-        return $user->can('restore_any_invitation');
+        return $authUser->can('Replicate:Invitation');
     }
 
-    /**
-     * Determine whether the user can replicate.
-     */
-    public function replicate(User $user, Invitation $invitation): bool
+    public function reorder(AuthUser $authUser): bool
     {
-        return $user->can('replicate_invitation');
+        return $authUser->can('Reorder:Invitation');
     }
 
-    /**
-     * Determine whether the user can reorder.
-     */
-    public function reorder(User $user): bool
-    {
-        return $user->can('reorder_invitation');
-    }
 }

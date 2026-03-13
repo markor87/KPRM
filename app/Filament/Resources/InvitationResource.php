@@ -45,8 +45,8 @@ class InvitationResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->can('view_invitation')
-            || auth()->user()?->can('view_any_invitation')
+        return auth()->user()?->can('View:Invitation')
+            || auth()->user()?->can('ViewAny:Invitation')
             || false;
     }
 
