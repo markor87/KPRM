@@ -22,8 +22,8 @@ class OrganFilterService
             return $query->whereRaw('1 = 0');
         }
 
-        // Korisnici sa view_any_podaci::o::radnom::mestu dozvolom vide sve
-        if ($user->can('view_any_podaci::o::radnom::mestu')) {
+        // Korisnici sa ViewAny:PodaciORadnomMestu dozvolom vide sve
+        if ($user->can('ViewAny:PodaciORadnomMestu')) {
             return $query;
         }
 
@@ -73,7 +73,7 @@ class OrganFilterService
             return false;
         }
 
-        return $user->can('view_any_podaci::o::radnom::mestu');
+        return $user->can('ViewAny:PodaciORadnomMestu');
     }
 
     /**

@@ -4,7 +4,6 @@ namespace App\Filament\Resources;
 
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
 use Filament\Forms\Components\DatePicker;
@@ -84,23 +83,22 @@ class ActivityResource extends Resource
                     ->sortable()
                     ->searchable(),
 
-                BadgeColumn::make('log_name')
+                TextColumn::make('log_name')
                     ->label('Тип')
+                    ->badge()
                     ->sortable()
                     ->searchable()
-                    ->colors([
-                        'primary' => 'auth',
-                        'success' => 'users',
-                        'warning' => 'podaci_o_radnom_mestu',
-                        'danger' => fn ($state) => !in_array($state, ['auth', 'users', 'podaci_o_radnom_mestu']),
-                    ])
-                    ->formatStateUsing(function ($state) {
-                        return match($state) {
-                            'auth' => 'Аутентификација',
-                            'users' => 'Корисници',
-                            'podaci_o_radnom_mestu' => 'Радна места',
-                            default => ucfirst($state),
-                        };
+                    ->color(fn ($state) => match($state) {
+                        'auth' => 'primary',
+                        'users' => 'success',
+                        'podaci_o_radnom_mestu' => 'warning',
+                        default => 'danger',
+                    })
+                    ->formatStateUsing(fn ($state) => match($state) {
+                        'auth' => 'Аутентификација',
+                        'users' => 'Корисници',
+                        'podaci_o_radnom_mestu' => 'Радна места',
+                        default => ucfirst($state),
                     }),
 
                 TextColumn::make('description')
