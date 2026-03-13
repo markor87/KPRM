@@ -228,8 +228,8 @@ class PodaciORadnomMestuResource extends Resource
      */
     public static function canViewAny(): bool
     {
-        return auth()->user()?->can('view_podaci::o::radnom::mestu')
-            || auth()->user()?->can('view_any_podaci::o::radnom::mestu')
+        return auth()->user()?->can('View:PodaciORadnomMestu')
+            || auth()->user()?->can('ViewAny:PodaciORadnomMestu')
             || false;
     }
 
