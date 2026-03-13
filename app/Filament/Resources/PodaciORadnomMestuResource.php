@@ -9,6 +9,8 @@ use Exception;
 use App\Services\OrganFilterService;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Forms\Components\Select;
 use App\Models\SifarnikOrgani;
 use Filament\Forms\Components\Repeater;
@@ -237,7 +239,9 @@ class PodaciORadnomMestuResource extends Resource
     {
         return $schema
             ->components([
-                Section::make('Основни подаци о конкурсу')
+                Tabs::make()->tabs([
+
+                Tab::make('Основни подаци о конкурсу')
                     ->schema([
                         TextInput::make('naziv_radnog_mesta')
                             ->label('Назив радног места')
@@ -398,9 +402,9 @@ class PodaciORadnomMestuResource extends Resource
                             ->searchable()
                             ->disabled(fn (Get $get) => $get('status_konkursa_na_dan_2') != 2)
                             ->dehydrated(),
-                    ])->columns(3)->columnSpanFull(),
+                    ])->columns(3),
 
-                Section::make('Покретање поступка')
+                Tab::make('Покретање поступка')
                     ->schema([
                         static::makeDateField('datum_dobijanja_saglasnosti_vlade', 'Датум добијања сагласности Владе'),
                         static::makeDateField('datum_donosenja_resenja_o_pokretanju_postupka', 'Датум доношења решења о покретању поступка', 'datum_dobijanja_saglasnosti_vlade', 'добијања сагласности Владе'),
@@ -408,9 +412,9 @@ class PodaciORadnomMestuResource extends Resource
                         static::makeDateField('datum_odrzavanja_prvog_sastanka', 'Датум одржавања првог састанка', 'datum_dobijanja_obavestenja_od_suka', 'добијања обавештења од СУКа'),
                         static::makeDateField('datum_oglasavanja', 'Датум оглашавања', 'datum_odrzavanja_prvog_sastanka', 'одржавања првог sastanka'),
                         static::makeDateField('datum_pregleda_prijava', 'Датум прегледа пријава', 'datum_oglasavanja', 'оглашавања'),
-                    ])->columns(3)->collapsible()->columnSpanFull(),
+                    ])->columns(3),
 
-                Section::make('Пристигле пријаве')
+                Tab::make('Пристигле пријаве')
                     ->schema([
                         TextInput::make('ukupan_broj_prijava')
                             ->label('Укупан број пријава')
@@ -457,10 +461,12 @@ class PodaciORadnomMestuResource extends Resource
                                     'Збир пријава мора бити једнак укупном броју пријава.'
                                 ),
                             ]),
-                    ])->columns(2)->collapsible()->columnSpanFull(),
+                    ])->columns(2),
 
-                Section::make('Старосна структура кандидата')
-                    ->headerActions([
+                Tab::make('Старосна структура кандидата')
+                    ->schema([
+                        Section::make()
+                            ->headerActions([
                         Action::make('info_starosna')
                             ->icon('heroicon-m-information-circle')
                             ->label('')
@@ -510,9 +516,10 @@ class PodaciORadnomMestuResource extends Resource
                                     ->modalCancelActionLabel('Затвори')
                                     ->modalWidth('lg')
                             ),
-                    ])->columns(2)->collapsible()->columnSpanFull(),
+                    ])->columns(2),
+                    ]),
 
-                Section::make('Валидне пријаве')
+                Tab::make('Валидне пријаве')
                     ->schema([
                         TextInput::make('broj_validnih_prijava')
                             ->label('Број валидних пријава')
@@ -563,9 +570,9 @@ class PodaciORadnomMestuResource extends Resource
                                     'Збир валидних пријава мора бити једнак укупном броју валидних пријава.'
                                 ),
                             ]),
-                    ])->columns(2)->collapsible()->columnSpanFull(),
+                    ])->columns(2),
 
-                Section::make('ОФК провера')
+                Tab::make('ОФК провера')
                     ->schema([
                         static::makeDateField('datum_slanja_zahteva_za_sprovodjenje_ofk_provera', 'Датум слања захтева за спровођење ОФК провера', 'datum_pregleda_prijava', 'прегледа пријава'),
                         TextInput::make('broj_kandidata_za_koje_se_zakazuju_ofk')
@@ -587,9 +594,9 @@ class PodaciORadnomMestuResource extends Resource
                             ->hintIconTooltip('Укупан број кандидата се може пронаћи у извештају СУК-а'),
                         static::makeDateField('datum_ofk_izvestaja', 'Датум ОФК извештаја', 'datum_pocetka_provere_ofk', 'спровођења провере ОФК')
                             ->helperText('Датум креирања извештаја СУКа'),
-                    ])->columns(2)->collapsible()->columnSpanFull(),
+                    ])->columns(2),
 
-                Section::make('ПФК провера')
+                Tab::make('ПФК провера')
                     ->schema([
                         static::makeDateField('datum_slanja_zahteva_za_sprovodjenje_pfk_provera', 'Датум слања захтева за спровођење ПФК провера', 'datum_ofk_izvestaja', 'ОФК извештаја'),
                         TextInput::make('broj_kandidata_za_koje_se_zakazuju_pfk')
@@ -630,9 +637,9 @@ class PodaciORadnomMestuResource extends Resource
                             ->relationship('proveraPfkRelation', 'provera_pfk', fn($query) => $query->orderBy('id', 'asc'))
                             ->preload()
                             ->searchable(),
-                    ])->columns(2)->collapsible()->columnSpanFull(),
+                    ])->columns(2),
 
-                Section::make('ПК провера')
+                Tab::make('ПК провера')
                     ->schema([
                         static::makeDateField('datum_slanja_zahteva_za_sprovodjenje_pk_provera', 'Датум слања захтева за спровођење ПК провера', 'datum_pfk_izvestaja', 'ПФК извештаја'),
                         TextInput::make('broj_kandidata_za_koje_se_zakazuju_pk')
@@ -687,9 +694,9 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број дана спровођења ПК провера')
                             ->numeric()
                             ->minValue(0),
-                    ])->columns(2)->collapsible()->columnSpanFull(),
+                    ])->columns(2),
 
-                Section::make('Завршна фаза поступка')
+                Tab::make('Завршна фаза поступка')
                     ->schema([
                         static::makeDateField('datum_predaje_dokumentacije', 'Датум предаје документације', 'datum_pocetka_provere_pk', 'почетка провере ПК')
                             ->helperText('Докази које прилажу кандидати који су успешно прошли фазе изборног поступка.'),
@@ -740,9 +747,9 @@ class PodaciORadnomMestuResource extends Resource
                         static::makeDateField('datum_donosenja_resenja_o_izabranom_kandidatu', 'Датум доношења решења о изабраном кандидату', 'datum_dostavljanja_liste_rukovodiocu_organa', 'достављања листе руководиоцу органа'),
                         static::makeDateField('datum_stupanja_na_rad', 'Датум ступања на рад', 'datum_donosenja_resenja_o_izabranom_kandidatu', 'доношења решења о изабраном кандидату')
                             ->helperText('Датум ступања на рад првог извршиоца'),
-                    ])->columns(3)->collapsible()->columnSpanFull(),
+                    ])->columns(3),
 
-                Section::make('Листа кандидата који су испунили мерила за избор')
+                Tab::make('Листа кандидата који су испунили мерила за избор')
                     ->schema([
                         static::makeDateField('datum_formiranja_liste_kandidata', 'Дан формирања листе кандидата који су испунили мерила у изборном поступку')
                             ->hintIcon('heroicon-m-information-circle')
@@ -802,9 +809,9 @@ class PodaciORadnomMestuResource extends Resource
                                     'Збир кандидата на листи мора бити једнак укупном броју кандидата на листи.'
                                 ),
                             ]),
-                    ])->columns(2)->collapsible()->columnSpanFull(),
+                    ])->columns(2),
 
-                Section::make('Изабрани кандидат')
+                Tab::make('Изабрани кандидат')
                     ->schema([
                         Select::make('izabrani_kandidat')
                             ->label('Изабрани кандидат је из:')
@@ -823,9 +830,9 @@ class PodaciORadnomMestuResource extends Resource
                         Select::make('broj_bodova_izabranog_kandidata_na_zavrsnom_razgovoru')
                             ->label('Број бодова на завршном разговору')
                             ->options(static::zavrsniScoreOptions()),
-                    ])->columns(3)->collapsible()->columnSpanFull(),
+                    ])->columns(3),
 
-                Section::make('Другопласирани кандидат')
+                Tab::make('Другопласирани кандидат')
                     ->schema([
                         Select::make('drugoplasirani_kandidat')
                             ->label('Другопласирани кандидат је из:')
@@ -844,9 +851,9 @@ class PodaciORadnomMestuResource extends Resource
                         Select::make('broj_bodova_drugoplasiranog_kandidata_na_zavrsnom_razgovoru')
                             ->label('Број бодова на завршном разговору')
                             ->options(static::zavrsniScoreOptions()),
-                    ])->columns(3)->collapsible()->columnSpanFull(),
+                    ])->columns(3),
 
-                Section::make('Статус и жалбе')
+                Tab::make('Статус и жалбе')
                     ->schema([
                         TextInput::make('broj_primljenih_izvrsilaca')
                             ->label('Број примљених извршилаца')
@@ -881,8 +888,9 @@ class PodaciORadnomMestuResource extends Resource
                             ->numeric()->minValue(0)
                             ->hintIcon('heroicon-m-information-circle')
                             ->hintIconTooltip('Односи се на број извршилаца за радна места која су у току исте календарске године поново оглашена, услед чињенице да претходним огласом није попуњен планирани број извршилаца.'),
-                    ])->columns(2)->collapsible()->columnSpanFull(),
+                    ])->columns(2),
 
+                ])->columnSpanFull(),
             ]);
     }
 
