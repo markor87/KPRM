@@ -247,7 +247,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Назив радног места')
                             ->maxLength(500)
                             ->required()
-                            ->regex('/^[А-Ша-шЂЈЉЊЋЏђјљњћџ0-9\s.,\-–—();\/\*\"\']+$/u')
+                            ->regex('/^[А-Ша-шЂЈЉЊЋЏђјљњћџ0-9\s.,\-–—():;\/\*\"\']+$/u')
                             ->validationMessages([
                                 'regex' => 'Назив радног места може садржати само ћирилична слова.',
                             ])
