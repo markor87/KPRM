@@ -181,7 +181,7 @@ class PodaciORadnomMestuExport implements FromQuery, WithHeadings, WithMapping
             $row->broj_neodazvanih_kandidata_pk,
             $row->broj_neodazvanih_kandidata_dokumentacija,
             $row->broj_neodazvanih_kandidata_zavrsni_razgovor,
-            $row->oblast_rada,
+            $row->oblastiRada->map(fn($o) => $o->oblast_rada)->join(', '),
             $row->velicinaOrganaRelation?->velicina_organa,
             $row->broj_uspelih_postupaka,
             $row->broj_neuspelih_postupaka,
