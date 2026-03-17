@@ -23,6 +23,8 @@ use Andreia\FilamentNordTheme\FilamentNordThemePlugin;
 use App\Filament\Pages\Auth\TwoFactorChallenge;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Illuminate\Support\Facades\Route;
+use Filament\View\PanelsRenderHook;
+use Illuminate\Support\HtmlString;
 use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
 
 class AdminPanelProvider extends PanelProvider
@@ -70,6 +72,16 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->plugin(FilamentNordThemePlugin::make())
             ->plugin(FilamentShieldPlugin::make())
-            ->plugin(FilamentApexChartsPlugin::make());
+            ->plugin(FilamentApexChartsPlugin::make())
+            ->renderHook(PanelsRenderHook::BODY_END, fn (): HtmlString => new HtmlString(<<<'HTML'
+                <script>
+                    document.addEventListener('click', function (e) {
+                        const tab = e.target.closest('[role="tab"]');
+                        if (tab) {
+                            setTimeout(() => tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }), 10);
+                        }
+                    });
+                </script>
+            HTML));
     }
 }
