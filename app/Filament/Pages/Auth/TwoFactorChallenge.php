@@ -78,7 +78,8 @@ class TwoFactorChallenge extends SimplePage
     protected function getVerifyAction(): Action
     {
         return Action::make('verify')
-            ->label('Верификуј');
+            ->label('Верификуј')
+            ->submit('form');
     }
 
     public function verify(): void
