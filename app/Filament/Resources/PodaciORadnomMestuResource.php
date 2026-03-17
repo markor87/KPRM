@@ -897,7 +897,8 @@ class PodaciORadnomMestuResource extends Resource
             ->columns([
                 TextColumn::make('id')
                     ->label('ID')
-                    ->sortable(),
+                    ->sortable()
+                    ->searchable(),
                 TextColumn::make('vrstaOrganaRelation.vrsta_organa')
                     ->label('Врста органа')
                     ->sortable()
