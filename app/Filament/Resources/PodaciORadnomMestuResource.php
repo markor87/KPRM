@@ -245,9 +245,9 @@ class PodaciORadnomMestuResource extends Resource
                     ->schema([
                         TextInput::make('naziv_radnog_mesta')
                             ->label('Назив радног места')
-                            ->maxLength(255)
+                            ->maxLength(500)
                             ->required()
-                            ->regex('/^[А-Ша-шЂЈЉЊЋЏђјљњћџ0-9\s.,\-()\/]+$/u')
+                            ->regex('/^[А-Ша-шЂЈЉЊЋЏђјљњћџ0-9\s.,\-–—();\/\*\"\']+$/u')
                             ->validationMessages([
                                 'regex' => 'Назив радног места може садржати само ћирилична слова.',
                             ])
@@ -259,7 +259,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->preload()
                             ->searchable()
                             ->live()
-                            ->disabled()
+                            // ->disabled()
                             ->dehydrated()
                             ->default(function () {
                                 $user = auth()->user();
@@ -278,7 +278,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->required()
                             ->searchable()
                             ->preload()
-                            ->disabled()
+                            // ->disabled()
                             ->dehydrated()
                             ->default(function () {
                                 return auth()->user()?->organ_id;
@@ -574,12 +574,11 @@ class PodaciORadnomMestuResource extends Resource
 
                 Tab::make('ОФК провера')
                     ->schema([
-                        static::makeDateField('datum_slanja_zahteva_za_sprovodjenje_ofk_provera', 'Датум слања захтева за спровођење ОФК провера', 'datum_pregleda_prijava', 'прегледа пријава'),
                         TextInput::make('broj_kandidata_za_koje_se_zakazuju_ofk')
                             ->label('Број кандидата за које се заказују ОФК')
                             ->numeric()
                             ->minValue(0),
-                        static::makeDateField('datum_pocetka_provere_ofk', 'Датум спровођења провере ОФК', 'datum_slanja_zahteva_za_sprovodjenje_ofk_provera', 'слања захтева за спровођење ОФК провера')
+                        static::makeDateField('datum_pocetka_provere_ofk', 'Датум спровођења провере ОФК', 'datum_pregleda_prijava', 'прегледа пријава')
                             ->helperText('Уколико је било више дана провере, унети први датум'),
                         TextInput::make('broj_neodazvanih_kandidata_ofk')
                             ->label('Број кандидата који се није одазвао позиву на ОФК')
@@ -598,12 +597,11 @@ class PodaciORadnomMestuResource extends Resource
 
                 Tab::make('ПФК провера')
                     ->schema([
-                        static::makeDateField('datum_slanja_zahteva_za_sprovodjenje_pfk_provera', 'Датум слања захтева за спровођење ПФК провера', 'datum_ofk_izvestaja', 'ОФК извештаја'),
                         TextInput::make('broj_kandidata_za_koje_se_zakazuju_pfk')
                             ->label('Број кандидата за које се заказују ПФК')
                             ->numeric()
                             ->minValue(0),
-                        static::makeDateField('datum_pocetka_provere_pfk', 'Датум почетка провере ПФК', 'datum_slanja_zahteva_za_sprovodjenje_pfk_provera', 'слања захтева за спровођење ПФК провера')
+                        static::makeDateField('datum_pocetka_provere_pfk', 'Датум почетка провере ПФК', 'datum_ofk_izvestaja', 'ОФК извештаја')
                             ->helperText('Уколико је било више дана провере, унети први датум'),
                         static::makeDateField('datum_pfk_izvestaja', 'Датум ПФК извештаја', 'datum_pocetka_provere_pfk', 'почетка провере ПФК')
                             ->hintIcon('heroicon-m-information-circle')
@@ -641,7 +639,6 @@ class PodaciORadnomMestuResource extends Resource
 
                 Tab::make('ПК провера')
                     ->schema([
-                        static::makeDateField('datum_slanja_zahteva_za_sprovodjenje_pk_provera', 'Датум слања захтева за спровођење ПК провера', 'datum_pfk_izvestaja', 'ПФК извештаја'),
                         TextInput::make('broj_kandidata_za_koje_se_zakazuju_pk')
                             ->label('Број кандидата за које се заказују ПК')
                             ->numeric()
@@ -651,11 +648,11 @@ class PodaciORadnomMestuResource extends Resource
                                 fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
                                     $pfk = (int) $get('broj_kandidata_koji_su_ispunlii_merila_pfk');
                                     if ($value !== null && $value !== '' && $pfk && (int)$value > $pfk) {
-                                        $fail('Број кандидата за које се заказују ПК не сме бити већи од броја кандидата који су испунили мерила ПФК.');
+                                        $fail('Број кандидата за које се заказују ПК не сме бити већи од броја кандидата koji су испунили мерила ПФК.');
                                     }
                                 },
                             ]),
-                        static::makeDateField('datum_pocetka_provere_pk', 'Датум почетка провере ПК', 'datum_slanja_zahteva_za_sprovodjenje_pk_provera', 'слања захтева за спровођење ПК провера')
+                        static::makeDateField('datum_pocetka_provere_pk', 'Датум почетка провере ПК', 'datum_pfk_izvestaja', 'ПФК извештаја')
                             ->helperText('Уколико је било више дана провере, унети први датум.'),
                         static::makeDateField('datum_pk_izvestaja', 'Датум ПК извештаја', 'datum_pocetka_provere_pk', 'почетка провере ПК')
                             ->helperText('Датум креирања извештаја СУКа'),
