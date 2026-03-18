@@ -404,8 +404,10 @@ class PodaciORadnomMestuResource extends Resource
                             ->dehydrated(),
                     ])->columns(3),
 
-                Tab::make('Покретање поступка')
+                Tab::make('Покретање поступка и пријаве')
                     ->schema([
+                        Section::make('Покретање поступка')
+                            ->schema([
                         static::makeDateField('datum_dobijanja_saglasnosti_vlade', 'Датум добијања сагласности Владе'),
                         static::makeDateField('datum_donosenja_resenja_o_pokretanju_postupka', 'Датум доношења решења о покретању поступка', 'datum_dobijanja_saglasnosti_vlade', 'добијања сагласности Владе'),
                         static::makeDateField('datum_dobijanja_obavestenja_od_suka', 'Датум добијања обавештења од СУКа', 'datum_donosenja_resenja_o_pokretanju_postupka', 'доношења решења о покретању поступка'),
@@ -414,8 +416,8 @@ class PodaciORadnomMestuResource extends Resource
                         static::makeDateField('datum_pregleda_prijava', 'Датум прегледа пријава', 'datum_oglasavanja', 'оглашавања'),
                     ])->columns(3),
 
-                Tab::make('Пристигле пријаве')
-                    ->schema([
+                        Section::make('Пристигле пријаве')
+                            ->schema([
                         TextInput::make('ukupan_broj_prijava')
                             ->label('Укупан број пријава')
                             ->numeric()->minValue(0),
@@ -463,9 +465,7 @@ class PodaciORadnomMestuResource extends Resource
                             ]),
                     ])->columns(2),
 
-                Tab::make('Старосна структура кандидата')
-                    ->schema([
-                        Section::make()
+                        Section::make('Старосна структура кандидата')
                             ->headerActions([
                         Action::make('info_starosna')
                             ->icon('heroicon-m-information-circle')
@@ -517,10 +517,9 @@ class PodaciORadnomMestuResource extends Resource
                                     ->modalWidth('lg')
                             ),
                     ])->columns(2),
-                    ]),
 
-                Tab::make('Валидне пријаве')
-                    ->schema([
+                        Section::make('Валидне пријаве')
+                            ->schema([
                         TextInput::make('broj_validnih_prijava')
                             ->label('Број валидних пријава')
                             ->numeric()->minValue(0)
@@ -571,9 +570,12 @@ class PodaciORadnomMestuResource extends Resource
                                 ),
                             ]),
                     ])->columns(2),
+                    ]),
 
-                Tab::make('ОФК провера')
+                Tab::make('Провере компетенција кандидата')
                     ->schema([
+                        Section::make('ОФК провера')
+                            ->schema([
                         TextInput::make('broj_kandidata_za_koje_se_zakazuju_ofk')
                             ->label('Број кандидата за које се заказују ОФК')
                             ->numeric()
@@ -595,8 +597,8 @@ class PodaciORadnomMestuResource extends Resource
                             ->helperText('Датум креирања извештаја СУКа'),
                     ])->columns(2),
 
-                Tab::make('ПФК провера')
-                    ->schema([
+                        Section::make('ПФК провера')
+                            ->schema([
                         TextInput::make('broj_kandidata_za_koje_se_zakazuju_pfk')
                             ->label('Број кандидата за које се заказују ПФК')
                             ->numeric()
@@ -637,8 +639,8 @@ class PodaciORadnomMestuResource extends Resource
                             ->searchable(),
                     ])->columns(2),
 
-                Tab::make('ПК провера')
-                    ->schema([
+                        Section::make('ПК провера')
+                            ->schema([
                         TextInput::make('broj_kandidata_za_koje_se_zakazuju_pk')
                             ->label('Број кандидата за које се заказују ПК')
                             ->numeric()
@@ -693,8 +695,12 @@ class PodaciORadnomMestuResource extends Resource
                             ->minValue(0),
                     ])->columns(2),
 
-                Tab::make('Завршна фаза поступка')
+                    ]),
+
+                Tab::make('Завршетак поступка и кандидати')
                     ->schema([
+                        Section::make('Завршна фаза поступка')
+                            ->schema([
                         static::makeDateField('datum_predaje_dokumentacije', 'Датум предаје документације', 'datum_pocetka_provere_pk', 'почетка провере ПК')
                             ->helperText('Докази које прилажу кандидати који су успешно прошли фазе изборног поступка.'),
                         TextInput::make('broj_neodazvanih_kandidata_dokumentacija')
@@ -746,8 +752,8 @@ class PodaciORadnomMestuResource extends Resource
                             ->helperText('Датум ступања на рад првог извршиоца'),
                     ])->columns(3),
 
-                Tab::make('Листа кандидата који су испунили мерила за избор')
-                    ->schema([
+                        Section::make('Листа кандидата који су испунили мерила за избор')
+                            ->schema([
                         static::makeDateField('datum_formiranja_liste_kandidata', 'Дан формирања листе кандидата који су испунили мерила у изборном поступку')
                             ->hintIcon('heroicon-m-information-circle')
                             ->hintIconTooltip('Члан 57, став 7, Закона о државним службеницима каже: На интернет презентацији органа државне управе који је огласио конкурс и Службе за управљање кадровима објављује се листа кандидата под шифром њихове пријаве и име и презиме кандидата који је изабран у конкурсном поступку.')
@@ -808,8 +814,8 @@ class PodaciORadnomMestuResource extends Resource
                             ]),
                     ])->columns(2),
 
-                Tab::make('Изабрани кандидат')
-                    ->schema([
+                        Section::make('Изабрани кандидат')
+                            ->schema([
                         Select::make('izabrani_kandidat')
                             ->label('Изабрани кандидат је из:')
                             ->relationship('izabraniKandidatRelation', 'izabrani_kandidat')
@@ -829,8 +835,8 @@ class PodaciORadnomMestuResource extends Resource
                             ->options(static::zavrsniScoreOptions()),
                     ])->columns(3),
 
-                Tab::make('Другопласирани кандидат')
-                    ->schema([
+                        Section::make('Другопласирани кандидат')
+                            ->schema([
                         Select::make('drugoplasirani_kandidat')
                             ->label('Другопласирани кандидат је из:')
                             ->relationship('drugoplasiraniKandidatRelation', 'izabrani_kandidat')
@@ -849,6 +855,8 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број бодова на завршном разговору')
                             ->options(static::zavrsniScoreOptions()),
                     ])->columns(3),
+
+                    ]),
 
                 Tab::make('Статус и жалбе')
                     ->schema([
