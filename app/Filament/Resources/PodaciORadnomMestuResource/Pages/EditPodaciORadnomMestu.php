@@ -23,6 +23,9 @@ class EditPodaciORadnomMestu extends EditRecord
 
     public array $mestaRadaData = [];
 
+    #[Locked]
+    public ?string $previousUrl = null;
+
     protected function getHeaderActions(): array
     {
         return [
@@ -32,7 +35,7 @@ class EditPodaciORadnomMestu extends EditRecord
 
     protected function getRedirectUrl(): string
     {
-        return $this->getResource()::getUrl('index');
+        return $this->previousUrl ?? $this->getResource()::getUrl('index');
     }
 
     /**
@@ -55,6 +58,8 @@ class EditPodaciORadnomMestu extends EditRecord
     public function mount(int | string $record): void
     {
         parent::mount($record);
+
+        $this->previousUrl = url()->previous();
 
         // Pronađi sve belongsToMany relacije na modelu
         $reflection = new ReflectionClass($this->record);
