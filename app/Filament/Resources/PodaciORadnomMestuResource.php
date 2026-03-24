@@ -162,7 +162,7 @@ class PodaciORadnomMestuResource extends Resource
             ->label($label)
             ->mask('99.99.9999')
             ->placeholder('дд.мм.гггг')
-            ->live(onBlur: true)
+            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
             ->rules($rules)
             ->afterStateUpdated(function ($state, $get, $component, $livewire) use ($afterField, $afterLabel) {
                 $path = $component->getStatePath();
@@ -251,6 +251,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->validationMessages([
                                 'regex' => 'Назив радног места може садржати само ћирилична слова.',
                             ])
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->columnSpanFull(),
                         Select::make('vrsta_organa')
                             ->label('Врста органа')
@@ -323,6 +324,7 @@ class PodaciORadnomMestuResource extends Resource
                                     ->numeric()
                                     ->required()
                                     ->minValue(1)
+                                    ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                                     ->default(1),
                             ])
                             ->columns(2)
@@ -420,11 +422,13 @@ class PodaciORadnomMestuResource extends Resource
                             ->schema([
                         TextInput::make('ukupan_broj_prijava')
                             ->label('Укупан број пријава')
-                            ->numeric()->minValue(0),
+                            ->numeric()->minValue(0)
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath())),
                         TextInput::make('broj_prijava_iz_organa')
                             ->label('Број пријава из органа који расписује конкурс')
                             ->numeric()->minValue(0)
                             ->lte('ukupan_broj_prijava')
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->validationMessages([
                                 'lte' => 'Број пријава из органа не може бити већи од укупног броја пријава.',
                             ])
@@ -439,6 +443,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број пријава из других органа државне управе')
                             ->numeric()->minValue(0)
                             ->lte('ukupan_broj_prijava')
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->validationMessages([
                                 'lte' => 'Број пријава из других органа не може бити већи од укупног броја пријава.',
                             ])
@@ -453,6 +458,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број пријава ван државних органа и/или незапослена лица')
                             ->numeric()->minValue(0)
                             ->lte('ukupan_broj_prijava')
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->validationMessages([
                                 'lte' => 'Број пријава ван државних органа не може бити већи од укупног броја пријава.',
                             ])
@@ -484,6 +490,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->minValue(0)
                             ->maxValue(100)
                             ->step(0.01)
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->suffix('година')
                             ->hintAction(
                                 Action::make('info_prosecna_starost')
@@ -503,6 +510,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->minValue(0)
                             ->maxValue(100)
                             ->step(0.01)
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->suffix('%')
                             ->hintAction(
                                 Action::make('info_udeo_mladjih')
@@ -524,6 +532,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број валидних пријава')
                             ->numeric()->minValue(0)
                             ->lte('ukupan_broj_prijava')
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->validationMessages([
                                 'lte' => 'Број валидних пријава не може бити већи од укупног броја пријава.',
                             ]),
@@ -531,6 +540,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број валидних пријава из органа који расписује конкурс')
                             ->numeric()->minValue(0)
                             ->lte('broj_validnih_prijava')
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->validationMessages([
                                 'lte' => 'Број валидних пријава из органа не може бити већи од укупног броја валидних пријава.',
                             ])
@@ -545,6 +555,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број валидних пријава из других органа државне управе')
                             ->numeric()->minValue(0)
                             ->lte('broj_validnih_prijava')
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->validationMessages([
                                 'lte' => 'Број валидних пријава из другог органа не може бити већи од укупног броја валидних пријава.',
                             ])
@@ -559,6 +570,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број валидних пријава ван органа државне управе и/или незапослена лица')
                             ->numeric()->minValue(0)
                             ->lte('broj_validnih_prijava')
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->validationMessages([
                                 'lte' => 'Број валидних пријава ван државних органа не може бити већи од укупног броја валидних пријава.',
                             ])
@@ -579,13 +591,15 @@ class PodaciORadnomMestuResource extends Resource
                         TextInput::make('broj_kandidata_za_koje_se_zakazuju_ofk')
                             ->label('Број кандидата за које се заказују ОФК')
                             ->numeric()
-                            ->minValue(0),
+                            ->minValue(0)
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath())),
                         static::makeDateField('datum_pocetka_provere_ofk', 'Датум спровођења провере ОФК', 'datum_pregleda_prijava', 'прегледа пријава')
                             ->helperText('Уколико је било више дана провере, унети први датум'),
                         TextInput::make('broj_neodazvanih_kandidata_ofk')
                             ->label('Број кандидата који се није одазвао позиву на ОФК')
                             ->numeric()
-                            ->minValue(0),
+                            ->minValue(0)
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath())),
                         TextInput::make('broj_kandidata_koji_su_ispunlii_merila_ofk')
                             ->label('Број кандидата који су испунили мерила ОФК')
                             ->numeric()->minValue(0)
@@ -602,7 +616,8 @@ class PodaciORadnomMestuResource extends Resource
                         TextInput::make('broj_kandidata_za_koje_se_zakazuju_pfk')
                             ->label('Број кандидата за које се заказују ПФК')
                             ->numeric()
-                            ->minValue(0),
+                            ->minValue(0)
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath())),
                         static::makeDateField('datum_pocetka_provere_pfk', 'Датум почетка провере ПФК', 'datum_ofk_izvestaja', 'ОФК извештаја')
                             ->helperText('Уколико је било више дана провере, унети први датум'),
                         static::makeDateField('datum_pfk_izvestaja', 'Датум ПФК извештаја', 'datum_pocetka_provere_pfk', 'почетка провере ПФК')
@@ -624,6 +639,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број кандидата који се није одазвао позиву на ПФК')
                             ->numeric()
                             ->minValue(0)
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->rules([
                                 fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
                                     $pfk = (int) $get('broj_kandidata_koji_su_ispunlii_merila_pfk');
@@ -680,6 +696,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број кандидата који се нису одазвали на проверу ПК')
                             ->numeric()
                             ->minValue(0)
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->rules([
                                 fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
                                     $zakazani = (int) $get('broj_kandidata_za_koje_se_zakazuju_pk');
@@ -692,7 +709,8 @@ class PodaciORadnomMestuResource extends Resource
                         TextInput::make('broj_dana_sprovodjenja_pk_provera')
                             ->label('Број дана спровођења ПК провера')
                             ->numeric()
-                            ->minValue(0),
+                            ->minValue(0)
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath())),
                     ])->columns(2),
 
                     ]),
@@ -738,6 +756,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број кандидата који се није одазвао позиву на завршном разговору')
                             ->numeric()
                             ->minValue(0)
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->rules([
                                 fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
                                     $odazvani = (int) $get('broj_odazvanih_kandidata_na_zavrsnom_razgovoru');
@@ -774,6 +793,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број кандидата из органа који расписује конкурс на листи')
                             ->numeric()->minValue(0)
                             ->lte('broj_kandidata_na_listi')
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->validationMessages([
                                 'lte' => 'Број кандидата из органа не може бити већи од укупног броја кандидата на листи.',
                             ])
@@ -788,6 +808,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број кандидата из других органа државне управе на листи')
                             ->numeric()->minValue(0)
                             ->lte('broj_kandidata_na_listi')
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->validationMessages([
                                 'lte' => 'Број кандидата из другог државног органа не може бити већи од укупног броја кандидата на листи.',
                             ])
@@ -802,6 +823,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број кандидата ван органа државне управе и/или незапослена лица на листи')
                             ->numeric()->minValue(0)
                             ->lte('broj_kandidata_na_listi')
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->validationMessages([
                                 'lte' => 'Број кандидата ван државних органа не може бити већи од укупног броја кандидата на листи.',
                             ])
@@ -864,6 +886,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број примљених извршилаца')
                             ->numeric()->minValue(0)
                             ->lte('broj_izvrsilaca')
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->validationMessages([
                                 'lte' => 'Број примљених извршилаца не може бити већи од броја извршилаца.',
                             ])
@@ -878,19 +901,24 @@ class PodaciORadnomMestuResource extends Resource
                         TextInput::make('ocena_sa_vrednovanja')
                             ->label('Оцена са вредновања')
                             ->numeric()->minValue(0)
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->helperText('Уколико је кандидат радио дуже од 6 месеци након ступања на рад.'),
                         TextInput::make('broj_zalbi_na_resenje_o_odbacaju_prijave')
                             ->label('Број жалби на решење о одбацивању пријаве')
-                            ->numeric()->minValue(0),
+                            ->numeric()->minValue(0)
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath())),
                         TextInput::make('broj_zalbi_na_resenje_o_prijemu_u_radni_odnos')
                             ->label('Број жалби на решење о пријему у радни однос')
-                            ->numeric()->minValue(0),
+                            ->numeric()->minValue(0)
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath())),
                         TextInput::make('broj_usvojenih_zalbi_na_resenje_o_odbacaju_prijave')
                             ->label('Број усвојених жалби на решење о одбацивању пријаве')
-                            ->numeric()->minValue(0),
+                            ->numeric()->minValue(0)
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath())),
                         TextInput::make('broj_izvrsilaca_ponovno_oglasavanje')
                             ->label('Број извршилаца - поновно оглашавање')
                             ->numeric()->minValue(0)
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->hintIcon('heroicon-m-information-circle')
                             ->hintIconTooltip('Односи се на број извршилаца за радна места која су у току исте календарске године поново оглашена, услед чињенице да претходним огласом није попуњен планирани број извршилаца.'),
                     ])->columns(2),
