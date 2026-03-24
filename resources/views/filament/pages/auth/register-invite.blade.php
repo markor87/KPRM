@@ -8,10 +8,10 @@
         </p>
     </div>
 
-    <x-filament-panels::form wire:submit="register">
+    <form wire:submit.prevent="register">
         {{ $this->form }}
 
-        <div class="flex flex-wrap items-center gap-4 justify-start mt-6">
+        <div class="flex flex-wrap items-center gap-4 justify-start" style="margin-top: 2rem;">
             <x-filament::button
                 type="submit"
                 size="lg"
@@ -19,5 +19,5 @@
                 Региструј се
             </x-filament::button>
         </div>
-    </x-filament-panels::form>
+    </form>
 </x-filament-panels::page.simple>

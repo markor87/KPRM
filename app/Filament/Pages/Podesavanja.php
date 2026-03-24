@@ -6,14 +6,11 @@ use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
 use App\Models\Setting;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Pages\Page;
 use Filament\Notifications\Notification;
 
-class Podesavanja extends Page implements HasForms
+class Podesavanja extends Page
 {
-    use InteractsWithForms;
 
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-cog-6-tooth';
 
