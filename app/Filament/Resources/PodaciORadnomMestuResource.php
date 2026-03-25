@@ -550,6 +550,12 @@ class PodaciORadnomMestuResource extends Resource
                                     ['broj_validnih_prijava_iz_organa', 'broj_validnih_prijava_iz_drugog_organa', 'broj_validnih_prijava_van_drzavnih_organa'],
                                     'Збир валидних пријава мора бити једнак укупном броју валидних пријава.'
                                 ),
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    $ukupne = (int) $get('broj_prijava_iz_organa');
+                                    if ($value !== null && $value !== '' && (int)$value > $ukupne) {
+                                        $fail('Број валидних пријава из органа не може бити већи од укупног броја пријава из органа.');
+                                    }
+                                },
                             ]),
                         TextInput::make('broj_validnih_prijava_iz_drugog_organa')
                             ->label('Број валидних пријава из других органа државне управе')
@@ -565,6 +571,12 @@ class PodaciORadnomMestuResource extends Resource
                                     ['broj_validnih_prijava_iz_organa', 'broj_validnih_prijava_iz_drugog_organa', 'broj_validnih_prijava_van_drzavnih_organa'],
                                     'Збир валидних пријава мора бити једнак укупном броју валидних пријава.'
                                 ),
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    $ukupne = (int) $get('broj_prijava_iz_drugih_organa');
+                                    if ($value !== null && $value !== '' && (int)$value > $ukupne) {
+                                        $fail('Број валидних пријава из других органа не може бити већи од укупног броја пријава из других органа.');
+                                    }
+                                },
                             ]),
                         TextInput::make('broj_validnih_prijava_van_drzavnih_organa')
                             ->label('Број валидних пријава ван органа државне управе и/или незапослена лица')
@@ -580,6 +592,12 @@ class PodaciORadnomMestuResource extends Resource
                                     ['broj_validnih_prijava_iz_organa', 'broj_validnih_prijava_iz_drugog_organa', 'broj_validnih_prijava_van_drzavnih_organa'],
                                     'Збир валидних пријава мора бити једнак укупном броју валидних пријава.'
                                 ),
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    $ukupne = (int) $get('broj_prijava_van_drzavnih_organa');
+                                    if ($value !== null && $value !== '' && (int)$value > $ukupne) {
+                                        $fail('Број валидних пријава ван државних органа не може бити већи од укупног броја пријава ван државних органа.');
+                                    }
+                                },
                             ]),
                     ])->columns(2),
                     ]),
