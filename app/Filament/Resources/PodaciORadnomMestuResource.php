@@ -610,21 +610,47 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број кандидата за које се заказују ОФК')
                             ->numeric()
                             ->minValue(0)
-                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath())),
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
+                            ->rules([
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    $ukupne = (int) $get('ukupan_broj_prijava');
+                                    if ($value !== null && $value !== '' && (int)$value > $ukupne) {
+                                        $fail('Број кандидата за ОФК не може бити већи од укупног броја пријава.');
+                                    }
+                                },
+                            ]),
                         static::makeDateField('datum_pocetka_provere_ofk', 'Датум спровођења провере ОФК', 'datum_pregleda_prijava', 'прегледа пријава')
                             ->helperText('Уколико је било више дана провере, унети први датум'),
                         TextInput::make('broj_neodazvanih_kandidata_ofk')
                             ->label('Број кандидата који се није одазвао позиву на ОФК')
                             ->numeric()
                             ->minValue(0)
-                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath())),
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
+                            ->rules([
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    $zakazani = (int) $get('broj_kandidata_za_koje_se_zakazuju_ofk');
+                                    $ispunili = (int) $get('broj_kandidata_koji_su_ispunlii_merila_ofk');
+                                    if ($value !== null && $value !== '' && $zakazani && ($ispunili + (int)$value) > $zakazani) {
+                                        $fail('Збир кандидата који су испунили мерила ОФК и кандидата који се нису одазвали на ОФК не сме бити већи од броја кандидата за које се заказују ОФК.');
+                                    }
+                                },
+                            ]),
                         TextInput::make('broj_kandidata_koji_su_ispunlii_merila_ofk')
                             ->label('Број кандидата који су испунили мерила ОФК')
                             ->numeric()->minValue(0)
-                            ->live()
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->helperText('Укључујући и кандидате којима су се оцене признале')
                             ->hintIcon('heroicon-m-information-circle')
-                            ->hintIconTooltip('Укупан број кандидата се може пронаћи у извештају СУК-а'),
+                            ->hintIconTooltip('Укупан број кандидата се може пронаћи у извештају СУК-а')
+                            ->rules([
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    $zakazani = (int) $get('broj_kandidata_za_koje_se_zakazuju_ofk');
+                                    $neodazvani = (int) $get('broj_neodazvanih_kandidata_ofk');
+                                    if ($value !== null && $value !== '' && $zakazani && ($neodazvani + (int)$value) > $zakazani) {
+                                        $fail('Збир кандидата који су испунили мерила ОФК и кандидата који се нису одазвали на ОФК не сме бити већи од броја кандидата за које се заказују ОФК.');
+                                    }
+                                },
+                            ]),
                         static::makeDateField('datum_ofk_izvestaja', 'Датум ОФК извештаја', 'datum_pocetka_provere_ofk', 'спровођења провере ОФК')
                             ->helperText('Датум креирања извештаја СУКа'),
                     ])->columns(2),
@@ -759,7 +785,7 @@ class PodaciORadnomMestuResource extends Resource
                         TextInput::make('broj_odazvanih_kandidata_na_zavrsnom_razgovoru')
                             ->label('Број одазваних кандидата на завршном разговору')
                             ->numeric()->minValue(0)
-                            ->live()
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->rules([
                                 fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
                                     $pk = (int) $get('broj_kandidata_ispunili_merila_pk');
@@ -767,6 +793,13 @@ class PodaciORadnomMestuResource extends Resource
                                     $max = $pk - $neodazvani;
                                     if ($value !== null && $value !== '' && $pk && (int)$value > $max) {
                                         $fail('Број одазваних кандидата на завршном разговору не сме бити већи од разлике броја кандидата koji су испунили мерила ПК и броја кандидата koji се нису одазвали на доставу документације.');
+                                    }
+                                },
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    $pk = (int) $get('broj_kandidata_ispunili_merila_pk');
+                                    $neodazvani_zavrsni = (int) $get('broj_neodazvanih_kandidata_zavrsni_razgovor');
+                                    if ($value !== null && $value !== '' && $pk && ($neodazvani_zavrsni + (int)$value) > $pk) {
+                                        $fail('Збир одазваних и неодазваних кандидата на завршном разговору не сме бити већи од броја кандидата koji су испунили мерила ПК.');
                                     }
                                 },
                             ]),
@@ -777,9 +810,10 @@ class PodaciORadnomMestuResource extends Resource
                             ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->rules([
                                 fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
-                                    $odazvani = (int) $get('broj_odazvanih_kandidata_na_zavrsnom_razgovoru');
-                                    if ($value !== null && $value !== '' && $odazvani && (int)$value > $odazvani) {
-                                        $fail('Број кандидата koji се нису одазвали на завршном разговору не сме бити већи од броја одазваних кандидата на завршном разговору.');
+                                    $pk = (int) $get('broj_kandidata_ispunili_merila_pk');
+                                    $odazvani_zavrsni = (int) $get('broj_odazvanih_kandidata_na_zavrsnom_razgovoru');
+                                    if ($value !== null && $value !== '' && $pk && ($odazvani_zavrsni + (int)$value) > $pk) {
+                                        $fail('Збир одазваних и неодазваних кандидата на завршном разговору не сме бити већи од броја кандидата koji су испунили мерила ПК.');
                                     }
                                 },
                             ]),
@@ -924,15 +958,39 @@ class PodaciORadnomMestuResource extends Resource
                         TextInput::make('broj_zalbi_na_resenje_o_odbacaju_prijave')
                             ->label('Број жалби на решење о одбацивању пријаве')
                             ->numeric()->minValue(0)
-                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath())),
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
+                            ->rules([
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    $ukupno = (int) $get('ukupan_broj_prijava');
+                                    if ($value !== null && $value !== '' && (int)$value > $ukupno) {
+                                        $fail('Број жалби на решење о одбацивању пријаве не може бити већи од укупног броја пријава.');
+                                    }
+                                },
+                            ]),
                         TextInput::make('broj_zalbi_na_resenje_o_prijemu_u_radni_odnos')
                             ->label('Број жалби на решење о пријему у радни однос')
                             ->numeric()->minValue(0)
-                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath())),
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
+                            ->rules([
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    $ukupno = (int) $get('ukupan_broj_prijava');
+                                    if ($value !== null && $value !== '' && (int)$value > $ukupno) {
+                                        $fail('Број жалби на решење о пријему у радни однос не може бити већи од укупног броја пријава.');
+                                    }
+                                },
+                            ]),
                         TextInput::make('broj_usvojenih_zalbi_na_resenje_o_odbacaju_prijave')
                             ->label('Број усвојених жалби на решење о одбацивању пријаве')
                             ->numeric()->minValue(0)
-                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath())),
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
+                            ->rules([
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    $zalbi = (int) $get('broj_zalbi_na_resenje_o_odbacaju_prijave');
+                                    if ($value !== null && $value !== '' && (int)$value > $zalbi) {
+                                        $fail('Број усвојених жалби не може бити већи од броја жалби на решење о одбацивању пријаве.');
+                                    }
+                                },
+                            ]),
                         TextInput::make('broj_izvrsilaca_ponovno_oglasavanje')
                             ->label('Број извршилаца - поновно оглашавање')
                             ->numeric()->minValue(0)
