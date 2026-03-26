@@ -290,7 +290,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->preload()
                             ->searchable()
                             ->live()
-                            // ->disabled()
+                            ->disabled()
                             ->dehydrated()
                             ->default(function () {
                                 $user = auth()->user();
@@ -309,7 +309,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->required()
                             ->searchable()
                             ->preload()
-                            // ->disabled()
+                            ->disabled()
                             ->dehydrated()
                             ->default(function () {
                                 return auth()->user()?->organ_id;
