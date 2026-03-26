@@ -856,7 +856,12 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број кандидата из органа који расписује конкурс на листи')
                             ->numeric()->minValue(0)
                             ->lte('broj_kandidata_na_listi')
-                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
+                            ->live(onBlur: true)->afterStateUpdated(function ($component, $livewire) {
+                                $livewire->validateOnly($component->getStatePath());
+                                $livewire->validateOnly('data.broj_kandidata_iz_organa_na_listi');
+                                $livewire->validateOnly('data.broj_kandidata_iz_drugog_drzavnog_organa_na_listi');
+                                $livewire->validateOnly('data.broj_kandidata_van_drzavnih_organa_na_listi');
+                            })
                             ->validationMessages([
                                 'lte' => 'Број кандидата из органа не може бити већи од укупног броја кандидата на листи.',
                             ])
@@ -864,14 +869,25 @@ class PodaciORadnomMestuResource extends Resource
                                 self::sumValidationRule(
                                     'broj_kandidata_na_listi',
                                     ['broj_kandidata_iz_organa_na_listi', 'broj_kandidata_iz_drugog_drzavnog_organa_na_listi', 'broj_kandidata_van_drzavnih_organa_na_listi'],
-                                    'Збир кандидата на листи мора бити једнак укупном броју кандидата на листи.'
+                                    'Збир кандидата на листи мора битиједнак укупном броју кандидата на листи.'
                                 ),
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    $max = (int) $get('broj_validnih_prijava_iz_organa');
+                                    if ($value !== null && $value !== '' && $max > 0 && (int)$value > $max) {
+                                        $fail('Број кандидата из органа на листи не може бити већи од броја валидних пријава из органа.');
+                                    }
+                                },
                             ]),
                         TextInput::make('broj_kandidata_iz_drugog_drzavnog_organa_na_listi')
                             ->label('Број кандидата из других органа државне управе на листи')
                             ->numeric()->minValue(0)
                             ->lte('broj_kandidata_na_listi')
-                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
+                            ->live(onBlur: true)->afterStateUpdated(function ($component, $livewire) {
+                                $livewire->validateOnly($component->getStatePath());
+                                $livewire->validateOnly('data.broj_kandidata_iz_organa_na_listi');
+                                $livewire->validateOnly('data.broj_kandidata_iz_drugog_drzavnog_organa_na_listi');
+                                $livewire->validateOnly('data.broj_kandidata_van_drzavnih_organa_na_listi');
+                            })
                             ->validationMessages([
                                 'lte' => 'Број кандидата из другог државног органа не може бити већи од укупног броја кандидата на листи.',
                             ])
@@ -879,14 +895,25 @@ class PodaciORadnomMestuResource extends Resource
                                 self::sumValidationRule(
                                     'broj_kandidata_na_listi',
                                     ['broj_kandidata_iz_organa_na_listi', 'broj_kandidata_iz_drugog_drzavnog_organa_na_listi', 'broj_kandidata_van_drzavnih_organa_na_listi'],
-                                    'Збир кандидата на листи мора бити једнак укупном броју кандидата на листи.'
+                                    'Збир кандидата на листи мора битиједнак укупном броју кандидата на листи.'
                                 ),
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    $max = (int) $get('broj_validnih_prijava_iz_drugog_organa');
+                                    if ($value !== null && $value !== '' && $max > 0 && (int)$value > $max) {
+                                        $fail('Број кандидата из других органа на листи не може бити већи од броја валидних пријава из других органа.');
+                                    }
+                                },
                             ]),
                         TextInput::make('broj_kandidata_van_drzavnih_organa_na_listi')
                             ->label('Број кандидата ван органа државне управе и/или незапослена лица на листи')
                             ->numeric()->minValue(0)
                             ->lte('broj_kandidata_na_listi')
-                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
+                            ->live(onBlur: true)->afterStateUpdated(function ($component, $livewire) {
+                                $livewire->validateOnly($component->getStatePath());
+                                $livewire->validateOnly('data.broj_kandidata_iz_organa_na_listi');
+                                $livewire->validateOnly('data.broj_kandidata_iz_drugog_drzavnog_organa_na_listi');
+                                $livewire->validateOnly('data.broj_kandidata_van_drzavnih_organa_na_listi');
+                            })
                             ->validationMessages([
                                 'lte' => 'Број кандидата ван државних органа не може бити већи од укупног броја кандидата на листи.',
                             ])
@@ -894,8 +921,14 @@ class PodaciORadnomMestuResource extends Resource
                                 self::sumValidationRule(
                                     'broj_kandidata_na_listi',
                                     ['broj_kandidata_iz_organa_na_listi', 'broj_kandidata_iz_drugog_drzavnog_organa_na_listi', 'broj_kandidata_van_drzavnih_organa_na_listi'],
-                                    'Збир кандидата на листи мора бити једнак укупном броју кандидата на листи.'
+                                    'Збир кандидата на листи мора битиједнак укупном броју кандидата на листи.'
                                 ),
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    $max = (int) $get('broj_validnih_prijava_van_drzavnih_organa');
+                                    if ($value !== null && $value !== '' && $max > 0 && (int)$value > $max) {
+                                        $fail('Број кандидата ван државних органа на листи не може бити већи од броја валидних пријава ван државних органа.');
+                                    }
+                                },
                             ]),
                     ])->columns(2),
 
