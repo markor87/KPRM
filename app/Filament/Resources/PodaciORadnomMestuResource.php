@@ -128,7 +128,7 @@ class PodaciORadnomMestuResource extends Resource
         };
     }
 
-    protected static function makeDateField(string $name, string $label, string $afterField = null, string $afterLabel = null, string $staticHelperText = null): TextInput
+    protected static function makeDateField(string $name, string $label, string $afterField = null, string $afterLabel = null): TextInput
     {
         // Submit-time validation (prevents saving bad data)
         $rules = [
@@ -150,8 +150,13 @@ class PodaciORadnomMestuResource extends Resource
                 if (!$value || !$get($afterField)) return;
                 try {
                     $current  = Carbon::createFromFormat('d.m.Y', $value);
-                    $previous = Carbon::createFromFormat('d.m.Y', $get($afterField));
-                    if ($current->lt($previous)) {
+                    $prevRaw2 = $get($afterField);
+                    $previous = null;
+                    if ($prevRaw2) {
+                        try { $previous = Carbon::createFromFormat('d.m.Y', $prevRaw2); } catch (\Exception $ex2) {}
+                        if (!$previous || !$previous->isValid()) { try { $previous = Carbon::createFromFormat('Y-m-d', $prevRaw2); } catch (\Exception $ex3) {} }
+                    }
+                    if ($previous && $current->lt($previous)) {
                         $fail("Датум мора бити после или једнак датуму {$afterLabel}");
                     }
                 } catch (Exception $e) {}
@@ -164,12 +169,11 @@ class PodaciORadnomMestuResource extends Resource
             ->placeholder('дд.мм.гггг')
             ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
             ->rules($rules)
-            ->afterStateUpdated(function ($state, $get, $component, $livewire) use ($afterField, $afterLabel, $staticHelperText) {
+            ->afterStateUpdated(function ($state, $get, $component, $livewire) use ($afterField, $afterLabel) {
                 $path = $component->getStatePath();
 
-                // Always clear previous error and reset helperText
+                // Always clear previous error
                 $livewire->resetValidation($path);
-                $component->helperText($staticHelperText);
 
                 if (!$state) return;
 
@@ -188,42 +192,19 @@ class PodaciORadnomMestuResource extends Resource
                 if ($afterField && $afterLabel && $get($afterField)) {
                     try {
                         $current  = Carbon::createFromFormat('d.m.Y', $state);
-                        $previous = Carbon::createFromFormat('d.m.Y', $get($afterField));
-                        if ($current->lt($previous)) {
+                        $prevRaw = $get($afterField);
+                        $previous = null;
+                        if ($prevRaw) {
+                            try { $previous = Carbon::createFromFormat('d.m.Y', $prevRaw); } catch (\Exception $e2) {}
+                            if (!$previous || !$previous->isValid()) { try { $previous = Carbon::createFromFormat('Y-m-d', $prevRaw); } catch (\Exception $e3) {} }
+                        }
+                        if ($previous && $current->lt($previous)) {
                             $livewire->addError($path, "Датум мора бити после илиједнак датуму {$afterLabel}");
-                            return;
                         }
                     } catch (Exception $e) {}
                 }
 
-                // 365-day warning
-                $warning = null;
-                try {
-                    $current = Carbon::createFromFormat('d.m.Y', $state);
-                    if ($afterField) {
-                        $prevVal = $get($afterField);
-                        if ($prevVal && preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $prevVal)) {
-                            $previous = Carbon::createFromFormat('d.m.Y', $prevVal);
-                            if ($current->gt($previous) && $current->diffInDays($previous) > 365) {
-                                $warning = '⚠ Датум је више од годину дана после претходног унетог датума';
-                            }
-                        }
-                    } else {
-                        $today = Carbon::today();
-                        $diff = $current->diffInDays($today);
-                        if ($diff > 365) {
-                            $warning = $current->lt($today)
-                                ? '⚠ Датум је више од годину дана у прошлости'
-                                : '⚠ Датум је више од годину дана у будућности';
-                        }
-                    }
-                } catch (Exception $e) {}
-
-                if ($warning) {
-                    $component->helperText($warning);
-                }
             })
-            ->helperText($staticHelperText)
             ->dehydrateStateUsing(fn ($state) => $state ? Carbon::createFromFormat('d.m.Y', $state)->format('Y-m-d') : null)
             ->formatStateUsing(fn ($state) => $state ? Carbon::parse($state)->format('d.m.Y') : null);
     }
@@ -649,7 +630,8 @@ class PodaciORadnomMestuResource extends Resource
                                     }
                                 },
                             ]),
-                        static::makeDateField('datum_pocetka_provere_ofk', 'Датум спровођења провере ОФК', 'datum_pregleda_prijava', 'прегледа пријава', 'Уколико је било више дана провере, унети први датум'),
+                        static::makeDateField('datum_pocetka_provere_ofk', 'Датум спровођења провере ОФК', 'datum_pregleda_prijava', 'прегледа пријава')
+                            ->helperText('Уколико је било више дана провере, унети први датум'),
                         TextInput::make('broj_neodazvanih_kandidata_ofk')
                             ->label('Број кандидата који се није одазвао позиву на ОФК')
                             ->numeric()
@@ -680,7 +662,8 @@ class PodaciORadnomMestuResource extends Resource
                                     }
                                 },
                             ]),
-                        static::makeDateField('datum_ofk_izvestaja', 'Датум ОФК извештаја', 'datum_pocetka_provere_ofk', 'спровођења провере ОФК', 'Датум креирања извештаја СУКа'),
+                        static::makeDateField('datum_ofk_izvestaja', 'Датум ОФК извештаја', 'datum_pocetka_provere_ofk', 'спровођења провере ОФК')
+                            ->helperText('Датум креирања извештаја СУКа'),
                     ])->columns(2),
 
                         Section::make('ПФК провера')
@@ -690,7 +673,8 @@ class PodaciORadnomMestuResource extends Resource
                             ->numeric()
                             ->minValue(0)
                             ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath())),
-                        static::makeDateField('datum_pocetka_provere_pfk', 'Датум почетка провере ПФК', 'datum_ofk_izvestaja', 'ОФК извештаја', 'Уколико је било више дана провере, унети први датум'),
+                        static::makeDateField('datum_pocetka_provere_pfk', 'Датум почетка провере ПФК', 'datum_ofk_izvestaja', 'ОФК извештаја')
+                            ->helperText('Уколико је било више дана провере, унети први датум'),
                         static::makeDateField('datum_pfk_izvestaja', 'Датум ПФК извештаја', 'datum_pocetka_provere_pfk', 'почетка провере ПФК')
                             ->hintIcon('heroicon-m-information-circle')
                             ->hintIconTooltip('Иако се ова форма извештаја тренутно не израђује, њено увођење омогућава праћење времена вредновања одговора кандидата и представља важан показатељ ефикасности изборног поступка.'),
@@ -741,8 +725,10 @@ class PodaciORadnomMestuResource extends Resource
                                     }
                                 },
                             ]),
-                        static::makeDateField('datum_pocetka_provere_pk', 'Датум почетка провере ПК', 'datum_pfk_izvestaja', 'ПФК извештаја', 'Уколико је било више дана провере, унети први датум.'),
-                        static::makeDateField('datum_pk_izvestaja', 'Датум ПК извештаја', 'datum_pocetka_provere_pk', 'почетка провере ПК', 'Датум креирања извештаја СУКа'),
+                        static::makeDateField('datum_pocetka_provere_pk', 'Датум почетка провере ПК', 'datum_pfk_izvestaja', 'ПФК извештаја')
+                            ->helperText('Уколико је било више дана провере, унети први датум.'),
+                        static::makeDateField('datum_pk_izvestaja', 'Датум ПК извештаја', 'datum_pocetka_provere_pk', 'почетка провере ПК')
+                            ->helperText('Датум креирања извештаја СУКа'),
                         TextInput::make('broj_kandidata_ispunili_merila_pk')
                             ->label('Број кандидата који су испунили мерила на ПК')
                             ->numeric()->minValue(0)
@@ -788,7 +774,8 @@ class PodaciORadnomMestuResource extends Resource
                     ->schema([
                         Section::make('Завршна фаза поступка')
                             ->schema([
-                        static::makeDateField('datum_predaje_dokumentacije', 'Датум предаје документације', 'datum_pocetka_provere_pk', 'почетка провере ПК', 'Докази које прилажу кандидати који су успешно прошли фазе изборног поступка.'),
+                        static::makeDateField('datum_predaje_dokumentacije', 'Датум предаје документације', 'datum_pocetka_provere_pk', 'почетка провере ПК')
+                            ->helperText('Докази које прилажу кандидати који су успешно прошли фазе изборног поступка.'),
                         TextInput::make('broj_neodazvanih_kandidata_dokumentacija')
                             ->label('Број кандидата који се није одазвао позиву на доставу документације')
                             ->numeric()
@@ -843,7 +830,8 @@ class PodaciORadnomMestuResource extends Resource
                             ]),
                         static::makeDateField('datum_dostavljanja_liste_rukovodiocu_organa', 'Датум достављања листе руководиоцу органа', 'datum_pocetka_sprovodjenja_intervjua', 'спровођења завршног интервјуа'),
                         static::makeDateField('datum_donosenja_resenja_o_izabranom_kandidatu', 'Датум доношења решења о изабраном кандидату', 'datum_dostavljanja_liste_rukovodiocu_organa', 'достављања листе руководиоцу органа'),
-                        static::makeDateField('datum_stupanja_na_rad', 'Датум ступања на рад', 'datum_donosenja_resenja_o_izabranom_kandidatu', 'доношења решења о изабраном кандидату', 'Датум ступања на рад првог извршиоца'),
+                        static::makeDateField('datum_stupanja_na_rad', 'Датум ступања на рад', 'datum_donosenja_resenja_o_izabranom_kandidatu', 'доношења решења о изабраном кандидату')
+                            ->helperText('Датум ступања на рад првог извршиоца'),
                     ])->columns(3),
 
                         Section::make('Листа кандидата који су испунили мерила за избор')
