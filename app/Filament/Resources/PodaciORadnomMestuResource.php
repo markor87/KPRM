@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use Closure;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Forms\Components\TextInput;
 use Exception;
 use App\Services\OrganFilterService;
@@ -306,7 +307,16 @@ class PodaciORadnomMestuResource extends Resource
                             ->required()
                             ->numeric()
                             ->minValue(1)
-                            ->live(),
+                            ->live(onBlur: true)->afterStateUpdated(function ($state, Get $get, Set $set, $component, $livewire) {
+                                $livewire->validateOnly($component->getStatePath());
+                                if ($state !== null && $state !== '') {
+                                    $mestaRada = $get('mestaRada') ?? [];
+                                    if (count($mestaRada) === 1) {
+                                        $firstKey = array_key_first($mestaRada);
+                                        $set("mestaRada.{$firstKey}.broj_izvrsilaca", (int) $state);
+                                    }
+                                }
+                            }),
                         Select::make('zvanje')
                             ->label('Звање')
                             ->relationship('zvanjeRelation', 'zvanje', fn($query) => $query->orderBy('id', 'asc'))
@@ -342,6 +352,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->addActionLabel('Додај место рада')
                             ->defaultItems(1)
                             ->required()
+                            ->live()->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->collapsed()
                             ->itemLabel(function (array $state): ?string {
                                 $mestoId = $state['sifarnik_mesta_id'] ?? null;
@@ -1101,6 +1112,26 @@ class PodaciORadnomMestuResource extends Resource
                     ->searchable()
                     ->preload()
                     ->multiple(),
+                SelectFilter::make('godina_oglasavanja')
+                    ->label('Датум оглашавања (година)')
+                    ->options(fn () => PodaciORadnomMestu::query()
+                        ->whereNotNull('datum_oglasavanja')
+                        ->selectRaw('YEAR(datum_oglasavanja) as godina')
+                        ->distinct()
+                        ->orderBy('godina', 'desc')
+                        ->pluck('godina', 'godina')
+                        ->toArray()
+                    )
+                    ->query(fn (Builder $query, array $data) =>
+                        $query->when($data['value'] ?? null, fn ($q, $value) =>
+                            $q->whereYear('datum_oglasavanja', $value)
+                        )
+                    ),
+                SelectFilter::make('tip_konkursa')
+                    ->label('Тип конкурса')
+                    ->relationship('tipKonkursaRelation', 'tip_konkursa')
+                    ->searchable()
+                    ->preload(),
             ])
             ->recordActions([
                 ActionGroup::make([
