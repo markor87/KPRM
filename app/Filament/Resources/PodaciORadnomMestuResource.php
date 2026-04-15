@@ -14,6 +14,7 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Forms\Components\Select;
 use App\Models\SifarnikOrgani;
+use App\Models\SifarnikZvanje;
 use Filament\Forms\Components\Repeater;
 use App\Models\SifarnikMesta;
 use Filament\Actions\Action;
@@ -319,9 +320,16 @@ class PodaciORadnomMestuResource extends Resource
                             }),
                         Select::make('zvanje')
                             ->label('Звање')
-                            ->relationship('zvanjeRelation', 'zvanje', fn($query) => $query->orderBy('id', 'asc'))
+                            ->options(function (Get $get) {
+                                $organId = $get('organ');
+                                return SifarnikZvanje::when(
+                                    $organId,
+                                    fn ($q) => $q->where('organ_id', $organId)
+                                )
+                                ->orderBy('id')
+                                ->pluck('zvanje', 'id');
+                            })
                             ->required()
-                            ->preload()
                             ->searchable(),
                         Select::make('oblastiRada')
                             ->label('Претежна област рада')
