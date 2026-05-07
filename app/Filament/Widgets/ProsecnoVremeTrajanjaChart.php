@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Widgets\Concerns\HasTipKonkursaFilter;
 use App\Models\PodaciORadnomMestu;
 use App\Services\OrganFilterService;
 use Filament\Support\RawJs;
@@ -9,6 +10,8 @@ use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
 class ProsecnoVremeTrajanjaChart extends ApexChartWidget
 {
+    use HasTipKonkursaFilter;
+
     protected static ?int $sort = 5;
 
     protected int|string|array $columnSpan = 12;
@@ -17,7 +20,8 @@ class ProsecnoVremeTrajanjaChart extends ApexChartWidget
 
     protected function getHeading(): ?string
     {
-        return 'Просечно време трајања фаза јавних конкурсних поступака изражено у данима (' . (now()->year - 1) . ')';
+        $tipLabel = $this->tipKonkursa === 1 ? 'јавних' : 'интерних';
+        return "Просечно време трајања фаза {$tipLabel} конкурсних поступака изражено у данима (" . (now()->year - 1) . ')';
     }
 
     protected function getOptions(): array
@@ -101,7 +105,7 @@ class ProsecnoVremeTrajanjaChart extends ApexChartWidget
         }
 
         $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina)
-            ->where('tip_konkursa', 1);
+            ->where('tip_konkursa', $this->tipKonkursa);
         $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ');
 
         $result = $baseQuery

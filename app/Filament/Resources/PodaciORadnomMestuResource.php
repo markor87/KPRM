@@ -320,16 +320,19 @@ class PodaciORadnomMestuResource extends Resource
                             }),
                         Select::make('zvanje')
                             ->label('Звање')
-                            ->options(function (Get $get) {
-                                $organId = $get('organ');
-                                return SifarnikZvanje::when(
-                                    $organId,
-                                    fn ($q) => $q->where('organ_id', $organId)
-                                )
-                                ->orderBy('id')
-                                ->pluck('zvanje', 'id');
+                            ->relationship('zvanjeRelation', 'zvanje', function ($query) {
+                                $organId = auth()->user()?->organ_id;
+                                if (!$organId) {
+                                    return $query->orderBy('id');
+                                }
+                                $hasMapped = SifarnikZvanje::where('organ_id', $organId)->exists();
+                                return $hasMapped
+                                    ? $query->where('organ_id', $organId)->orderBy('id')
+                                    : $query->whereNull('organ_id')->orderBy('id');
                             })
+                            ->getOptionLabelUsing(fn($value) => SifarnikZvanje::find($value)?->zvanje ?? $value)
                             ->required()
+                            ->preload()
                             ->searchable(),
                         Select::make('oblastiRada')
                             ->label('Претежна област рада')
@@ -414,18 +417,19 @@ class PodaciORadnomMestuResource extends Resource
                             ])
                             ->helperText(fn (Get $get) => 'Укупан број извршилаца: ' . ($get('broj_izvrsilaca') ?: 0) . '. Збир по градовима мора бити једнак овом броју.'),
                         Select::make('status_konkursa_na_dan_1')
-                            ->label('Статус конкурса на дан 31/12/' . (now()->year - 1))
+                            ->label('Статус конкурса на дан 31/12/' . (now()->year - 2))
                             ->relationship('statusKonkursaNaDan1Relation', 'status_konkursa', fn($query) => $query->orderBy('id', 'asc'))
                             ->preload()
                             ->searchable()
                             ->hidden(fn () => auth()->user()->hasRole('User'))
                             ->rules([static::uspesnoZavrsenValidationRule()]),
                         Select::make('status_konkursa_na_dan_2')
-                            ->label('Статус конкурса на дан 31/12/' . now()->year)
+                            ->label('Статус конкурса на дан 31/12/' . (now()->year - 1))
                             ->relationship('statusKonkursaNaDan2Relation', 'status_konkursa', fn($query) => $query->orderBy('id', 'asc'))
                             ->preload()
                             ->searchable()
                             ->live()
+                            ->afterStateUpdated(fn (Set $set, $state) => $state != 2 ? $set('razlog_neuspelog_konkursa', null) : null)
                             ->rules([static::uspesnoZavrsenValidationRule()]),
                         Select::make('razlog_neuspelog_konkursa')
                             ->label('Разлог неуспелог конкурса')

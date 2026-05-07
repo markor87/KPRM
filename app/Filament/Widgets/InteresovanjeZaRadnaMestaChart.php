@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Widgets\Concerns\HasTipKonkursaFilter;
 use App\Models\PodaciORadnomMestu;
 use App\Services\OrganFilterService;
 use Filament\Support\RawJs;
@@ -9,6 +10,8 @@ use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
 class InteresovanjeZaRadnaMestaChart extends ApexChartWidget
 {
+    use HasTipKonkursaFilter;
+
     protected static ?int $sort = 6;
 
     protected int|string|array $columnSpan = 6;
@@ -23,7 +26,8 @@ class InteresovanjeZaRadnaMestaChart extends ApexChartWidget
         $organFilterService = app(OrganFilterService::class);
         $godina = now()->year - 1;
 
-        $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina);
+        $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina)
+            ->where('tip_konkursa', $this->tipKonkursa);
         $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ');
 
         $podaci = $baseQuery->get();

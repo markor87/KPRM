@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Widgets\Concerns\HasTipKonkursaFilter;
 use App\Models\PodaciORadnomMestu;
 use App\Services\OrganFilterService;
 use Filament\Support\RawJs;
@@ -9,6 +10,8 @@ use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
 class KonkursiDonutChart extends ApexChartWidget
 {
+    use HasTipKonkursaFilter;
+
     protected static ?int $sort = 3;
 
     protected int|string|array $columnSpan = 3;
@@ -26,45 +29,40 @@ class KonkursiDonutChart extends ApexChartWidget
         $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina);
         $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ');
 
-        $javni = (clone $baseQuery)->where('tip_konkursa', 1)->count();
-        $interni = (clone $baseQuery)->where('tip_konkursa', 2)->count();
+        $tipCount = (clone $baseQuery)->where('tip_konkursa', $this->tipKonkursa)->count();
+        $total = (clone $baseQuery)->count();
+        $tipLabel = $this->tipKonkursa === 1 ? 'Јавни' : 'Интерни';
+        $tipColor = $this->tipKonkursa === 1 ? '#3b82f6' : '#10b981';
+        $percent = $total > 0 ? round($tipCount / $total * 100) : 0;
 
         return [
-            'series' => [$javni, $interni],
+            'series' => [$percent],
             'chart' => [
-                'type' => 'donut',
+                'type' => 'radialBar',
                 'height' => 280,
                 'background' => 'transparent',
             ],
-            'labels' => ["Јавни: {$javni}", "Интерни: {$interni}"],
-            'colors' => ['#3b82f6', '#10b981'],
-            'legend' => [
-                'show' => true,
-                'position' => 'top',
-            ],
+            'colors' => [$tipColor],
             'plotOptions' => [
-                'pie' => [
-                    'donut' => [
-                        'size' => '65%',
-                        'labels' => ['show' => false],
+                'radialBar' => [
+                    'hollow' => ['size' => '55%'],
+                    'dataLabels' => [
+                        'name' => [
+                            'show' => true,
+                            'fontSize' => '14px',
+                            'offsetY' => -8,
+                        ],
+                        'value' => [
+                            'show' => true,
+                            'fontSize' => '26px',
+                            'fontWeight' => 'bold',
+                            'offsetY' => 6,
+                        ],
                     ],
                 ],
             ],
-            'dataLabels' => [
-                'enabled' => true,
-                'style' => [
-                    'fontSize' => '14px',
-                    'fontWeight' => 'bold',
-                    'colors' => ['#ffffff'],
-                ],
-                'dropShadow' => [
-                    'enabled' => true,
-                    'top' => 1,
-                    'left' => 1,
-                    'blur' => 2,
-                    'opacity' => 0.3,
-                ],
-            ],
+            'labels' => ["{$tipLabel}: {$tipCount}"],
+            'legend' => ['show' => false],
         ];
     }
 
@@ -72,9 +70,15 @@ class KonkursiDonutChart extends ApexChartWidget
     {
         return RawJs::make(<<<'JS'
         {
-            dataLabels: {
-                formatter: function(val) {
-                    return Math.round(val) + '%';
+            plotOptions: {
+                radialBar: {
+                    dataLabels: {
+                        value: {
+                            formatter: function(val) {
+                                return val + '%';
+                            }
+                        }
+                    }
                 }
             }
         }

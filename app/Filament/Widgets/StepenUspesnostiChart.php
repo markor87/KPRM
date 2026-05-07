@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Widgets\Concerns\HasTipKonkursaFilter;
 use App\Models\PodaciORadnomMestu;
 use App\Services\OrganFilterService;
 use Filament\Support\RawJs;
@@ -9,6 +10,8 @@ use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
 class StepenUspesnostiChart extends ApexChartWidget
 {
+    use HasTipKonkursaFilter;
+
     protected static ?int $sort = 4;
 
     protected int|string|array $columnSpan = 3;
@@ -23,13 +26,13 @@ class StepenUspesnostiChart extends ApexChartWidget
         $organFilterService = app(OrganFilterService::class);
         $godina = now()->year - 1;
 
-        $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina);
+        $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina)
+            ->where('tip_konkursa', $this->tipKonkursa);
         $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ');
 
-        // status_konkursa_na_dan_1: 1 = Успешно завршен, 2 = Неуспео, 3 = Обустављен
-        $uspesno = (clone $baseQuery)->where('status_konkursa_na_dan_1', 1)->count();
-        $neuspeo = (clone $baseQuery)->where('status_konkursa_na_dan_1', 2)->count();
-        $obustavljeno = (clone $baseQuery)->where('status_konkursa_na_dan_1', 3)->count();
+        $uspesno = (clone $baseQuery)->where('status_konkursa_na_dan_2', 1)->count();
+        $neuspeo = (clone $baseQuery)->where('status_konkursa_na_dan_2', 2)->count();
+        $obustavljeno = (clone $baseQuery)->where('status_konkursa_na_dan_2', 3)->count();
 
         return [
             'series' => [$uspesno, $neuspeo, $obustavljeno],
@@ -41,14 +44,27 @@ class StepenUspesnostiChart extends ApexChartWidget
             'labels' => ['Успешно завршен конкурс', 'Неуспео конкурс', 'Обустављен конкурс'],
             'colors' => ['#3b82f6', '#f59e0b', '#ef4444'],
             'legend' => [
-                'show' => true,
-                'position' => 'top',
+                'show' => false,
             ],
             'plotOptions' => [
                 'pie' => [
                     'donut' => [
                         'size' => '65%',
-                        'labels' => ['show' => false],
+                        'labels' => [
+                            'show' => true,
+                            'total' => [
+                                'show' => true,
+                                'label' => 'Укупно',
+                                'fontSize' => '13px',
+                                'fontWeight' => 600,
+                            ],
+                            'value' => [
+                                'show' => true,
+                                'fontSize' => '22px',
+                                'fontWeight' => 'bold',
+                                'offsetY' => 4,
+                            ],
+                        ],
                     ],
                 ],
             ],

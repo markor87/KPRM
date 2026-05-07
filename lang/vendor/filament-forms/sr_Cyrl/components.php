@@ -461,6 +461,8 @@ return [
 
         'max_items_message' => 'Само :count може бити изабрано.',
 
+        'no_options_message' => 'Нема доступних опција.',
+
         'no_search_results_message' => 'Нема резултата који одговарају вашој претрази.',
 
         'placeholder' => 'Изаберите опцију',

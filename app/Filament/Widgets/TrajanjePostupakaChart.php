@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Widgets\Concerns\HasTipKonkursaFilter;
 use App\Models\PodaciORadnomMestu;
 use App\Services\OrganFilterService;
 use Carbon\Carbon;
@@ -10,13 +11,16 @@ use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
 class TrajanjePostupakaChart extends ApexChartWidget
 {
+    use HasTipKonkursaFilter;
+
     protected static ?int $sort = 7;
 
     protected int|string|array $columnSpan = 12;
 
     protected function getHeading(): ?string
     {
-        return 'Трајање јавних конкурсних и изборних поступака (' . (now()->year - 1) . ')';
+        $tipLabel = $this->tipKonkursa === 1 ? 'јавних' : 'интерних';
+        return "Трајање {$tipLabel} конкурсних и изборних поступака (" . (now()->year - 1) . ')';
     }
 
     protected function getOptions(): array
@@ -25,7 +29,7 @@ class TrajanjePostupakaChart extends ApexChartWidget
         $godina = now()->year - 1;
 
         $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina)
-            ->where('tip_konkursa', 1);
+            ->where('tip_konkursa', $this->tipKonkursa);
         $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ');
 
         $podaci = $baseQuery->get();
