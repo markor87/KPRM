@@ -30,18 +30,27 @@ class KandidatiFunnelChart extends ApexChartWidget
             ->where('tip_konkursa', $this->tipKonkursa);
         $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ');
 
-        $podaci = $baseQuery->get();
+        $result = (clone $baseQuery)->selectRaw('
+            SUM(broj_validnih_prijava) as validne,
+            SUM(broj_neodazvanih_kandidata_ofk) as neodazvani_ofk,
+            SUM(broj_kandidata_koji_su_ispunlii_merila_ofk) as ofk,
+            SUM(broj_kandidata_koji_su_ispunlii_merila_pfk) as pfk,
+            SUM(broj_kandidata_ispunili_merila_pk) as pk,
+            SUM(broj_odazvanih_kandidata_na_zavrsnom_razgovoru) as intervju,
+            SUM(broj_kandidata_na_listi) as lista
+        ')->first();
 
         return [
             'series' => [[
                 'name' => 'Број кандидата',
                 'data' => [
-                    $podaci->sum('broj_validnih_prijava'),
-                    $podaci->sum('broj_kandidata_koji_su_ispunlii_merila_ofk'),
-                    $podaci->sum('broj_kandidata_koji_su_ispunlii_merila_pfk'),
-                    $podaci->sum('broj_kandidata_ispunili_merila_pk'),
-                    $podaci->sum('broj_odazvanih_kandidata_na_zavrsnom_razgovoru'),
-                    $podaci->sum('broj_kandidata_na_listi'),
+                    (int) ($result->validne ?? 0),
+                    (int) ($result->neodazvani_ofk ?? 0),
+                    (int) ($result->ofk ?? 0),
+                    (int) ($result->pfk ?? 0),
+                    (int) ($result->pk ?? 0),
+                    (int) ($result->intervju ?? 0),
+                    (int) ($result->lista ?? 0),
                 ],
             ]],
             'chart' => [
@@ -55,6 +64,7 @@ class KandidatiFunnelChart extends ApexChartWidget
                     'horizontal' => false,
                     'columnWidth' => '60%',
                     'borderRadius' => 4,
+                    'distributed' => true,
                     'dataLabels' => ['position' => 'top'],
                 ],
             ],
@@ -69,6 +79,7 @@ class KandidatiFunnelChart extends ApexChartWidget
             'xaxis' => [
                 'categories' => [
                     'Валидне пријаве',
+                    'Неодазвани кандидати',
                     'ОФК',
                     'ПФК',
                     'ПК',
@@ -76,7 +87,7 @@ class KandidatiFunnelChart extends ApexChartWidget
                     'Листа',
                 ],
             ],
-            'colors' => ['#3b82f6'],
+            'colors' => ['#3b82f6', '#dc2626', '#3b82f6', '#3b82f6', '#3b82f6', '#3b82f6', '#3b82f6'],
             'grid' => [
                 'strokeDashArray' => 3,
             ],
