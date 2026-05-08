@@ -40,7 +40,6 @@ class KretanjeKandidataChart extends ApexChartWidget
             SUM(broj_validnih_prijava_iz_organa) as validne_organ,
             SUM(broj_validnih_prijava_iz_drugog_organa) as validne_drugi,
             SUM(broj_validnih_prijava_van_drzavnih_organa) as validne_van,
-            SUM(broj_neodazvanih_kandidata_ofk) as neodazvani_ofk,
             SUM(broj_kandidata_iz_organa_na_listi) as lista_organ,
             SUM(broj_kandidata_iz_drugog_drzavnog_organa_na_listi) as lista_drugi,
             SUM(broj_kandidata_van_drzavnih_organa_na_listi) as lista_van,
@@ -59,7 +58,6 @@ class KretanjeKandidataChart extends ApexChartWidget
                     'data' => [
                         (int) ($result->prijave_van ?? 0),
                         (int) ($result->validne_van ?? 0),
-                        0,
                         (int) ($result->lista_van ?? 0),
                         (int) ($result->izabrani_van ?? 0),
                         (int) ($result->drugoplasirani_van ?? 0),
@@ -70,7 +68,6 @@ class KretanjeKandidataChart extends ApexChartWidget
                     'data' => [
                         (int) ($result->prijave_drugi ?? 0),
                         (int) ($result->validne_drugi ?? 0),
-                        0,
                         (int) ($result->lista_drugi ?? 0),
                         (int) ($result->izabrani_drugi ?? 0),
                         (int) ($result->drugoplasirani_drugi ?? 0),
@@ -81,21 +78,9 @@ class KretanjeKandidataChart extends ApexChartWidget
                     'data' => [
                         (int) ($result->prijave_organ ?? 0),
                         (int) ($result->validne_organ ?? 0),
-                        0,
                         (int) ($result->lista_organ ?? 0),
                         (int) ($result->izabrani_organ ?? 0),
                         (int) ($result->drugoplasirani_organ ?? 0),
-                    ],
-                ],
-                [
-                    'name' => 'Неодазвани кандидати',
-                    'data' => [
-                        0,
-                        0,
-                        (int) ($result->neodazvani_ofk ?? 0),
-                        0,
-                        0,
-                        0,
                     ],
                 ],
             ],
@@ -127,7 +112,6 @@ class KretanjeKandidataChart extends ApexChartWidget
                 'categories' => [
                     'Пристигле пријаве',
                     'Валидне пријаве',
-                    'Неодазвани кандидати',
                     'Изборна листа',
                     'Изабрани кандидат',
                     'Другопласирани кандидат',
@@ -140,7 +124,7 @@ class KretanjeKandidataChart extends ApexChartWidget
                     'style' => ['fontSize' => '11px'],
                 ],
             ],
-            'colors' => ['#3b82f6', '#0d9488', '#1e3a5f', '#dc2626'],
+            'colors' => ['#3b82f6', '#0d9488', '#1e3a5f'],
             'legend' => [
                 'show' => true,
                 'position' => 'bottom',
