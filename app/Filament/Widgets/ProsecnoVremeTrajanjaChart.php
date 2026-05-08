@@ -12,7 +12,7 @@ class ProsecnoVremeTrajanjaChart extends ApexChartWidget
 {
     use HasTipKonkursaFilter;
 
-    protected static ?int $sort = 5;
+    protected static ?int $sort = 6;
 
     protected int|string|array $columnSpan = 12;
 
@@ -21,7 +21,7 @@ class ProsecnoVremeTrajanjaChart extends ApexChartWidget
     protected function getHeading(): ?string
     {
         $tipLabel = $this->tipKonkursa === 1 ? 'јавних' : 'интерних';
-        return "Просечно време трајања фаза {$tipLabel} конкурсних поступака изражено у данима (" . (now()->year - 1) . ')';
+        return "Просечно време трајања фаза {$tipLabel} конкурсних поступака изражено у данима";
     }
 
     protected function getOptions(): array

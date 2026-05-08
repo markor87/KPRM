@@ -18,7 +18,7 @@ class KonkursiDonutChart extends ApexChartWidget
 
     protected function getHeading(): ?string
     {
-        return 'Оглашени конкурси ' . (now()->year - 1);
+        return 'Оглашени конкурси';
     }
 
     protected function getOptions(): array

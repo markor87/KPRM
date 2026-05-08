@@ -19,3 +19,4 @@
         <span class="fi-tabs-item-label">Интерни</span>
     </button>
 </nav>
+<p class="mb-4 text-sm text-gray-500 dark:text-gray-400">За годину: <strong class="font-semibold text-gray-700 dark:text-gray-300">{{ now()->year - 1 }}</strong></p>

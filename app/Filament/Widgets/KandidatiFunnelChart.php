@@ -18,7 +18,7 @@ class KandidatiFunnelChart extends ApexChartWidget
 
     protected function getHeading(): ?string
     {
-        return 'Селекција кандидата (' . (now()->year - 1) . ')';
+        return 'Селекција кандидата';
     }
 
     protected function getOptions(): array

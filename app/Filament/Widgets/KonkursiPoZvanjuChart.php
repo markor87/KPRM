@@ -11,13 +11,13 @@ class KonkursiPoZvanjuChart extends ApexChartWidget
 {
     use HasTipKonkursaFilter;
 
-    protected static ?int $sort = 5;
+    protected static ?int $sort = 4;
 
     protected int|string|array $columnSpan = 3;
 
     protected function getHeading(): ?string
     {
-        return 'Конкурси по звањима ' . (now()->year - 1);
+        return 'Конкурси по звањима';
     }
 
     protected function getOptions(): array

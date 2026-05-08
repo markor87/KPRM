@@ -18,7 +18,7 @@ class InteresovanjeZaRadnaMestaChart extends ApexChartWidget
 
     protected function getHeading(): ?string
     {
-        return 'Интересовање за радна места (' . (now()->year - 1) . ')';
+        return 'Интересовање за радна места';
     }
 
     protected function getOptions(): array

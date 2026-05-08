@@ -17,7 +17,7 @@ class OglasenaRadnaMestaPoRegionimaChart extends ApexChartWidget
 
     protected function getHeading(): ?string
     {
-        return 'Радна места по регионима ' . (now()->year - 1);
+        return 'Радна места по регионима';
     }
 
     protected function getOptions(): array

@@ -21,7 +21,7 @@ class KretanjeKandidataChart extends ApexChartWidget
     protected function getHeading(): ?string
     {
         $tipLabel = $this->tipKonkursa === 1 ? 'јавном' : 'интерном';
-        return "Кретање кандидата кроз процес селекције у {$tipLabel} конкурсу (" . (now()->year - 1) . ')';
+        return "Кретање кандидата кроз процес селекције у {$tipLabel} конкурсу";
     }
 
     protected function getOptions(): array

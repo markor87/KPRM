@@ -20,7 +20,7 @@ class TrajanjePostupakaChart extends ApexChartWidget
     protected function getHeading(): ?string
     {
         $tipLabel = $this->tipKonkursa === 1 ? 'јавних' : 'интерних';
-        return "Трајање {$tipLabel} конкурсних и изборних поступака (" . (now()->year - 1) . ')';
+        return "Трајање {$tipLabel} конкурсних и изборних поступака";
     }
 
     protected function getOptions(): array

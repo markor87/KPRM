@@ -12,13 +12,13 @@ class StepenUspesnostiChart extends ApexChartWidget
 {
     use HasTipKonkursaFilter;
 
-    protected static ?int $sort = 4;
+    protected static ?int $sort = 5;
 
     protected int|string|array $columnSpan = 3;
 
     protected function getHeading(): ?string
     {
-        return 'Степен успешности ' . (now()->year - 1);
+        return 'Степен успешности';
     }
 
     protected function getOptions(): array
