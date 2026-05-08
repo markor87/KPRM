@@ -16,7 +16,8 @@ use Filament\Forms\Components\Select;
 use App\Models\SifarnikOrgani;
 use App\Models\SifarnikZvanje;
 use Filament\Forms\Components\Repeater;
-use App\Models\SifarnikMesta;
+use App\Models\SifarnikKodoviGradova;
+use Filament\Schemas\Components\Grid;
 use Filament\Actions\Action;
 use Illuminate\Support\HtmlString;
 use Filament\Tables\Columns\TextColumn;
@@ -342,13 +343,15 @@ class PodaciORadnomMestuResource extends Resource
                             ->searchable(),
                         Repeater::make('mestaRada')
                             ->label('Места рада са бројем извршилаца')
+                            ->columnSpanFull()
                             ->schema([
-                                Select::make('sifarnik_mesta_id')
+                                Select::make('sifarnik_kodovi_gradova_id')
                                     ->label('Место рада')
-                                    ->options(SifarnikMesta::whereNotNull('mesto')->where('mesto', '!=', '')->orderBy('mesto')->pluck('mesto', 'id'))
+                                    ->options(SifarnikKodoviGradova::whereNotNull('grad')->orderBy('grad')->pluck('grad', 'id'))
                                     ->required()
                                     ->searchable()
                                     ->distinct()
+                                    ->columnSpanFull()
                                     ->live(),
 
                                 TextInput::make('broj_izvrsilaca')
@@ -358,21 +361,36 @@ class PodaciORadnomMestuResource extends Resource
                                     ->minValue(1)
                                     ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                                     ->default(1),
+
+                                TextInput::make('region')
+                                    ->label('Регион')
+                                    ->readOnly(),
+
+                                TextInput::make('oblast')
+                                    ->label('Област')
+                                    ->readOnly(),
+
+                                TextInput::make('kod_grada')
+                                    ->label('Код града')
+                                    ->readOnly(),
                             ])
-                            ->columns(2)
+                            ->columns(4)
                             ->addActionLabel('Додај место рада')
                             ->defaultItems(1)
                             ->required()
-                            ->live()->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
+                            ->live()
+                            ->afterStateUpdated(function ($component, $livewire) {
+                                $livewire->validateOnly($component->getStatePath());
+                            })
                             ->collapsed()
                             ->itemLabel(function (array $state): ?string {
-                                $mestoId = $state['sifarnik_mesta_id'] ?? null;
+                                $gradId = $state['sifarnik_kodovi_gradova_id'] ?? null;
                                 $brojIzvrsilaca = $state['broj_izvrsilaca'] ?? 1;
 
-                                if ($mestoId) {
-                                    $mesto = SifarnikMesta::find($mestoId);
-                                    if ($mesto) {
-                                        return "{$mesto->mesto} ({$brojIzvrsilaca})";
+                                if ($gradId) {
+                                    $grad = SifarnikKodoviGradova::find($gradId);
+                                    if ($grad) {
+                                        return "{$grad->grad} ({$brojIzvrsilaca})";
                                     }
                                 }
 
@@ -381,10 +399,13 @@ class PodaciORadnomMestuResource extends Resource
                             ->collapsible()
                             ->afterStateHydrated(function (Repeater $component, $state, $record) {
                                 if ($record && $record->mestaRada) {
-                                    $data = $record->mestaRada->map(function ($mesto) {
+                                    $data = $record->mestaRada->map(function ($grad) {
                                         return [
-                                            'sifarnik_mesta_id' => $mesto->id,
-                                            'broj_izvrsilaca' => $mesto->pivot->broj_izvrsilaca ?? 1,
+                                            'sifarnik_kodovi_gradova_id' => $grad->id,
+                                            'broj_izvrsilaca'            => $grad->pivot->broj_izvrsilaca ?? 1,
+                                            'region'                     => $grad->pivot->region,
+                                            'oblast'                     => $grad->pivot->oblast,
+                                            'kod_grada'                  => $grad->pivot->kod_grada,
                                         ];
                                     })->toArray();
 
@@ -401,7 +422,7 @@ class PodaciORadnomMestuResource extends Resource
                                     }
 
                                     // Провера дупликата
-                                    $gradovi = array_column($value, 'sifarnik_mesta_id');
+                                    $gradovi = array_column($value, 'sifarnik_kodovi_gradova_id');
                                     $gradovi = array_filter($gradovi);
                                     if (count($gradovi) !== count(array_unique($gradovi))) {
                                         $fail("Не можете изабрати исти град више пута.");
@@ -415,7 +436,7 @@ class PodaciORadnomMestuResource extends Resource
                                     }
                                 },
                             ])
-                            ->helperText(fn (Get $get) => 'Укупан број извршилаца: ' . ($get('broj_izvrsilaca') ?: 0) . '. Збир по градовима мора бити једнак овом броју.'),
+                            ->helperText(fn (Get $get) => 'Укупан број извршилаца: ' . ($get('broj_izvrsilaca') ?: 0) . '. Збир по градовима мора битиједнак овом броју.'),
                         Select::make('status_konkursa_na_dan_1')
                             ->label('Статус конкурса на дан 31/12/' . (now()->year - 2))
                             ->relationship('statusKonkursaNaDan1Relation', 'status_konkursa', fn($query) => $query->orderBy('id', 'asc'))
@@ -455,11 +476,11 @@ class PodaciORadnomMestuResource extends Resource
                         Section::make('Пристигле пријаве')
                             ->schema([
                         TextInput::make('ukupan_broj_prijava')
-                            ->label('Укупан број пријава')
+                            ->label('Укупан број пристиглих пријава')
                             ->numeric()->minValue(0)
                             ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath())),
                         TextInput::make('broj_prijava_iz_organa')
-                            ->label('Број пријава из органа који расписује конкурс')
+                            ->label('Број пристиглих пријава кандидата из органа')
                             ->numeric()->minValue(0)
                             ->lte('ukupan_broj_prijava')
                             ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
@@ -474,7 +495,7 @@ class PodaciORadnomMestuResource extends Resource
                                 ),
                             ]),
                         TextInput::make('broj_prijava_iz_drugih_organa')
-                            ->label('Број пријава из других органа државне управе')
+                            ->label('Број пристиглих пријава кандидата из других државних органа')
                             ->numeric()->minValue(0)
                             ->lte('ukupan_broj_prijava')
                             ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
@@ -489,7 +510,7 @@ class PodaciORadnomMestuResource extends Resource
                                 ),
                             ]),
                         TextInput::make('broj_prijava_van_drzavnih_organa')
-                            ->label('Број пријава ван државних органа и/или незапослена лица')
+                            ->label('Број пристиглих пријава кандидата ван државних органа, укључујући незапослена лица')
                             ->numeric()->minValue(0)
                             ->lte('ukupan_broj_prijava')
                             ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
@@ -1096,12 +1117,12 @@ class PodaciORadnomMestuResource extends Resource
                     ->label('Звање')
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('mestaRada.mesto')
+                TextColumn::make('mestaRada.grad')
                     ->label('Место рада')
                     ->searchable()
-                    ->state(fn ($record) => $record->mestaRada->unique('id')->pluck('mesto')->join(', '))
+                    ->state(fn ($record) => $record->mestaRada->unique('id')->pluck('grad')->join(', '))
                     ->tooltip(function ($record) {
-                        $mesta = $record->mestaRada->unique('id')->pluck('mesto');
+                        $mesta = $record->mestaRada->unique('id')->pluck('grad');
                         return $mesta->count() > 3 ? $mesta->join(', ') : null;
                     }),
             ])
@@ -1120,7 +1141,7 @@ class PodaciORadnomMestuResource extends Resource
                     ->multiple(),
                 SelectFilter::make('mestaRada')
                     ->label('Место рада')
-                    ->relationship('mestaRada', 'mesto')
+                    ->relationship('mestaRada', 'grad')
                     ->searchable()
                     ->preload()
                     ->multiple(),
@@ -1316,7 +1337,7 @@ class PodaciORadnomMestuResource extends Resource
                         ->modalCancelActionLabel('Откажи')
                         ->after(function ($replica, $record) {
                             // Kopiraj mestaRada relaciju (many-to-many)
-                            $mestaRadaIds = $record->mestaRada()->pluck('sifarnik_mesta.id')->toArray();
+                            $mestaRadaIds = $record->mestaRada()->pluck('sifarnik_kodovi_gradova.id')->toArray();
                             $replica->mestaRada()->sync($mestaRadaIds);
 
                             // Log aktivnost

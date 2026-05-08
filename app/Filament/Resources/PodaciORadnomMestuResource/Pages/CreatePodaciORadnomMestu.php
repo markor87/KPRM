@@ -7,6 +7,7 @@ use ReflectionMethod;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Throwable;
 use App\Filament\Resources\PodaciORadnomMestuResource;
+use App\Models\SifarnikKodoviGradova;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Log;
@@ -20,6 +21,25 @@ class CreatePodaciORadnomMestu extends CreateRecord
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');
+    }
+
+    public function updatedData($value, $key): void
+    {
+        if (preg_match('/^mestaRada\.[^.]+\.sifarnik_kodovi_gradova_id$/', $key)) {
+            $parts = explode('.', $key);
+            $itemKey = $parts[1];
+
+            if ($value) {
+                $grad = SifarnikKodoviGradova::find($value);
+                $this->data['mestaRada'][$itemKey]['region']    = $grad?->region;
+                $this->data['mestaRada'][$itemKey]['oblast']    = $grad?->oblast;
+                $this->data['mestaRada'][$itemKey]['kod_grada'] = $grad?->kod_grada;
+            } else {
+                $this->data['mestaRada'][$itemKey]['region']    = null;
+                $this->data['mestaRada'][$itemKey]['oblast']    = null;
+                $this->data['mestaRada'][$itemKey]['kod_grada'] = null;
+            }
+        }
     }
 
     /**
@@ -46,9 +66,13 @@ class CreatePodaciORadnomMestu extends CreateRecord
             $syncData = [];
 
             foreach ($this->mestaRadaData as $mesto) {
-                if (isset($mesto['sifarnik_mesta_id']) && $mesto['sifarnik_mesta_id']) {
-                    $syncData[$mesto['sifarnik_mesta_id']] = [
+                if (isset($mesto['sifarnik_kodovi_gradova_id']) && $mesto['sifarnik_kodovi_gradova_id']) {
+                    $grad = SifarnikKodoviGradova::find($mesto['sifarnik_kodovi_gradova_id']);
+                    $syncData[$mesto['sifarnik_kodovi_gradova_id']] = [
                         'broj_izvrsilaca' => $mesto['broj_izvrsilaca'] ?? 1,
+                        'region'          => $grad?->region,
+                        'oblast'          => $grad?->oblast,
+                        'kod_grada'       => $grad?->kod_grada,
                     ];
                 }
             }
@@ -120,7 +144,7 @@ class CreatePodaciORadnomMestu extends CreateRecord
 
         // Mapiranje tabela na njihove display kolone
         $displayColumns = [
-            'sifarnik_mesta' => 'mesto',
+            'sifarnik_kodovi_gradova' => 'grad',
             'sifarnik_organi' => 'organ',
             'sifarnik_zvanje' => 'zvanje',
         ];

@@ -128,17 +128,17 @@ class PodaciORadnomMestu extends Model
     }
 
     /**
-     * Relacija sa sifarnik_mesta tabelom (many-to-many)
+     * Relacija sa sifarnik_kodovi_gradova tabelom (many-to-many)
      */
     public function mestaRada()
     {
         return $this->belongsToMany(
-            SifarnikMesta::class,
+            SifarnikKodoviGradova::class,
             'mesto_rada_podaci_o_radnom_mestu',
             'podaci_o_radnom_mestu_id',
-            'sifarnik_mesta_id'
+            'sifarnik_kodovi_gradova_id'
         )
-        ->withPivot('broj_izvrsilaca')
+        ->withPivot('broj_izvrsilaca', 'region', 'oblast', 'kod_grada')
         ->withTimestamps();
     }
 
