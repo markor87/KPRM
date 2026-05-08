@@ -7,7 +7,7 @@ use App\Models\PodaciORadnomMestu;
 use App\Services\OrganFilterService;
 use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
-class KonkursiPoZvanjuChart extends ApexChartWidget
+class OglasenaRadnaMestaPoRegionimaChart extends ApexChartWidget
 {
     use HasTipKonkursaFilter;
 
@@ -17,7 +17,7 @@ class KonkursiPoZvanjuChart extends ApexChartWidget
 
     protected function getHeading(): ?string
     {
-        return 'Конкурси по звањима ' . (now()->year - 1);
+        return 'Радна места по регионима ' . (now()->year - 1);
     }
 
     protected function getOptions(): array
@@ -27,18 +27,19 @@ class KonkursiPoZvanjuChart extends ApexChartWidget
 
         $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina)
             ->where('tip_konkursa', $this->tipKonkursa)
-            ->whereNotNull('podaci_o_radnom_mestu.zvanje');
+            ->join('mesto_rada_podaci_o_radnom_mestu', 'podaci_o_radnom_mestu.id', '=', 'mesto_rada_podaci_o_radnom_mestu.podaci_o_radnom_mestu_id')
+            ->whereNotNull('mesto_rada_podaci_o_radnom_mestu.region')
+            ->where('mesto_rada_podaci_o_radnom_mestu.region', '!=', '');
         $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ');
 
         $podaci = (clone $baseQuery)
-            ->join('sifarnik_zvanje', 'podaci_o_radnom_mestu.zvanje', '=', 'sifarnik_zvanje.id')
-            ->selectRaw('sifarnik_zvanje.zvanje as naziv, COUNT(*) as ukupno')
-            ->groupBy('sifarnik_zvanje.id', 'sifarnik_zvanje.zvanje')
+            ->selectRaw('mesto_rada_podaci_o_radnom_mestu.region as naziv, SUM(mesto_rada_podaci_o_radnom_mestu.broj_izvrsilaca) as ukupno')
+            ->groupBy('mesto_rada_podaci_o_radnom_mestu.region')
             ->orderByDesc('ukupno')
             ->get();
 
         return [
-            'series' => $podaci->pluck('ukupno')->toArray(),
+            'series' => $podaci->pluck('ukupno')->map(fn($v) => (int) $v)->toArray(),
             'chart' => [
                 'type' => 'donut',
                 'height' => 280,
@@ -96,7 +97,7 @@ class KonkursiPoZvanjuChart extends ApexChartWidget
             tooltip: {
                 y: {
                     formatter: function(val) {
-                        return val + ' конкурса';
+                        return val + ' места';
                     }
                 }
             }
