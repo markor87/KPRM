@@ -592,7 +592,7 @@ class PodaciORadnomMestuResource extends Resource
                                 'lte' => 'Број валидних пријава не може бити већи од укупног броја пријава.',
                             ]),
                         TextInput::make('broj_validnih_prijava_iz_organa')
-                            ->label('Број валидних пријава из органа који расписује конкурс')
+                            ->label('Број валидних пријава кандидата из органа')
                             ->numeric()->minValue(0)
                             ->lte('broj_validnih_prijava')
                             ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
@@ -613,7 +613,7 @@ class PodaciORadnomMestuResource extends Resource
                                 },
                             ]),
                         TextInput::make('broj_validnih_prijava_iz_drugog_organa')
-                            ->label('Број валидних пријава из других органа државне управе')
+                            ->label('Број валидних пријава кандидата из другог државног органа')
                             ->numeric()->minValue(0)
                             ->lte('broj_validnih_prijava')
                             ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
@@ -634,7 +634,7 @@ class PodaciORadnomMestuResource extends Resource
                                 },
                             ]),
                         TextInput::make('broj_validnih_prijava_van_drzavnih_organa')
-                            ->label('Број валидних пријава ван органа државне управе и/или незапослена лица')
+                            ->label('Број валидних пријава кандидата ван државних органа, укључујући незапослена лица')
                             ->numeric()->minValue(0)
                             ->lte('broj_validnih_prijava')
                             ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
@@ -1079,8 +1079,20 @@ class PodaciORadnomMestuResource extends Resource
                                     }
                                 },
                             ]),
+                        TextInput::make('broj_usvojenih_zalbi_na_resenje_o_prijemu_u_radni_odnos')
+                            ->label('Број усвојених жалби на решење о пријему у радни однос')
+                            ->numeric()->minValue(0)
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
+                            ->rules([
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    $zalbi = (int) $get('broj_zalbi_na_resenje_o_prijemu_u_radni_odnos');
+                                    if ($value !== null && $value !== '' && (int)$value > $zalbi) {
+                                        $fail('Број усвојених жалби не може бити већи од броја жалби на решење о пријему у радни однос.');
+                                    }
+                                },
+                            ]),
                         TextInput::make('broj_izvrsilaca_ponovno_oglasavanje')
-                            ->label('Број извршилаца - поновно оглашавање')
+                            ->label('Број извршилаца за које је оглашавање поновљено након неуспелог поступка')
                             ->numeric()->minValue(0)
                             ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->hintIcon('heroicon-m-information-circle')

@@ -34,12 +34,14 @@ class ZalbeChart extends ApexChartWidget
         $result = (clone $baseQuery)->selectRaw('
             SUM(broj_zalbi_na_resenje_o_odbacaju_prijave) as zalbe_odbacaj,
             SUM(broj_zalbi_na_resenje_o_prijemu_u_radni_odnos) as zalbe_prijem,
-            SUM(broj_usvojenih_zalbi_na_resenje_o_odbacaju_prijave) as usvojene_odbacaj
+            SUM(broj_usvojenih_zalbi_na_resenje_o_odbacaju_prijave) as usvojene_odbacaj,
+            SUM(broj_usvojenih_zalbi_na_resenje_o_prijemu_u_radni_odnos) as usvojene_prijem
         ')->first();
 
-        $zalbeOdbacaj   = (int) ($result->zalbe_odbacaj   ?? 0);
-        $zalbePrijem    = (int) ($result->zalbe_prijem    ?? 0);
+        $zalbeOdbacaj    = (int) ($result->zalbe_odbacaj    ?? 0);
+        $zalbePrijem     = (int) ($result->zalbe_prijem     ?? 0);
         $usvojeneOdbacaj = (int) ($result->usvojene_odbacaj ?? 0);
+        $usvojenePrijem  = (int) ($result->usvojene_prijem  ?? 0);
 
         return [
             'series' => [
@@ -49,7 +51,7 @@ class ZalbeChart extends ApexChartWidget
                 ],
                 [
                     'name' => 'Усвојене жалбе',
-                    'data' => [$usvojeneOdbacaj, 0],
+                    'data' => [$usvojeneOdbacaj, $usvojenePrijem],
                 ],
             ],
             'chart' => [
@@ -114,9 +116,8 @@ class ZalbeChart extends ApexChartWidget
                 style: {
                     colors: Array(20).fill(document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#111827')
                 },
-                formatter: function(val, opts) {
-                    if (opts.seriesIndex === 1 && opts.dataPointIndex === 1) return '';
-                    return val;
+                formatter: function(val) {
+                    return val > 0 ? val : '';
                 }
             },
             tooltip: {

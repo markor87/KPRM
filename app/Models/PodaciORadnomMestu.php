@@ -56,6 +56,7 @@ class PodaciORadnomMestu extends Model
         'broj_zalbi_na_resenje_o_odbacaju_prijave',
         'broj_zalbi_na_resenje_o_prijemu_u_radni_odnos',
         'broj_usvojenih_zalbi_na_resenje_o_odbacaju_prijave',
+        'broj_usvojenih_zalbi_na_resenje_o_prijemu_u_radni_odnos',
         'broj_izvrsilaca_ponovno_oglasavanje',
         'ukupan_broj_prijava',
         'broj_prijava_iz_organa',
