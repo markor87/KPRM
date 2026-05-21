@@ -131,6 +131,30 @@ class PodaciORadnomMestuResource extends Resource
         };
     }
 
+    protected static function dateChainLabels(): array
+    {
+        return [
+            'datum_dobijanja_saglasnosti_vlade'             => 'Датум добијања сагласности Владе',
+            'datum_donosenja_resenja_o_pokretanju_postupka' => 'Датум доношења решења о покретању поступка',
+            'datum_dobijanja_obavestenja_od_suka'           => 'Датум добијања обавештења од СУКа',
+            'datum_odrzavanja_prvog_sastanka'               => 'Датум одржавања првог sastanka',
+            'datum_oglasavanja'                             => 'Датум оглашавања',
+            'datum_pregleda_prijava'                        => 'Датум прегледа пријава',
+            'datum_pocetka_provere_ofk'                     => 'Датум спровођења провере ОФК',
+            'datum_ofk_izvestaja'                           => 'Датум ОФК извештаја',
+            'datum_pocetka_provere_pfk'                     => 'Датум почетка провере ПФК',
+            'datum_pfk_izvestaja'                           => 'Датум ПФК извештаја',
+            'datum_pocetka_provere_pk'                      => 'Датум почетка провере ПК',
+            'datum_pk_izvestaja'                            => 'Датум ПК извештаја',
+            'datum_predaje_dokumentacije'                   => 'Датум предаје документације',
+            'datum_pocetka_sprovodjenja_intervjua'          => 'Датум спровођења завршног интервјуа',
+            'datum_izvestaja_sa_zavrsnog_intervjua'         => 'Датум извештаја са завршног интервјуа',
+            'datum_dostavljanja_liste_rukovodiocu_organa'   => 'Датум достављања листе руководиоцу органа',
+            'datum_donosenja_resenja_o_izabranom_kandidatu' => 'Датум доношења решења о изабраном кандидату',
+            'datum_stupanja_na_rad'                         => 'Датум ступања на рад',
+        ];
+    }
+
     protected static function makeDateField(string $name, string $label, string $afterField = null, string $afterLabel = null): TextInput
     {
         // Submit-time validation (prevents saving bad data)
@@ -163,6 +187,43 @@ class PodaciORadnomMestuResource extends Resource
                         $fail("Датум мора бити после или једнак датуму {$afterLabel}");
                     }
                 } catch (Exception $e) {}
+            };
+        }
+
+        // Global chain check: catches non-adjacent violations (e.g. last date < first date with all middle dates empty)
+        $chainLabels = static::dateChainLabels();
+        $chainKeys   = array_keys($chainLabels);
+        $pos         = array_search($name, $chainKeys);
+
+        if ($pos !== false && $pos > 1) {
+            $preceding = array_reverse(array_slice($chainLabels, 0, $pos - 1, true), true);
+
+            $rules[] = fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get, $preceding) {
+                if (!$value) return;
+
+                $current = null;
+                try { $current = Carbon::createFromFormat('d.m.Y', $value); } catch (\Exception $e) {}
+                if (!$current || !$current->isValid()) {
+                    try { $current = Carbon::createFromFormat('Y-m-d', $value); } catch (\Exception $e) {}
+                }
+                if (!$current || !$current->isValid()) return;
+
+                foreach ($preceding as $field => $label) {
+                    $prevRaw = $get($field);
+                    if (!$prevRaw) continue;
+
+                    $prev = null;
+                    try { $prev = Carbon::createFromFormat('d.m.Y', $prevRaw); } catch (\Exception $e) {}
+                    if (!$prev || !$prev->isValid()) {
+                        try { $prev = Carbon::createFromFormat('Y-m-d', $prevRaw); } catch (\Exception $e) {}
+                    }
+                    if (!$prev || !$prev->isValid()) continue;
+
+                    if ($current->lt($prev)) {
+                        $fail("Датум мора бити после илиједнак датуму: {$label}");
+                        return;
+                    }
+                }
             };
         }
 
