@@ -45,31 +45,43 @@ class ManageInvitations extends ManageRecords
                     $emails = array_filter(array_map('trim', $emails));
 
                     $invitationCount = 0;
+                    $failedEmails = [];
 
                     foreach ($emails as $email) {
-                        // Kreiraj pozivnicu
                         $invitation = Invitation::create([
-                            'email' => $email,
-                            'token' => Str::random(64),
+                            'email'      => $email,
+                            'token'      => Str::random(64),
                             'expires_at' => now()->addDays(7),
                             'invited_by' => auth()->id(),
+                            'organ_id'   => $data['organ_id'],
                         ]);
 
-                        // Pošalji email
-                        Mail::to($invitation->email)->send(new InvitationMail($invitation));
-
-                        // Inkrementiraj rate limiter za svaku poslatu pozivnicu
-                        RateLimiter::hit($rateLimitKey, 3600); // 1 sat
-
-                        $invitationCount++;
+                        try {
+                            Mail::to($invitation->email)->send(new InvitationMail($invitation));
+                            RateLimiter::hit($rateLimitKey, 3600);
+                            $invitationCount++;
+                        } catch (\Exception $e) {
+                            $invitation->delete();
+                            $failedEmails[] = $email;
+                        }
                     }
 
-                    // Notifikacija
-                    Notification::make()
-                        ->title('Позивнице успешно послате')
-                        ->body("Послато је {$invitationCount} позивница.")
-                        ->success()
-                        ->send();
+                    if ($invitationCount > 0) {
+                        Notification::make()
+                            ->title('Позивнице успешно послате')
+                            ->body("Послато је {$invitationCount} позивница.")
+                            ->success()
+                            ->send();
+                    }
+
+                    if (!empty($failedEmails)) {
+                        Notification::make()
+                            ->title('Грешка при слању')
+                            ->body('Слање није успело за: ' . implode(', ', $failedEmails))
+                            ->danger()
+                            ->persistent()
+                            ->send();
+                    }
 
                     return null; // Ne vraća record jer kreiramo više
                 })

@@ -3,10 +3,8 @@
 namespace App\Filament\Pages\Auth;
 
 use Filament\Schemas\Schema;
-use App\Models\SifarnikOrgani;
 use App\Models\Invitation;
 use App\Models\User;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Pages\SimplePage;
 use Filament\Notifications\Notification;
@@ -26,8 +24,6 @@ class RegisterInvite extends SimplePage
     public ?string $password = null;
 
     public ?string $passwordConfirmation = null;
-
-    public ?int $organ_id = null;
 
     public function mount(string $token): void
     {
@@ -82,12 +78,6 @@ class RegisterInvite extends SimplePage
                     ->required()
                     ->maxLength(255),
 
-                Select::make('organ_id')
-                    ->label('Орган')
-                    ->options(fn() => SifarnikOrgani::orderBy('organ', 'asc')->pluck('organ', 'id')->toArray())
-                    ->required()
-                    ->searchable(),
-
                 TextInput::make('password')
                     ->label('Лозинка')
                     ->password()
@@ -135,7 +125,7 @@ class RegisterInvite extends SimplePage
             'name' => $data['name'],
             'email' => $invitation->email,
             'password' => Hash::make($data['password']),
-            'organ_id' => $data['organ_id'],
+            'organ_id' => $invitation->organ_id,
         ]);
 
         // Dodeli "user" ulogu

@@ -4,7 +4,9 @@ namespace App\Filament\Resources;
 
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Select;
 use Closure;
+use App\Models\SifarnikOrgani;
 use App\Models\User;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
@@ -54,6 +56,13 @@ class InvitationResource extends Resource
     {
         return $schema
             ->components([
+                Select::make('organ_id')
+                    ->label('Орган')
+                    ->options(fn () => SifarnikOrgani::orderBy('organ', 'asc')->pluck('organ', 'id')->toArray())
+                    ->required()
+                    ->searchable()
+                    ->columnSpanFull(),
+
                 Textarea::make('emails')
                     ->label('Email адресе')
                     ->required()
@@ -109,6 +118,11 @@ class InvitationResource extends Resource
                     ->label('Послао')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('organRelation.organ')
+                    ->label('Орган')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('Није додељен'),
                 IconColumn::make('status')
                     ->label('Статус')
                     ->getStateUsing(function ($record) {

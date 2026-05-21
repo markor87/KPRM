@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
+use App\Models\SifarnikOrgani;
 
 class Invitation extends Model
 {
@@ -15,6 +15,7 @@ class Invitation extends Model
         'expires_at',
         'accepted_at',
         'invited_by',
+        'organ_id',
     ];
 
     protected $casts = [
@@ -25,13 +26,14 @@ class Invitation extends Model
     /**
      * Generate a new invitation
      */
-    public static function createInvitation(string $email, int $invitedBy): self
+    public static function createInvitation(string $email, int $invitedBy, ?int $organId = null): self
     {
         return self::create([
-            'email' => $email,
-            'token' => Str::random(64),
-            'expires_at' => now()->addDays(7), // Pozivnica važi 7 dana
+            'email'      => $email,
+            'token'      => Str::random(64),
+            'expires_at' => now()->addDays(7),
             'invited_by' => $invitedBy,
+            'organ_id'   => $organId,
         ]);
     }
 
@@ -73,5 +75,10 @@ class Invitation extends Model
     public function invitedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'invited_by');
+    }
+
+    public function organRelation(): BelongsTo
+    {
+        return $this->belongsTo(SifarnikOrgani::class, 'organ_id');
     }
 }
