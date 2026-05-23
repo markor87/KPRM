@@ -227,11 +227,22 @@ class PodaciORadnomMestuResource extends Resource
             };
         }
 
+        $cascadeChainKeys = array_keys(static::dateChainLabels());
+        $cascadeChainPos  = array_search($name, $cascadeChainKeys);
+        $cascadeFields    = ($cascadeChainPos !== false && $cascadeChainPos < count($cascadeChainKeys) - 1)
+            ? array_slice($cascadeChainKeys, $cascadeChainPos + 1)
+            : [];
+
         return TextInput::make($name)
             ->label($label)
             ->mask('99.99.9999')
             ->placeholder('дд.мм.гггг')
-            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
+            ->live(onBlur: true)->afterStateUpdated(function ($component, $livewire) use ($cascadeFields) {
+                $livewire->validateOnly($component->getStatePath());
+                foreach ($cascadeFields as $subsequent) {
+                    $livewire->validateOnly('data.' . $subsequent);
+                }
+            })
             ->rules($rules)
             ->afterStateUpdated(function ($state, $get, $component, $livewire) use ($afterField, $afterLabel) {
                 $path = $component->getStatePath();
