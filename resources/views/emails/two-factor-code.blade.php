@@ -3,131 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Код за двофакторску аутентификацију</title>
+    <title>Верификациони код — КПРМ</title>
     <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            background-color: #ffffff;
-            border-radius: 10px;
-            padding: 40px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 3px solid #d97706;
-            padding-bottom: 20px;
-        }
-        .header h1 {
-            color: #d97706;
-            margin: 0;
-            font-size: 28px;
-        }
-        .header p {
-            color: #666;
-            margin: 10px 0 0 0;
-            font-size: 14px;
-        }
-        .code-box {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            border: 3px solid #d97706;
-            border-radius: 10px;
-            padding: 30px;
-            text-align: center;
-            margin: 30px 0;
-            box-shadow: 0 2px 8px rgba(217, 119, 6, 0.2);
-        }
-        .code {
-            font-size: 42px;
-            font-weight: bold;
-            color: #92400e;
-            letter-spacing: 12px;
-            font-family: 'Courier New', monospace;
-        }
-        .content {
-            margin: 20px 0;
-            color: #374151;
-            font-size: 15px;
-        }
-        .content p {
-            margin: 15px 0;
-        }
-        .greeting {
-            font-weight: 600;
+            background-color: #f0f2f5;
+            padding: 40px 20px;
             color: #1f2937;
         }
-        .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 2px solid #e5e7eb;
-            font-size: 13px;
-            color: #6b7280;
+        .wrapper {
+            max-width: 560px;
+            margin: 0 auto;
+        }
+        .header {
+            background-color: #1e3a5f;
+            border-radius: 10px 10px 0 0;
+            padding: 32px 40px;
             text-align: center;
         }
-        .footer p {
-            margin: 8px 0;
-        }
-        .warning {
-            background-color: #fef3c7;
-            border-left: 5px solid #f59e0b;
-            padding: 20px;
-            margin: 25px 0;
-            border-radius: 5px;
-        }
-        .warning-title {
-            color: #92400e;
-            font-weight: bold;
-            font-size: 16px;
+        .header .logo {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #93c5fd;
             margin-bottom: 10px;
         }
-        .security-note {
-            background-color: #f3f4f6;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 20px 0;
-            font-size: 14px;
-            color: #374151;
+        .header h1 {
+            color: #ffffff;
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .body {
+            background-color: #ffffff;
+            padding: 40px;
+        }
+        .greeting {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 14px;
+        }
+        .intro {
+            font-size: 14.5px;
+            color: #4b5563;
+            line-height: 1.65;
+        }
+        .code-section {
+            margin: 32px 0;
+            text-align: center;
+        }
+        .code-label {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #9ca3af;
+            margin-bottom: 16px;
+        }
+        .code-box {
+            display: inline-block;
+            background-color: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px 40px;
+            width: 100%;
+        }
+        .code {
+            font-size: 46px;
+            font-weight: 700;
+            color: #1e3a5f;
+            letter-spacing: 14px;
+            font-family: 'Courier New', monospace;
+        }
+        .expiry {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+        .expiry strong {
+            color: #dc2626;
+        }
+        .divider {
+            border: none;
+            border-top: 1px solid #e5e7eb;
+            margin: 28px 0;
+        }
+        .warning {
+            background-color: #fff7ed;
+            border: 1px solid #fed7aa;
+            border-radius: 8px;
+            padding: 16px 18px;
+            font-size: 13.5px;
+            color: #7c2d12;
+            line-height: 1.6;
+        }
+        .warning .warning-icon {
+            font-size: 15px;
+            margin-right: 4px;
+        }
+        .security {
+            margin-top: 20px;
+            font-size: 13px;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+        .footer {
+            background-color: #f8fafc;
+            border-top: 1px solid #e5e7eb;
+            border-radius: 0 0 10px 10px;
+            padding: 20px 40px;
+            text-align: center;
+            font-size: 12px;
+            color: #9ca3af;
+            line-height: 1.8;
+        }
+        .footer a {
+            color: #9ca3af;
+            text-decoration: none;
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="wrapper">
         <div class="header">
-            <h1>Двофакторска аутентификација</h1>
-            <p>КПРМ</p>
+            <div class="logo">КПРМ</div>
+            <h1>Верификациони код</h1>
         </div>
 
-        <div class="content">
-            <p class="greeting">Поштовани {{ $userName }},</p>
+        <div class="body">
+            <p class="greeting">Поштовани/а {{ $userName }},</p>
+            <p class="intro">Затражена је пријава на Ваш налог. Употребите код испод да бисте завршили верификацију.</p>
 
-            <p>Примили сте овај имејл јер је затражена пријава на Ваш налог у КПРМ систему. Да бисте наставили са процесом пријављивања, молимо Вас да користите следећи верификациони код:</p>
-        </div>
+            <div class="code-section">
+                <div class="code-label">Ваш код</div>
+                <div class="code-box">
+                    <div class="code">{{ $code }}</div>
+                    <div class="expiry">Истиче за <strong>10 минута</strong></div>
+                </div>
+            </div>
 
-        <div class="code-box">
-            <div class="code">{{ $code }}</div>
-        </div>
+            <hr class="divider">
 
-        <div class="warning">
-            <div class="warning-title">⚠️ Важно упозорење:</div>
-            <p style="margin: 5px 0;">Овај код ће истећи за <strong>10 минута</strong>.</p>
-            <p style="margin: 5px 0;">Уколико нисте покренули процес пријаве, контактирајте Службу за управљање кадровима.</p>
-        </div>
+            <div class="warning">
+                <span class="warning-icon">⚠️</span>
+                Уколико нисте покренули пријаву, занемарите овај имејл и контактирајте администратора система.
+            </div>
 
-        <div class="security-note">
-            <strong>Напомена о безбедности:</strong> Никада ни са ким немојте делити овај верификациони код.
+            <p class="security">
+                🔒 <strong>Никада не делите овај код</strong> са другим особама.
+            </p>
         </div>
 
         <div class="footer">
-            <p>Ово је аутоматска порука. Молимо Вас да не одговарате на овај имејл.</p>
-            <p style="margin-top: 15px;">&copy; {{ date('Y') }} КПРМ. Сва права задржана.</p>
+            <p>Ово је аутоматска порука — молимо не одговарајте.</p>
+            <p>&copy; {{ date('Y') }} КПРМ &mdash; Сва права задржана</p>
         </div>
     </div>
 </body>
