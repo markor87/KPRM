@@ -375,7 +375,8 @@ class PodaciORadnomMestuResource extends Resource
                             ->relationship('tipKonkursaRelation', 'tip_konkursa')
                             ->required()
                             ->preload()
-                            ->searchable(),
+                            ->searchable()
+                            ->live(),
                         TextInput::make('broj_izvrsilaca')
                             ->label('Број извршилаца')
                             ->required()
@@ -736,6 +737,7 @@ class PodaciORadnomMestuResource extends Resource
                 Tab::make('Провере компетенција кандидата')
                     ->schema([
                         Section::make('ОФК провера')
+                            ->hidden(fn (Get $get) => $get('tip_konkursa') == 2)
                             ->schema([
                         TextInput::make('broj_kandidata_za_koje_se_zakazuju_ofk')
                             ->label('Број кандидата за које се заказују ОФК')
