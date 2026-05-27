@@ -571,6 +571,8 @@ class PodaciORadnomMestuResource extends Resource
                             ->numeric()->minValue(0)
                             ->lte('ukupan_broj_prijava')
                             ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
+                            ->hintIcon('heroicon-m-information-circle')
+                            ->hintIconTooltip('Не односи се на органе локалне самоуправе и органе аутономне покрајине')
                             ->validationMessages([
                                 'lte' => 'Број пријава из других органа не може бити већи од укупног броја пријава.',
                             ])
@@ -689,6 +691,8 @@ class PodaciORadnomMestuResource extends Resource
                             ->numeric()->minValue(0)
                             ->lte('broj_validnih_prijava')
                             ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
+                            ->hintIcon('heroicon-m-information-circle')
+                            ->hintIconTooltip('Не односи се на органе локалне самоуправе и органе аутономне покрајине')
                             ->validationMessages([
                                 'lte' => 'Број валидних пријава из другог органа не може бити већи од укупног броја валидних пријава.',
                             ])
@@ -905,7 +909,12 @@ class PodaciORadnomMestuResource extends Resource
                                     }
                                 },
                             ]),
-                        static::makeDateField('datum_pocetka_sprovodjenja_intervjua', 'Датум спровођења завршног интервјуа', 'datum_predaje_dokumentacije', 'предаје документације'),
+                        static::makeDateField('datum_pocetka_sprovodjenja_intervjua', 'Датум спровођења завршног интервјуа', 'datum_predaje_dokumentacije', 'предаје документације')
+                            ->afterStateUpdated(function ($state, $get, $set) {
+                                if ($state && !$get('datum_izvestaja_sa_zavrsnog_intervjua')) {
+                                    $set('datum_izvestaja_sa_zavrsnog_intervjua', $state);
+                                }
+                            }),
                         static::makeDateField('datum_izvestaja_sa_zavrsnog_intervjua', 'Датум извештаја са завршног интервјуа', 'datum_pocetka_sprovodjenja_intervjua', 'спровођења завршног интервјуа')
                             ->hintIcon('heroicon-m-information-circle')
                             ->hintIconTooltip('Иако се ова форма извештаја тренутно не израђује, њено увођење омогућава праћење времена вредновања одговора кандидата и представља важан показатељ ефикасности изборног поступка.'),
