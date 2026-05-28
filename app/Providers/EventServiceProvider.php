@@ -7,6 +7,7 @@ use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Auth\Events\Failed;
 use App\Listeners\LogAuthenticationEvents;
+use App\Listeners\CheckLoginLocation;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -18,6 +19,7 @@ class EventServiceProvider extends ServiceProvider
     protected $listen = [
         Login::class => [
             LogAuthenticationEvents::class . '@handleLogin',
+            CheckLoginLocation::class,
         ],
         Logout::class => [
             LogAuthenticationEvents::class . '@handleLogout',
