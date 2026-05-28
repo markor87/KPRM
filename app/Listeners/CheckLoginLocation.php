@@ -3,6 +3,7 @@
 namespace App\Listeners;
 
 use App\Mail\SuspiciousLoginMail;
+use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -15,9 +16,26 @@ class CheckLoginLocation
 
     public function handle(Login $event): void
     {
+        $this->checkLocation(
+            userName: $event->user->name,
+            userEmail: $event->user->email,
+            successful: true,
+        );
+    }
+
+    public function handleFailed(Failed $event): void
+    {
+        $this->checkLocation(
+            userName: $event->user?->name,
+            userEmail: $event->credentials['email'] ?? 'Непознато',
+            successful: false,
+        );
+    }
+
+    private function checkLocation(string|null $userName, string $userEmail, bool $successful): void
+    {
         $ip = Request::ip();
 
-        // Skip local/private IPs (dev environment, internal network)
         if ($this->isPrivateIp($ip)) {
             return;
         }
@@ -44,14 +62,15 @@ class CheckLoginLocation
 
             if (($data['countryCode'] ?? '') !== self::ALLOWED_COUNTRY) {
                 Mail::to($adminEmail)->send(new SuspiciousLoginMail(
-                    user: $event->user,
+                    userName: $userName ?? 'Непознато',
+                    userEmail: $userEmail,
                     ip: $ip,
                     country: $data['country'] ?? 'Непознато',
                     city: $data['city'] ?? 'Непознато',
+                    successful: $successful,
                 ));
             }
         } catch (\Throwable $e) {
-            // Fail silently — geo check must never block a login
             Log::warning('Geo provera prijave nije uspela', [
                 'ip' => $ip,
                 'error' => $e->getMessage(),

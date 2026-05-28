@@ -6,7 +6,7 @@
     <!--[if mso]>
     <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
     <![endif]-->
-    <title>Пријава са стране локације — КПРМ</title>
+    <title>{{ $successful ? 'Пријава' : 'Покушај пријаве' }} са стране локације — КПРМ</title>
     <style>
         body, table, td { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
         table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; }
@@ -24,7 +24,11 @@
         <tr>
             <td bgcolor="#7f1d1d" align="center" style="padding:28px 40px; background-color:#7f1d1d;">
                 <p style="margin:0 0 8px 0; font-size:11px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:#fca5a5; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">КПРМ</p>
-                <h1 style="margin:0; font-size:21px; font-weight:600; color:#ffffff; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; mso-line-height-rule:exactly; line-height:30px;">⚠️ Пријава са стране локације</h1>
+                @if($successful)
+                    <h1 style="margin:0; font-size:21px; font-weight:600; color:#ffffff; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; mso-line-height-rule:exactly; line-height:30px;">⚠️ Пријава са стране локације</h1>
+                @else
+                    <h1 style="margin:0; font-size:21px; font-weight:600; color:#ffffff; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; mso-line-height-rule:exactly; line-height:30px;">🚨 Неуспешан покушај пријаве са стране локације</h1>
+                @endif
             </td>
         </tr>
 
@@ -35,7 +39,11 @@
 
                     <tr>
                         <td style="padding-bottom:20px; font-size:14px; color:#374151; line-height:22px; mso-line-height-rule:exactly; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
-                            Детектована је успешна пријава на КПРМ систем са IP адресе која се не налази у Србији.
+                            @if($successful)
+                                Детектована је <strong>успешна пријава</strong> на КПРМ систем са IP адресе која се не налази у Србији.
+                            @else
+                                Детектован је <strong>неуспешан покушај пријаве</strong> на КПРМ систем са IP адресе која се не налази у Србији.
+                            @endif
                         </td>
                     </tr>
 
@@ -46,17 +54,17 @@
 
                                 <tr bgcolor="#f8fafc">
                                     <td style="padding:12px 16px; font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:#6b7280; background-color:#f8fafc; border-bottom:1px solid #e5e7eb; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;" colspan="2">
-                                        Детаљи пријаве
+                                        Детаљи {{ $successful ? 'пријаве' : 'покушаја' }}
                                     </td>
                                 </tr>
 
                                 <tr>
                                     <td style="padding:11px 16px; font-size:13px; color:#6b7280; border-bottom:1px solid #f3f4f6; width:40%; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">Корисник</td>
-                                    <td style="padding:11px 16px; font-size:13px; font-weight:600; color:#111827; border-bottom:1px solid #f3f4f6; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">{{ $user->name }}</td>
+                                    <td style="padding:11px 16px; font-size:13px; font-weight:600; color:#111827; border-bottom:1px solid #f3f4f6; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">{{ $userName }}</td>
                                 </tr>
                                 <tr bgcolor="#fafafa">
                                     <td style="padding:11px 16px; font-size:13px; color:#6b7280; border-bottom:1px solid #f3f4f6; background-color:#fafafa; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">Имејл</td>
-                                    <td style="padding:11px 16px; font-size:13px; color:#374151; border-bottom:1px solid #f3f4f6; background-color:#fafafa; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">{{ $user->email }}</td>
+                                    <td style="padding:11px 16px; font-size:13px; color:#374151; border-bottom:1px solid #f3f4f6; background-color:#fafafa; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">{{ $userEmail }}</td>
                                 </tr>
                                 <tr>
                                     <td style="padding:11px 16px; font-size:13px; color:#6b7280; border-bottom:1px solid #f3f4f6; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">IP адреса</td>
@@ -82,7 +90,11 @@
                     <!-- Action note -->
                     <tr>
                         <td bgcolor="#fef2f2" style="background-color:#fef2f2; border-left:4px solid #ef4444; padding:14px 16px; font-size:13px; color:#7f1d1d; line-height:20px; mso-line-height-rule:exactly; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
-                            Уколико овај корисник није очекиван на тој локацији, размотрите привремено онемогућавање налога и контактирање корисника.
+                            @if($successful)
+                                Уколико овај корисник није очекиван на тој локацији, размотрите привремено онемогућавање налога и контактирање корисника.
+                            @else
+                                Уколико се покушаји понављају, размотрите блокирање IP адресе или контактирање корисника ради провере.
+                            @endif
                         </td>
                     </tr>
 

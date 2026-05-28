@@ -2,7 +2,6 @@
 
 namespace App\Mail;
 
-use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -14,24 +13,26 @@ class SuspiciousLoginMail extends Mailable
     use Queueable, SerializesModels;
 
     public function __construct(
-        public User $user,
+        public string $userName,
+        public string $userEmail,
         public string $ip,
         public string $country,
         public string $city,
+        public bool $successful,
     ) {}
 
     public function envelope(): Envelope
     {
-        return new Envelope(
-            subject: '⚠️ Пријава са стране локације — КПРМ',
-        );
+        $subject = $this->successful
+            ? '⚠️ Пријава са стране локације — КПРМ'
+            : '🚨 Неуспешан покушај пријаве са стране локације — КПРМ';
+
+        return new Envelope(subject: $subject);
     }
 
     public function content(): Content
     {
-        return new Content(
-            view: 'emails.suspicious-login',
-        );
+        return new Content(view: 'emails.suspicious-login');
     }
 
     public function attachments(): array

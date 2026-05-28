@@ -26,6 +26,7 @@ class EventServiceProvider extends ServiceProvider
         ],
         Failed::class => [
             LogAuthenticationEvents::class . '@handleFailed',
+            CheckLoginLocation::class . '@handleFailed',
         ],
     ];
 
