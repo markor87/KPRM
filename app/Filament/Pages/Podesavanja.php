@@ -45,7 +45,7 @@ class Podesavanja extends Page
                     ->schema([
                         Toggle::make('two_factor_enabled_global')
                             ->label('Омогући двофакторску аутентификацију (2ФА) за све кориснике')
-                            ->helperText('Када је омогућено, СВИ корисници ће морати да унесу 6-цифрени код послат на њихову е-пошту након уноса акредитива.')
+                            ->helperText('Када је омогућено, сви корисници ће морати да унесу 6-цифрени код послат на њихову е-пошту након уноса акредитива.')
                             ->live()
                             ->afterStateUpdated(function ($state) {
                                 Setting::set('two_factor_enabled_global', $state ? '1' : '0');
