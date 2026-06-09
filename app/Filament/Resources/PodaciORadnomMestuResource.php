@@ -771,7 +771,10 @@ class PodaciORadnomMestuResource extends Resource
                         TextInput::make('broj_kandidata_koji_su_ispunlii_merila_ofk')
                             ->label('Број кандидата који су испунили мерила ОФК')
                             ->numeric()->minValue(0)
-                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
+                            ->live(onBlur: true)->afterStateUpdated(function ($component, $livewire) {
+                                $livewire->validateOnly($component->getStatePath());
+                                $livewire->validateOnly('data.broj_kandidata_za_koje_se_zakazuju_pfk');
+                            })
                             ->helperText('Укључујући и кандидате којима су се оцене признале')
                             ->hintIcon('heroicon-m-information-circle')
                             ->hintIconTooltip('Укупан број кандидата се може пронаћи у извештају СУК-а')
@@ -794,7 +797,15 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број кандидата за које се заказују ПФК')
                             ->numeric()
                             ->minValue(0)
-                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath())),
+                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
+                            ->rules([
+                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    $ispunili_ofk = (int) $get('broj_kandidata_koji_su_ispunlii_merila_ofk');
+                                    if ($value !== null && $value !== '' && $ispunili_ofk && (int)$value > $ispunili_ofk) {
+                                        $fail('Број кандидата за које се заказују ПФК не сме бити већи од броја кандидата који су испунили мерила ОФК.');
+                                    }
+                                },
+                            ]),
                         static::makeDateField('datum_pocetka_provere_pfk', 'Датум почетка провере ПФК', 'datum_ofk_izvestaja', 'ОФК извештаја')
                             ->helperText('Уколико је било више дана провере, унети први датум'),
                         static::makeDateField('datum_pfk_izvestaja', 'Датум ПФК извештаја', 'datum_pocetka_provere_pfk', 'почетка провере ПФК')
