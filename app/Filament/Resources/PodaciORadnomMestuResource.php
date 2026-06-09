@@ -934,7 +934,10 @@ class PodaciORadnomMestuResource extends Resource
                         TextInput::make('broj_odazvanih_kandidata_na_zavrsnom_razgovoru')
                             ->label('Број одазваних кандидата на завршном разговору')
                             ->numeric()->minValue(0)
-                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
+                            ->live(onBlur: true)->afterStateUpdated(function ($component, $livewire) {
+                                $livewire->validateOnly($component->getStatePath());
+                                $livewire->validateOnly('data.broj_neodazvanih_kandidata_zavrsni_razgovor');
+                            })
                             ->rules([
                                 fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
                                     $pk = (int) $get('broj_kandidata_ispunili_merila_pk');
@@ -956,7 +959,10 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број кандидата који се није одазвао позиву на завршном разговору')
                             ->numeric()
                             ->minValue(0)
-                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
+                            ->live(onBlur: true)->afterStateUpdated(function ($component, $livewire) {
+                                $livewire->validateOnly($component->getStatePath());
+                                $livewire->validateOnly('data.broj_odazvanih_kandidata_na_zavrsnom_razgovoru');
+                            })
                             ->rules([
                                 fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
                                     $pk = (int) $get('broj_kandidata_ispunili_merila_pk');
