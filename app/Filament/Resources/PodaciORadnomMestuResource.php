@@ -331,7 +331,7 @@ class PodaciORadnomMestuResource extends Resource
                     ->schema([
                         TextInput::make('naziv_radnog_mesta')
                             ->label('Назив радног места')
-                            ->maxLength(500)
+                            ->maxLength(1000)
                             ->required()
                             ->regex('/^[А-Ша-шЂЈЉЊЋЏђјљњћџ0-9\s.,\-–—():;\/\*\"\']+$/u')
                             ->validationMessages([
@@ -987,7 +987,12 @@ class PodaciORadnomMestuResource extends Resource
                         TextInput::make('broj_kandidata_na_listi')
                             ->label('Број кандидата на листи')
                             ->numeric()->minValue(0)
-                            ->live()
+                            ->live(onBlur: true)->afterStateUpdated(function ($component, $livewire) {
+                                $livewire->validateOnly($component->getStatePath());
+                                $livewire->validateOnly('data.broj_kandidata_iz_organa_na_listi');
+                                $livewire->validateOnly('data.broj_kandidata_iz_drugog_drzavnog_organa_na_listi');
+                                $livewire->validateOnly('data.broj_kandidata_van_drzavnih_organa_na_listi');
+                            })
                             ->rules([
                                 fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
                                     $odazvani = (int) $get('broj_odazvanih_kandidata_na_zavrsnom_razgovoru');
