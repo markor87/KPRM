@@ -6,6 +6,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Filament\Forms\Components\DatePicker;
+use Filament\Auth\Notifications\ResetPassword as FilamentResetPassword;
+use App\Notifications\ResetPassword as CyrillicResetPassword;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -14,7 +16,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Filament reset-password нотификацију замени ћириличном, синхроном верзијом
+        $this->app->bind(FilamentResetPassword::class, CyrillicResetPassword::class);
     }
 
     /**

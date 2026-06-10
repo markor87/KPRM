@@ -10,6 +10,8 @@ use App\Mail\TwoFactorCodeMail;
 use App\Models\Setting;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\TextInput;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
@@ -50,6 +52,23 @@ class Login extends \Filament\Auth\Pages\Login
     {
         return Checkbox::make('remember_email')
             ->label('Запамти е-пошту');
+    }
+
+    protected function getPasswordFormComponent(): Component
+    {
+        return TextInput::make('password')
+            ->label(__('filament-panels::auth/pages/login.form.password.label'))
+            ->hint(
+                Filament::hasPasswordReset()
+                    ? new HtmlString(Blade::render(
+                        '<x-filament::link :href="filament()->getRequestPasswordResetUrl()">Заборављена лозинка?</x-filament::link>'
+                    ))
+                    : null
+            )
+            ->password()
+            ->revealable(Filament::arePasswordsRevealable())
+            ->autocomplete('current-password')
+            ->required();
     }
 
     protected function getImageComponent(): Component

@@ -36,6 +36,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('')
             ->login(Login::class)
+            ->passwordReset()
             ->brandName('КПРМ')
             ->favicon(secure_asset('images/favicon.png'))
             ->colors([
