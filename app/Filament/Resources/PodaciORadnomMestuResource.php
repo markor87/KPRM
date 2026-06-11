@@ -980,7 +980,7 @@ class PodaciORadnomMestuResource extends Resource
 
                         Section::make('Листа кандидата који су испунили мерила за избор')
                             ->schema([
-                        static::makeDateField('datum_formiranja_liste_kandidata', 'Дан формирања листе кандидата који су испунили мерила у изборном поступку')
+                        static::makeDateField('datum_formiranja_liste_kandidata', 'Дан објављивања листе кандидата који су испунили мерила у изборном поступку')
                             ->hintIcon('heroicon-m-information-circle')
                             ->hintIconTooltip('Члан 57, став 7, Закона о државним службеницима каже: На интернет презентацији органа државне управе који је огласио конкурс и Службе за управљање кадровима објављује се листа кандидата под шифром њихове пријаве и име и презиме кандидата који је изабран у конкурсном поступку.')
                             ->columnSpanFull(),
