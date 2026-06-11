@@ -1242,6 +1242,10 @@ class PodaciORadnomMestuResource extends Resource
                         $mesta = $record->mestaRada->unique('id')->pluck('grad');
                         return $mesta->count() > 3 ? $mesta->join(', ') : null;
                     }),
+                TextColumn::make('datum_oglasavanja')
+                    ->label('Датум оглашавања')
+                    ->date('d.m.Y.')
+                    ->sortable(),
             ])
             ->filters([
                 SelectFilter::make('organ')
@@ -1249,7 +1253,8 @@ class PodaciORadnomMestuResource extends Resource
                     ->relationship('organRelation', 'organ')
                     ->searchable()
                     ->preload()
-                    ->multiple(),
+                    ->multiple()
+                    ->visible(fn () => auth()->user()?->hasAnyRole(['Super Admin', 'Admin']) ?? false),
                 SelectFilter::make('zvanje')
                     ->label('Звање')
                     ->relationship('zvanjeRelation', 'zvanje', fn ($query) => $query->orderBy('id', 'asc'))
