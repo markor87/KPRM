@@ -28,7 +28,15 @@ class AppServiceProvider extends ServiceProvider
         Schema::defaultStringLength(191);
 
         if (config('app.env') === 'production') {
+            // Генерисање URL-ова увек преко https
             URL::forceScheme('https');
+
+            // Продукција је иза TLS-терминације која апликацији не шаље ни X-Forwarded-Proto,
+            // па Laravel захтев види као http. То руши потпис signed URL-ова (нпр. ресет лозинке → 403).
+            // Натерамо да се захтев третира као безбедан да би $request->url() био https.
+            if (! $this->app->runningInConsole()) {
+                $this->app['request']->server->set('HTTPS', 'on');
+            }
         }
 
         // Globalna konfiguracija DatePicker komponenti
