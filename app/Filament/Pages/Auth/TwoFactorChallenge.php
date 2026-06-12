@@ -36,7 +36,7 @@ class TwoFactorChallenge extends SimplePage
 
     public function getSubHeading(): string | Htmlable | null
     {
-        return 'Унесите 6-цифрени код послат на вашу е-пошту';
+        return 'Унесите 6-цифрени код послат на Вашу е-пошту';
     }
 
     public function hasLogo(): bool
