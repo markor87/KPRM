@@ -1,103 +1,119 @@
 <!DOCTYPE html>
-<html lang="sr">
+<html lang="sr" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Позивница за регистрацију</title>
+    <!--[if mso]>
+    <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+    <![endif]-->
+    <title>Позивница за регистрацију — КПРМ</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .container {
-            background-color: #f9f9f9;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 30px;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .header h1 {
-            color: #d97706;
-            margin: 0;
-        }
-        .content {
-            margin-bottom: 30px;
-        }
-        .button {
-            display: inline-block;
-            padding: 14px 40px;
-            background-color: #d97706;
-            color: #ffffff;
-            text-decoration: none;
-            border-radius: 8px;
-            margin: 20px 0;
-            text-align: center;
-            font-size: 16px;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-            box-shadow: 0 2px 6px rgba(217, 119, 6, 0.4);
-        }
-        .button:hover {
-            background-color: #b45309;
-        }
-        .footer {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
-            font-size: 12px;
-            color: #666;
-        }
-        .expiry {
-            background-color: #fef3c7;
-            padding: 10px;
-            border-left: 4px solid #d97706;
-            margin: 20px 0;
-        }
+        body, table, td { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; }
+        body { margin: 0; padding: 0; background-color: #f0f2f5; }
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>КПРМ</h1>
-            <p>Квалитет попуњавања радних места</p>
-        </div>
+<body style="margin:0; padding:0; background-color:#f0f2f5; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
 
-        <div class="content">
-            <h2>Позвани сте да се региструјете</h2>
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" bgcolor="#f0f2f5">
+<tr><td align="center" style="padding:40px 20px;">
 
-            <p>Поштовани/а,</p>
+    <!-- Container 560px -->
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="560" style="max-width:560px; width:100%;">
 
-            <p>Позвани сте да се региструјете у систем КПРМ (Квалитет попуњавања радних места).</p>
+        <!-- HEADER -->
+        <tr>
+            <td bgcolor="#1e3a5f" align="center" style="padding:28px 40px; background-color:#1e3a5f;">
+                <p style="margin:0 0 8px 0; font-size:11px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:#93c5fd; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">КПРМ</p>
+                <h1 style="margin:0; font-size:22px; font-weight:600; color:#ffffff; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; mso-line-height-rule:exactly; line-height:30px;">Позивница за регистрацију</h1>
+            </td>
+        </tr>
 
-            <p>Кликните на дугме испод да бисте завршили процес регистрације:</p>
+        <!-- BODY -->
+        <tr>
+            <td bgcolor="#ffffff" style="padding:36px 40px 32px 40px; background-color:#ffffff;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
 
-            <div style="text-align: center;">
-                <a href="{{ url('/register-invite/' . $invitation->token) }}" class="button" style="color: #ffffff;">
-                    Завршите регистрацију
-                </a>
-            </div>
+                    <!-- Greeting -->
+                    <tr>
+                        <td style="padding-bottom:12px; font-size:16px; font-weight:600; color:#111827; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+                            Поштовани/а,
+                        </td>
+                    </tr>
 
-            <p>Или копирајте и налепите следећи линк у ваш претраживач:</p>
-            <p style="word-break: break-all; background-color: #f3f4f6; padding: 10px; border-radius: 3px;">
-                {{ url('/register-invite/' . $invitation->token) }}
-            </p>
+                    <!-- Intro -->
+                    <tr>
+                        <td style="padding-bottom:28px; font-size:14px; color:#4b5563; line-height:22px; mso-line-height-rule:exactly; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+                            Позвани сте да се региструјете у систем КПРМ (Квалитет попуњавања радних места). Кликом на дугме испод можете завршити процес регистрације.
+                        </td>
+                    </tr>
 
-            <div class="expiry">
-                <strong>Важно:</strong> Ова позивница истиче {{ $invitation->expires_at->translatedFormat('d. F Y. у H:i') }}.
-            </div>
-        </div>
+                    <!-- Action button (Outlook-compatible) -->
+                    <tr>
+                        <td align="center" style="padding-bottom:28px;">
+                            <!--[if mso]>
+                            <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ url('/register-invite/' . $invitation->token) }}" style="height:46px;v-text-anchor:middle;width:260px;" arcsize="13%" stroke="f" fillcolor="#1e3a5f">
+                            <w:anchorlock/>
+                            <center style="color:#ffffff;font-family:'Segoe UI',sans-serif;font-size:15px;font-weight:600;">Завршите регистрацију</center>
+                            </v:roundrect>
+                            <![endif]-->
+                            <!--[if !mso]><!-- -->
+                            <a href="{{ url('/register-invite/' . $invitation->token) }}" style="display:inline-block; background-color:#1e3a5f; color:#ffffff; font-size:15px; font-weight:600; text-decoration:none; padding:13px 36px; border-radius:6px; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">Завршите регистрацију</a>
+                            <!--<![endif]-->
+                        </td>
+                    </tr>
 
-        <div class="footer">
-            <p>Ако нисте очекивали ову е-пошту, молимо вас да је игноришете.</p>
-            <p>Овај е-mail је аутоматски генерисан. Молимо вас да не одговарате на њега.</p>
-        </div>
-    </div>
+                    <!-- Expiry note -->
+                    <tr>
+                        <td style="padding-bottom:8px; font-size:13px; color:#6b7280; line-height:20px; mso-line-height-rule:exactly; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+                            Ова позивница истиче <strong style="color:#dc2626;">{{ $invitation->expires_at->translatedFormat('d. F Y. у H:i') }}</strong>.
+                        </td>
+                    </tr>
+
+                    <!-- Fallback URL -->
+                    <tr>
+                        <td style="padding-bottom:4px; font-size:12px; color:#9ca3af; line-height:18px; mso-line-height-rule:exactly; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+                            Уколико дугме не ради, копирајте и налепите следећи линк у Ваш веб прегледач:
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-size:12px; color:#1e3a5f; line-height:18px; word-break:break-all; font-family:'Courier New',monospace;">
+                            {{ url('/register-invite/' . $invitation->token) }}
+                        </td>
+                    </tr>
+
+                    <!-- Divider -->
+                    <tr>
+                        <td style="padding:26px 0 22px 0;">
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                <tr><td style="border-top:1px solid #e5e7eb; font-size:0; line-height:0;">&nbsp;</td></tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Warning -->
+                    <tr>
+                        <td bgcolor="#fff7ed" style="background-color:#fff7ed; border-left:4px solid #f97316; padding:14px 16px; font-size:13px; color:#7c2d12; line-height:20px; mso-line-height-rule:exactly; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+                            ⚠️&nbsp; Уколико нисте очекивали ову позивницу, занемарите овај имејл.
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+
+        <!-- FOOTER -->
+        <tr>
+            <td bgcolor="#f8fafc" align="center" style="background-color:#f8fafc; border-top:1px solid #e5e7eb; padding:18px 40px; font-size:12px; color:#9ca3af; line-height:20px; mso-line-height-rule:exactly; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+                <p style="margin:0;">Ово је аутоматска порука — молимо не одговарајте.</p>
+                <p style="margin:4px 0 0 0;">&copy; {{ date('Y') }} КПРМ &mdash; Сва права задржана</p>
+            </td>
+        </tr>
+
+    </table>
+
+</td></tr>
+</table>
+
 </body>
 </html>
