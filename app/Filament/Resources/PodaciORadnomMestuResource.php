@@ -16,12 +16,15 @@ use Filament\Forms\Components\Select;
 use App\Models\SifarnikOrgani;
 use App\Models\SifarnikZvanje;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Toggle;
 use App\Models\SifarnikKodoviGradova;
 use Filament\Schemas\Components\Grid;
 use Filament\Actions\Action;
 use Illuminate\Support\HtmlString;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Actions\ActionGroup;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Actions\ViewAction;
@@ -307,6 +310,7 @@ class PodaciORadnomMestuResource extends Resource
             'vrstaOrganaRelation',
             'organRelation',
             'zvanjeRelation',
+            'unosZavrsioKorisnik',
         ]);
         return app(OrganFilterService::class)->applyOrganFilter($query, 'organ');
     }
@@ -1202,6 +1206,20 @@ class PodaciORadnomMestuResource extends Resource
                             ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->hintIcon('heroicon-m-information-circle')
                             ->hintIconTooltip('Односи се на број извршилаца за радна места која су у току исте календарске године поново оглашена, услед чињенице да претходним огласом није попуњен планирани број извршилаца.'),
+
+                        Section::make('Завршетак уноса')
+                            ->schema([
+                                Toggle::make('unos_zavrsen')
+                                    ->label('Унос завршен')
+                                    ->onColor('success')
+                                    ->helperText('Означите када сте у потпуности завршили унос и измене на овом радном месту. Запис остаје изменљив — ознаку можете скинути у сваком тренутку.'),
+                                TextEntry::make('unos_zavrsen_info')
+                                    ->label('Означио')
+                                    ->state(fn ($record) => $record?->unos_zavrsen && $record->unos_zavrsen_at
+                                        ? ($record->unosZavrsioKorisnik?->name ?? '—') . ', ' . $record->unos_zavrsen_at->format('d.m.Y. у H:i')
+                                        : '—')
+                                    ->visible(fn ($record) => (bool) $record?->unos_zavrsen),
+                            ])->columns(2)->columnSpanFull(),
                     ])->columns(2),
 
                 ])->columnSpanFull(),
@@ -1246,6 +1264,14 @@ class PodaciORadnomMestuResource extends Resource
                     ->label('Датум оглашавања')
                     ->date('d.m.Y.')
                     ->sortable(),
+                ToggleColumn::make('unos_zavrsen')
+                    ->label('Унос завршен')
+                    ->sortable()
+                    ->onColor('success')
+                    ->disabled(fn ($record) => ! auth()->user()?->can('update', $record))
+                    ->tooltip(fn ($record) => $record->unos_zavrsen && $record->unos_zavrsen_at
+                        ? 'Означио: ' . ($record->unosZavrsioKorisnik?->name ?? '—') . ', ' . $record->unos_zavrsen_at->format('d.m.Y. H:i')
+                        : null),
             ])
             ->filters([
                 SelectFilter::make('organ')
@@ -1287,6 +1313,19 @@ class PodaciORadnomMestuResource extends Resource
                     ->relationship('tipKonkursaRelation', 'tip_konkursa')
                     ->searchable()
                     ->preload(),
+                TernaryFilter::make('unos_zavrsen')
+                    ->label('Унос завршен')
+                    ->placeholder('Сви')
+                    ->trueLabel('Завршени')
+                    ->falseLabel('Незавршени')
+                    ->queries(
+                        true: fn (Builder $query) => $query->where('unos_zavrsen', true),
+                        false: fn (Builder $query) => $query->where(fn (Builder $q) => $q
+                            ->where('unos_zavrsen', false)
+                            ->orWhereNull('unos_zavrsen')
+                        ),
+                        blank: fn (Builder $query) => $query,
+                    ),
             ])
             ->recordActions([
                 ActionGroup::make([

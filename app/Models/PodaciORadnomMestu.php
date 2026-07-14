@@ -94,7 +94,37 @@ class PodaciORadnomMestu extends Model
         // 'oblast_rada', // Uklonjeno - sada je many-to-many relacija
         'prosecna_starost_kandidata',
         'udeo_kandidata_mladjih_od_30',
+        'unos_zavrsen',
     ];
+
+    protected $casts = [
+        'unos_zavrsen' => 'boolean',
+        'unos_zavrsen_at' => 'datetime',
+    ];
+
+    /**
+     * Kada korisnik promeni oznaku "unos zavrsen", sami upisujemo ko je i kada oznacio.
+     * Ta dva polja nisu u $fillable - ne smeju stizati iz forme.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (self $record) {
+            if (! $record->isDirty('unos_zavrsen')) {
+                return;
+            }
+
+            $record->unos_zavrsen_at = $record->unos_zavrsen ? now() : null;
+            $record->unos_zavrsen_by = $record->unos_zavrsen ? auth()->id() : null;
+        });
+    }
+
+    /**
+     * Korisnik koji je oznacio da je unos zavrsen
+     */
+    public function unosZavrsioKorisnik()
+    {
+        return $this->belongsTo(User::class, 'unos_zavrsen_by');
+    }
 
     /**
      * Relacija sa sifarnik_organi tabelom
@@ -291,6 +321,7 @@ class PodaciORadnomMestu extends Model
                 'oblast_rada',
                 'prosecna_starost_kandidata',
                 'udeo_kandidata_mladjih_od_30',
+                'unos_zavrsen',
             ])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
