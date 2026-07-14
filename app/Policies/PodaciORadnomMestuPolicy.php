@@ -19,7 +19,8 @@ class PodaciORadnomMestuPolicy
 
     public function view(AuthUser $authUser, PodaciORadnomMestu $podaciORadnomMestu): bool
     {
-        return $authUser->can('View:PodaciORadnomMestu');
+        return $authUser->can('View:PodaciORadnomMestu')
+            && $this->pripadaOrganuKorisnika($authUser, $podaciORadnomMestu);
     }
 
     public function create(AuthUser $authUser): bool
@@ -29,22 +30,26 @@ class PodaciORadnomMestuPolicy
 
     public function update(AuthUser $authUser, PodaciORadnomMestu $podaciORadnomMestu): bool
     {
-        return $authUser->can('Update:PodaciORadnomMestu');
+        return $authUser->can('Update:PodaciORadnomMestu')
+            && $this->pripadaOrganuKorisnika($authUser, $podaciORadnomMestu);
     }
 
     public function delete(AuthUser $authUser, PodaciORadnomMestu $podaciORadnomMestu): bool
     {
-        return $authUser->can('Delete:PodaciORadnomMestu');
+        return $authUser->can('Delete:PodaciORadnomMestu')
+            && $this->pripadaOrganuKorisnika($authUser, $podaciORadnomMestu);
     }
 
     public function restore(AuthUser $authUser, PodaciORadnomMestu $podaciORadnomMestu): bool
     {
-        return $authUser->can('Restore:PodaciORadnomMestu');
+        return $authUser->can('Restore:PodaciORadnomMestu')
+            && $this->pripadaOrganuKorisnika($authUser, $podaciORadnomMestu);
     }
 
     public function forceDelete(AuthUser $authUser, PodaciORadnomMestu $podaciORadnomMestu): bool
     {
-        return $authUser->can('ForceDelete:PodaciORadnomMestu');
+        return $authUser->can('ForceDelete:PodaciORadnomMestu')
+            && $this->pripadaOrganuKorisnika($authUser, $podaciORadnomMestu);
     }
 
     public function forceDeleteAny(AuthUser $authUser): bool
@@ -59,12 +64,28 @@ class PodaciORadnomMestuPolicy
 
     public function replicate(AuthUser $authUser, PodaciORadnomMestu $podaciORadnomMestu): bool
     {
-        return $authUser->can('Replicate:PodaciORadnomMestu');
+        return $authUser->can('Replicate:PodaciORadnomMestu')
+            && $this->pripadaOrganuKorisnika($authUser, $podaciORadnomMestu);
     }
 
     public function reorder(AuthUser $authUser): bool
     {
         return $authUser->can('Reorder:PodaciORadnomMestu');
+    }
+
+    /**
+     * Drugi sloj izolacije po organu (pored getEloquentQuery na resursu).
+     * Korisnik sa ViewAny dozvolom vidi/menja sve organe; ostali samo svoj.
+     * Prati istu logiku kao OrganFilterService.
+     */
+    private function pripadaOrganuKorisnika(AuthUser $authUser, PodaciORadnomMestu $podaciORadnomMestu): bool
+    {
+        if ($authUser->can('ViewAny:PodaciORadnomMestu')) {
+            return true;
+        }
+
+        return $authUser->organ_id !== null
+            && (int) $podaciORadnomMestu->organ === (int) $authUser->organ_id;
     }
 
 }
