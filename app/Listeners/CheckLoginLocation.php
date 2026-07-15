@@ -3,8 +3,9 @@
 namespace App\Listeners;
 
 use App\Mail\SuspiciousLoginMail;
-use Illuminate\Auth\Events\Failed;
+use App\Models\User;
 use Illuminate\Auth\Events\Login;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -23,12 +24,17 @@ class CheckLoginLocation
         );
     }
 
-    public function handleFailed(Failed $event): void
+    /**
+     * Rano upozorenje: kredencijali su tacni, ali korisnik jos nije zavrsio 2FA.
+     * Znaci da neko sa ispravnom lozinkom pristupa iz inostranstva - okida se pre
+     * nego sto se 2FA zavrsi (ili cak i ako se ne zavrsi). Poziva se iz Login stranice.
+     */
+    public function handleValidCredentials(User $user): void
     {
         $this->checkLocation(
-            userName: $event->user?->name,
-            userEmail: $event->credentials['email'] ?? 'Непознато',
-            successful: false,
+            userName: $user->name,
+            userEmail: $user->email,
+            successful: true,
         );
     }
 
@@ -42,6 +48,15 @@ class CheckLoginLocation
 
         $adminEmail = config('app.admin_email');
         if (empty($adminEmail)) {
+            return;
+        }
+
+        // Dedup: isti korisnik sa iste IP adrese ne dobija dva mejla za istu prijavu
+        // (npr. rano upozorenje na 2FA koraku + uspesna prijava nakon unosa koda).
+        // Kljuc se postavlja tek nakon uspesno poslatog mejla, pa privremeni pad
+        // ip-api-ja ne blokira kasniji pokusaj slanja.
+        $dedupKey = 'geo-login-alert:' . md5($ip . '|' . $userEmail);
+        if (Cache::has($dedupKey)) {
             return;
         }
 
@@ -69,6 +84,8 @@ class CheckLoginLocation
                     city: $data['city'] ?? 'Непознато',
                     successful: $successful,
                 ));
+
+                Cache::put($dedupKey, true, now()->addMinutes(10));
             }
         } catch (\Throwable $e) {
             Log::warning('Geo provera prijave nije uspela', [

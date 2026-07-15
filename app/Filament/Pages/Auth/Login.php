@@ -6,6 +6,7 @@ use Filament\Schemas\Components\Component;
 use Filament\Forms\Components\Placeholder;
 use Filament\Auth\Http\Responses\Contracts\LoginResponse;
 use App\Models\User;
+use App\Listeners\CheckLoginLocation;
 use App\Mail\TwoFactorCodeMail;
 use App\Models\Setting;
 use Filament\Facades\Filament;
@@ -14,6 +15,7 @@ use Filament\Forms\Components\TextInput;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Auth\Events\Failed;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use Illuminate\Support\HtmlString;
 
@@ -126,6 +128,15 @@ class Login extends \Filament\Auth\Pages\Login
             $credentials = $this->getCredentialsFromFormData($data);
 
             if (! Filament::auth()->validate($credentials)) {
+                // validate() ne okida Failed event kao attempt(). Okidamo ga rucno da
+                // bi i u 2FA rezimu radila geo-provera (mejl upozorenja za pokusaj
+                // prijave van Srbije) i belezenje neuspesnih pokusaja u evidenciji.
+                event(new Failed(
+                    Filament::getAuthGuard(),
+                    User::where('email', $credentials['email'])->first(),
+                    $credentials,
+                ));
+
                 throw ValidationException::withMessages([
                     'data.email' => __('filament-panels::pages/auth/login.messages.failed'),
                 ]);
@@ -148,6 +159,10 @@ class Login extends \Filament\Auth\Pages\Login
 
             // Store only user ID in session (no remember)
             session(['2fa_user_id' => $user->id]);
+
+            // Rano upozorenje: kredencijali su tacni, a pristup je iz inostranstva -
+            // salje se pre nego sto se 2FA zavrsi (hvata kompromitovanu lozinku).
+            app(CheckLoginLocation::class)->handleValidCredentials($user);
 
             // Redirect to 2FA verification page
             $this->redirect(route('filament.admin.two-factor-challenge'));

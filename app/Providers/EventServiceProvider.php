@@ -25,8 +25,10 @@ class EventServiceProvider extends ServiceProvider
             LogAuthenticationEvents::class . '@handleLogout',
         ],
         Failed::class => [
+            // Neuspesni pokusaji se samo beleze u evidenciji (jeftino, korisno za
+            // forenziku). Mejl se NE salje na pogresne kredencijale - to bi bio sum
+            // i vektor za spamovanje inboksa. Mejl ide samo na validne kredencijale.
             LogAuthenticationEvents::class . '@handleFailed',
-            CheckLoginLocation::class . '@handleFailed',
         ],
     ];
 
