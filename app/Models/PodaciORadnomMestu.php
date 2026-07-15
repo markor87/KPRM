@@ -27,6 +27,7 @@ class PodaciORadnomMestu extends Model
         'razlog_neuspelog_konkursa',
         'status_konkursa_na_dan_2',
         'datum_dobijanja_saglasnosti_vlade',
+        'konkurs_bez_saglasnosti_vlade',
         'datum_donosenja_resenja_o_pokretanju_postupka',
         'datum_dobijanja_obavestenja_od_suka',
         'datum_odrzavanja_prvog_sastanka',
@@ -100,6 +101,7 @@ class PodaciORadnomMestu extends Model
     protected $casts = [
         'unos_zavrsen' => 'boolean',
         'unos_zavrsen_at' => 'datetime',
+        'konkurs_bez_saglasnosti_vlade' => 'boolean',
     ];
 
     /**
@@ -109,12 +111,16 @@ class PodaciORadnomMestu extends Model
     protected static function booted(): void
     {
         static::saving(function (self $record) {
-            if (! $record->isDirty('unos_zavrsen')) {
-                return;
+            if ($record->isDirty('unos_zavrsen')) {
+                $record->unos_zavrsen_at = $record->unos_zavrsen ? now() : null;
+                $record->unos_zavrsen_by = $record->unos_zavrsen ? auth()->id() : null;
             }
 
-            $record->unos_zavrsen_at = $record->unos_zavrsen ? now() : null;
-            $record->unos_zavrsen_by = $record->unos_zavrsen ? auth()->id() : null;
+            // Konkurs pokrenut bez saglasnosti Vlade: garantujemo da datum saglasnosti bude
+            // null u bazi (disable-ovano polje se ne dehidrira, pa se na to ne oslanjamo).
+            if ($record->konkurs_bez_saglasnosti_vlade) {
+                $record->datum_dobijanja_saglasnosti_vlade = null;
+            }
         });
     }
 
@@ -253,6 +259,7 @@ class PodaciORadnomMestu extends Model
                 'status_konkursa_na_dan_2',
                 // Datumi poступka
                 'datum_dobijanja_saglasnosti_vlade',
+                'konkurs_bez_saglasnosti_vlade',
                 'datum_donosenja_resenja_o_pokretanju_postupka',
                 'datum_dobijanja_obavestenja_od_suka',
                 'datum_odrzavanja_prvog_sastanka',

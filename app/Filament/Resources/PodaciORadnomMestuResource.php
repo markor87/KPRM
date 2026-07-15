@@ -96,7 +96,6 @@ class PodaciORadnomMestuResource extends Resource
     protected static function uspesnoZavrsenValidationRule(): Closure
     {
         $requiredDates = [
-            'datum_dobijanja_saglasnosti_vlade'               => 'Датум добијања сагласности Владе',
             'datum_donosenja_resenja_o_pokretanju_postupka'   => 'Датум доношења решења о покретању поступка',
             'datum_dobijanja_obavestenja_od_suka'             => 'Датум добијања обавештења од СУКа',
             'datum_odrzavanja_prvog_sastanka'                 => 'Датум одржавања првог састанка',
@@ -542,7 +541,13 @@ class PodaciORadnomMestuResource extends Resource
                     ->schema([
                         Section::make('Покретање поступка')
                             ->schema([
-                        static::makeDateField('datum_dobijanja_saglasnosti_vlade', 'Датум добијања сагласности Владе'),
+                        Toggle::make('konkurs_bez_saglasnosti_vlade')
+                            ->label('Конкурс покренут без сагласности Владе')
+                            ->live()
+                            ->afterStateUpdated(fn (Set $set, $state) => $state ? $set('datum_dobijanja_saglasnosti_vlade', null) : null)
+                            ->columnSpanFull(),
+                        static::makeDateField('datum_dobijanja_saglasnosti_vlade', 'Датум добијања сагласности Владе')
+                            ->disabled(fn (Get $get) => (bool) $get('konkurs_bez_saglasnosti_vlade')),
                         static::makeDateField('datum_donosenja_resenja_o_pokretanju_postupka', 'Датум доношења решења о покретању поступка', 'datum_dobijanja_saglasnosti_vlade', 'добијања сагласности Владе'),
                         static::makeDateField('datum_dobijanja_obavestenja_od_suka', 'Датум добијања обавештења од СУКа', 'datum_donosenja_resenja_o_pokretanju_postupka', 'доношења решења о покретању поступка'),
                         static::makeDateField('datum_odrzavanja_prvog_sastanka', 'Датум одржавања првог састанка', 'datum_dobijanja_obavestenja_od_suka', 'добијања обавештења од СУКа'),
