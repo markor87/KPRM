@@ -2,7 +2,7 @@
 
 namespace App\Filament\Widgets;
 
-use App\Filament\Widgets\Concerns\HasTipKonkursaFilter;
+use App\Filament\Widgets\Concerns\HasDashboardFilters;
 use App\Models\PodaciORadnomMestu;
 use App\Services\OrganFilterService;
 use Filament\Support\RawJs;
@@ -10,7 +10,7 @@ use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
 class StepenUspesnostiChart extends ApexChartWidget
 {
-    use HasTipKonkursaFilter;
+    use HasDashboardFilters;
 
     protected static ?int $sort = 5;
 
@@ -24,25 +24,27 @@ class StepenUspesnostiChart extends ApexChartWidget
     protected function getOptions(): array
     {
         $organFilterService = app(OrganFilterService::class);
-        $godina = now()->year - 1;
+        $godina = $this->godina;
 
         $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina)
             ->where('tip_konkursa', $this->tipKonkursa);
         $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ');
 
-        $uspesno = (clone $baseQuery)->where('status_konkursa_na_dan_2', 1)->count();
-        $neuspeo = (clone $baseQuery)->where('status_konkursa_na_dan_2', 2)->count();
-        $obustavljeno = (clone $baseQuery)->where('status_konkursa_na_dan_2', 3)->count();
+        // "U toku" (4) se ne broji - grafikon meri ishode zavrsenih konkursa.
+        $uspesno = (clone $baseQuery)->where('status_konkursa', 1)->count();
+        $delimicnoUspesno = (clone $baseQuery)->where('status_konkursa', 5)->count();
+        $neuspeo = (clone $baseQuery)->where('status_konkursa', 2)->count();
+        $obustavljeno = (clone $baseQuery)->where('status_konkursa', 3)->count();
 
         return [
-            'series' => [$uspesno, $neuspeo, $obustavljeno],
+            'series' => [$uspesno, $delimicnoUspesno, $neuspeo, $obustavljeno],
             'chart' => [
                 'type' => 'donut',
                 'height' => 280,
                 'background' => 'transparent',
             ],
-            'labels' => ['Успешно завршен конкурс', 'Неуспео конкурс', 'Обустављен конкурс'],
-            'colors' => ['#3b82f6', '#f59e0b', '#ef4444'],
+            'labels' => ['Успешно завршен конкурс', 'Делимично успешно завршен конкурс', 'Неуспео конкурс', 'Обустављен конкурс'],
+            'colors' => ['#3b82f6', '#14b8a6', '#f59e0b', '#ef4444'],
             'legend' => [
                 'show' => false,
             ],

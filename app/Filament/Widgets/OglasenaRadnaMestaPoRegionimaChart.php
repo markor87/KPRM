@@ -2,14 +2,14 @@
 
 namespace App\Filament\Widgets;
 
-use App\Filament\Widgets\Concerns\HasTipKonkursaFilter;
+use App\Filament\Widgets\Concerns\HasDashboardFilters;
 use App\Models\PodaciORadnomMestu;
 use App\Services\OrganFilterService;
 use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
 class OglasenaRadnaMestaPoRegionimaChart extends ApexChartWidget
 {
-    use HasTipKonkursaFilter;
+    use HasDashboardFilters;
 
     protected static ?int $sort = 5;
 
@@ -23,7 +23,7 @@ class OglasenaRadnaMestaPoRegionimaChart extends ApexChartWidget
     protected function getOptions(): array
     {
         $organFilterService = app(OrganFilterService::class);
-        $godina = now()->year - 1;
+        $godina = $this->godina;
 
         $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina)
             ->where('tip_konkursa', $this->tipKonkursa)

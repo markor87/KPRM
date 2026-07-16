@@ -2,7 +2,7 @@
 
 namespace App\Filament\Widgets;
 
-use App\Filament\Widgets\Concerns\HasTipKonkursaFilter;
+use App\Filament\Widgets\Concerns\HasDashboardFilters;
 use App\Models\PodaciORadnomMestu;
 use App\Services\OrganFilterService;
 use Filament\Support\RawJs;
@@ -10,7 +10,7 @@ use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
 class RazloziNeuspehaChart extends ApexChartWidget
 {
-    use HasTipKonkursaFilter;
+    use HasDashboardFilters;
 
     protected static ?int $sort = 9;
 
@@ -27,11 +27,11 @@ class RazloziNeuspehaChart extends ApexChartWidget
     protected function getOptions(): array
     {
         $organFilterService = app(OrganFilterService::class);
-        $godina = now()->year - 1;
+        $godina = $this->godina;
 
         $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina)
             ->where('tip_konkursa', $this->tipKonkursa)
-            ->where('status_konkursa_na_dan_2', 2)
+            ->where('status_konkursa', 2)
             ->whereNotNull('razlog_neuspelog_konkursa')
             ->join('sifarnik_razlog_neuspelih_konkursa', 'podaci_o_radnom_mestu.razlog_neuspelog_konkursa', '=', 'sifarnik_razlog_neuspelih_konkursa.id');
         $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'podaci_o_radnom_mestu.organ');
