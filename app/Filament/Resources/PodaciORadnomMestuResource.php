@@ -17,6 +17,7 @@ use App\Models\SifarnikOrgani;
 use App\Models\SifarnikZvanje;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Placeholder;
 use App\Models\SifarnikKodoviGradova;
 use Filament\Schemas\Components\Grid;
 use Filament\Actions\Action;
@@ -310,6 +311,7 @@ class PodaciORadnomMestuResource extends Resource
             'organRelation',
             'zvanjeRelation',
             'unosZavrsioKorisnik',
+            'statusKonkursaRelation',
         ]);
         return app(OrganFilterService::class)->applyOrganFilter($query, 'organ');
     }
@@ -512,28 +514,38 @@ class PodaciORadnomMestuResource extends Resource
                                     }
                                 },
                             ])
-                            ->helperText(fn (Get $get) => 'Укупан број извршилаца: ' . ($get('broj_izvrsilaca') ?: 0) . '. Збир по градовима мора битиједнак овом броју.'),
-                        Select::make('status_konkursa_na_dan_1')
-                            ->label('Статус конкурса на дан 31/12/' . (now()->year - 2))
-                            ->relationship('statusKonkursaNaDan1Relation', 'status_konkursa', fn($query) => $query->orderBy('id', 'asc'))
-                            ->preload()
-                            ->searchable()
-                            ->hidden(fn () => auth()->user()->hasRole('User'))
-                            ->rules([static::uspesnoZavrsenValidationRule()]),
-                        Select::make('status_konkursa_na_dan_2')
-                            ->label('Статус конкурса на дан 31/12/' . (now()->year - 1))
-                            ->relationship('statusKonkursaNaDan2Relation', 'status_konkursa', fn($query) => $query->orderBy('id', 'asc'))
+                            ->helperText(fn (Get $get) => 'Укупан број извршилаца: ' . ($get('broj_izvrsilaca') ?: 0) . '. Збир по градовима мора бити једнак овом броју.'),
+                        Placeholder::make('trenutni_status_prikaz')
+                            ->label('Тренутни статус')
+                            ->content(function (Get $get) {
+                                $status = (int) $get('status_konkursa');
+                                if (in_array($status, [1, 2, 3, 5], true) && filled($get('datum_statusa_konkursa'))) {
+                                    return \App\Models\SifarnikStatusKonkursa::find($status)?->status_konkursa ?? '—';
+                                }
+                                if (filled($get('datum_donosenja_resenja_o_pokretanju_postupka'))) {
+                                    return 'У току';
+                                }
+                                return '—';
+                            })
+                            ->helperText('Статус „У току" се поставља аутоматски када је унет датум решења о покретању поступка, а статус конкурса још није изабран.'),
+                        Select::make('status_konkursa')
+                            ->label('Статус конкурса')
+                            ->relationship('statusKonkursaRelation', 'status_konkursa', fn($query) => $query->where('id', '!=', 4)->orderBy('id', 'asc'))
                             ->preload()
                             ->searchable()
                             ->live()
+                            ->formatStateUsing(fn ($state) => in_array((int) $state, [1, 2, 3, 5], true) ? $state : null)
+                            ->required(fn (Get $get) => filled($get('datum_statusa_konkursa')))
                             ->afterStateUpdated(fn (Set $set, $state) => $state != 2 ? $set('razlog_neuspelog_konkursa', null) : null)
                             ->rules([static::uspesnoZavrsenValidationRule()]),
+                        static::makeDateField('datum_statusa_konkursa', 'Датум статуса конкурса', 'datum_donosenja_resenja_o_pokretanju_postupka', 'доношења решења о покретању поступка')
+                            ->required(fn (Get $get) => filled($get('status_konkursa'))),
                         Select::make('razlog_neuspelog_konkursa')
                             ->label('Разлог неуспелог конкурса')
                             ->relationship('razlogNeuspelogKonkursaRelation', 'razlog', fn($query) => $query->orderBy('id', 'asc'))
                             ->preload()
                             ->searchable()
-                            ->disabled(fn (Get $get) => $get('status_konkursa_na_dan_2') != 2)
+                            ->disabled(fn (Get $get) => $get('status_konkursa') != 2)
                             ->dehydrated(),
                     ])->columns(3),
 
@@ -1027,7 +1039,7 @@ class PodaciORadnomMestuResource extends Resource
                                 self::sumValidationRule(
                                     'broj_kandidata_na_listi',
                                     ['broj_kandidata_iz_organa_na_listi', 'broj_kandidata_iz_drugog_drzavnog_organa_na_listi', 'broj_kandidata_van_drzavnih_organa_na_listi'],
-                                    'Збир кандидата на листи мора битиједнак укупном броју кандидата на листи.'
+                                    'Збир кандидата на листи мора бити једнак укупном броју кандидата на листи.'
                                 ),
                                 fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
                                     $max = (int) $get('broj_validnih_prijava_iz_organa');
@@ -1053,7 +1065,7 @@ class PodaciORadnomMestuResource extends Resource
                                 self::sumValidationRule(
                                     'broj_kandidata_na_listi',
                                     ['broj_kandidata_iz_organa_na_listi', 'broj_kandidata_iz_drugog_drzavnog_organa_na_listi', 'broj_kandidata_van_drzavnih_organa_na_listi'],
-                                    'Збир кандидата на листи мора битиједнак укупном броју кандидата на листи.'
+                                    'Збир кандидата на листи мора бити једнак укупном броју кандидата на листи.'
                                 ),
                                 fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
                                     $max = (int) $get('broj_validnih_prijava_iz_drugog_organa');
@@ -1079,7 +1091,7 @@ class PodaciORadnomMestuResource extends Resource
                                 self::sumValidationRule(
                                     'broj_kandidata_na_listi',
                                     ['broj_kandidata_iz_organa_na_listi', 'broj_kandidata_iz_drugog_drzavnog_organa_na_listi', 'broj_kandidata_van_drzavnih_organa_na_listi'],
-                                    'Збир кандидата на листи мора битиједнак укупном броју кандидата на листи.'
+                                    'Збир кандидата на листи мора бити једнак укупном броју кандидата на листи.'
                                 ),
                                 fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
                                     $max = (int) $get('broj_validnih_prijava_van_drzavnih_organa');
@@ -1239,10 +1251,6 @@ class PodaciORadnomMestuResource extends Resource
                     ->label('ID')
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('vrstaOrganaRelation.vrsta_organa')
-                    ->label('Врста органа')
-                    ->sortable()
-                    ->searchable(),
                 TextColumn::make('organRelation.organ')
                     ->label('Орган')
                     ->sortable()
@@ -1268,6 +1276,11 @@ class PodaciORadnomMestuResource extends Resource
                 TextColumn::make('datum_oglasavanja')
                     ->label('Датум оглашавања')
                     ->date('d.m.Y.')
+                    ->sortable(),
+                TextColumn::make('statusKonkursaRelation.status_konkursa')
+                    ->label('Статус конкурса')
+                    ->badge()
+                    ->placeholder('—')
                     ->sortable(),
                 ToggleColumn::make('unos_zavrsen')
                     ->label('Унос завршен')
