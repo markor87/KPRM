@@ -121,6 +121,12 @@ class PodaciORadnomMestuResource extends Resource
             if ($value != 1) return;
             if ($get('tip_konkursa') != 1) return;
 
+            // Pripravnici ne prolaze PFK proveru, pa se ti datumi od njih ne traze.
+            // 5 = Mladji savetnik - pripravnik, 31 = Mladji poreski savetnik - pripravnik.
+            if (in_array((int) $get('zvanje'), [5, 31], true)) {
+                unset($requiredDates['datum_pocetka_provere_pfk'], $requiredDates['datum_pfk_izvestaja']);
+            }
+
             $missing = [];
             foreach ($requiredDates as $field => $label) {
                 if (empty($get($field))) {
