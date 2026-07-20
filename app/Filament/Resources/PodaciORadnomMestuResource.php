@@ -1269,20 +1269,19 @@ class PodaciORadnomMestuResource extends Resource
                     ->label('ID')
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('organRelation.organ')
-                    ->label('Орган')
-                    ->sortable()
-                    ->searchable()
-                    ->wrap(),
                 TextColumn::make('naziv_radnog_mesta')
                     ->label('Назив радног места')
-                    ->searchable()
+                    ->description(fn ($record) => $record->organRelation?->organ)
                     ->sortable()
-                    ->wrap(),
+                    ->wrap()
+                    ->searchable(query: fn ($query, string $search) => $query
+                        ->where('naziv_radnog_mesta', 'like', "%{$search}%")
+                        ->orWhereHas('organRelation', fn ($q) => $q->where('organ', 'like', "%{$search}%"))),
                 TextColumn::make('zvanjeRelation.zvanje')
                     ->label('Звање')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->wrap(),
                 TextColumn::make('mestaRada.grad')
                     ->label('Место рада')
                     ->searchable()
