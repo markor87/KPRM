@@ -524,8 +524,8 @@ class PodaciORadnomMestuResource extends Resource
                         Placeholder::make('trenutni_status_prikaz')
                             ->label('Тренутни статус')
                             ->content(function (Get $get) {
-                                $status = (int) $get('status_konkursa');
-                                if (in_array($status, [1, 2, 3, 5], true) && filled($get('datum_statusa_konkursa'))) {
+                                $status = (int) $get('ishod_konkursa');
+                                if (in_array($status, [1, 2, 3, 5], true) && filled($get('datum_ishoda_konkursa'))) {
                                     return \App\Models\SifarnikStatusKonkursa::find($status)?->status_konkursa ?? '—';
                                 }
                                 if (filled($get('datum_donosenja_resenja_o_pokretanju_postupka'))) {
@@ -533,25 +533,37 @@ class PodaciORadnomMestuResource extends Resource
                                 }
                                 return '—';
                             })
-                            ->helperText('Статус „У току" се поставља аутоматски када је унет датум решења о покретању поступка, а статус конкурса још није изабран.'),
-                        Select::make('status_konkursa')
-                            ->label('Статус конкурса')
+                            ->helperText('Статус „У току" се поставља аутоматски када је унет датум решења о покретању поступка, а исход конкурса још није изабран.'),
+                        Select::make('ishod_konkursa')
+                            ->label('Исход конкурса')
                             ->relationship('statusKonkursaRelation', 'status_konkursa', fn($query) => $query->where('id', '!=', 4)->orderBy('id', 'asc'))
                             ->preload()
                             ->searchable()
                             ->live()
                             ->formatStateUsing(fn ($state) => in_array((int) $state, [1, 2, 3, 5], true) ? $state : null)
-                            ->required(fn (Get $get) => filled($get('datum_statusa_konkursa')))
+                            ->required(fn (Get $get) => filled($get('datum_ishoda_konkursa')))
                             ->afterStateUpdated(fn (Set $set, $state) => $state != 2 ? $set('razlog_neuspelog_konkursa', null) : null)
                             ->rules([static::uspesnoZavrsenValidationRule()]),
-                        static::makeDateField('datum_statusa_konkursa', 'Датум статуса конкурса', 'datum_donosenja_resenja_o_pokretanju_postupka', 'доношења решења о покретању поступка')
-                            ->required(fn (Get $get) => filled($get('status_konkursa'))),
+                        static::makeDateField('datum_ishoda_konkursa', 'Датум', 'datum_donosenja_resenja_o_pokretanju_postupka', 'доношења решења о покретању поступка')
+                            ->hintAction(
+                                Action::make('info_datum_ishoda')
+                                    ->icon('heroicon-m-information-circle')
+                                    ->label('')
+                                    ->color('gray')
+                                    ->extraAttributes(['style' => 'padding:0;background:transparent;box-shadow:none;min-height:unset;color:rgb(156,163,175);'])
+                                    ->modalHeading('Датум по исходу конкурса')
+                                    ->modalContent(new HtmlString('<div style="font-size:0.875rem;"><p style="margin-bottom:10px;">Који датум се уписује у поље „Датум", у зависности од исхода конкурса:</p><table style="width:100%;border-collapse:collapse;"><thead><tr><th style="text-align:left;padding:6px 10px;border:1px solid rgba(156,163,175,0.4);font-weight:600;">Исход конкурса</th><th style="text-align:left;padding:6px 10px;border:1px solid rgba(156,163,175,0.4);font-weight:600;">Датум који се уписује</th></tr></thead><tbody><tr><td style="padding:6px 10px;border:1px solid rgba(156,163,175,0.4);vertical-align:top;">Успешно завршен конкурс</td><td style="padding:6px 10px;border:1px solid rgba(156,163,175,0.4);vertical-align:top;">Датум доношења Решења о ступању на рад</td></tr><tr><td style="padding:6px 10px;border:1px solid rgba(156,163,175,0.4);vertical-align:top;">Делимично успешно завршен конкурс</td><td style="padding:6px 10px;border:1px solid rgba(156,163,175,0.4);vertical-align:top;">Датум доношења Решења о ступању на рад изабраног кандидата који је први ступио на рад (од више оглашених извршилаца)</td></tr><tr><td style="padding:6px 10px;border:1px solid rgba(156,163,175,0.4);vertical-align:top;">Неуспео конкурс</td><td style="padding:6px 10px;border:1px solid rgba(156,163,175,0.4);vertical-align:top;">Датум доношења Решења о неуспелом конкурсу</td></tr><tr><td style="padding:6px 10px;border:1px solid rgba(156,163,175,0.4);vertical-align:top;">Обустављен конкурс</td><td style="padding:6px 10px;border:1px solid rgba(156,163,175,0.4);vertical-align:top;">Датум доношења Решења о обустави конкурса</td></tr></tbody></table></div>'))
+                                    ->modalSubmitAction(false)
+                                    ->modalCancelActionLabel('Затвори')
+                                    ->modalWidth('lg')
+                            )
+                            ->required(fn (Get $get) => filled($get('ishod_konkursa'))),
                         Select::make('razlog_neuspelog_konkursa')
                             ->label('Разлог неуспелог конкурса')
                             ->relationship('razlogNeuspelogKonkursaRelation', 'razlog', fn($query) => $query->orderBy('id', 'asc'))
                             ->preload()
                             ->searchable()
-                            ->disabled(fn (Get $get) => $get('status_konkursa') != 2)
+                            ->disabled(fn (Get $get) => $get('ishod_konkursa') != 2)
                             ->dehydrated(),
                     ])->columns(3),
 
@@ -1284,7 +1296,7 @@ class PodaciORadnomMestuResource extends Resource
                     ->date('d.m.Y.')
                     ->sortable(),
                 TextColumn::make('statusKonkursaRelation.status_konkursa')
-                    ->label('Статус конкурса')
+                    ->label('Исход конкурса')
                     ->badge()
                     ->placeholder('—')
                     ->sortable(),

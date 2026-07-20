@@ -31,7 +31,7 @@ class RazloziNeuspehaChart extends ApexChartWidget
 
         $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina)
             ->where('tip_konkursa', $this->tipKonkursa)
-            ->where('status_konkursa', 2)
+            ->where('ishod_konkursa', 2)
             ->whereNotNull('razlog_neuspelog_konkursa')
             ->join('sifarnik_razlog_neuspelih_konkursa', 'podaci_o_radnom_mestu.razlog_neuspelog_konkursa', '=', 'sifarnik_razlog_neuspelih_konkursa.id');
         $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'podaci_o_radnom_mestu.organ');

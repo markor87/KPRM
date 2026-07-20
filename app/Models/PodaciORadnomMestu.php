@@ -26,8 +26,8 @@ class PodaciORadnomMestu extends Model
         'status_konkursa_na_dan_1',
         'razlog_neuspelog_konkursa',
         'status_konkursa_na_dan_2',
-        'status_konkursa',
-        'datum_statusa_konkursa',
+        'ishod_konkursa',
+        'datum_ishoda_konkursa',
         'datum_dobijanja_saglasnosti_vlade',
         'konkurs_bez_saglasnosti_vlade',
         'datum_donosenja_resenja_o_pokretanju_postupka',
@@ -141,14 +141,14 @@ class PodaciORadnomMestu extends Model
             // postupka a terminalni status jos nije izabran+datiran -> status je „У току".
             $terminalni = [1, 2, 3, 5];
             $imaResenje = ! empty($record->datum_donosenja_resenja_o_pokretanju_postupka);
-            $imaDatumStatusa = ! empty($record->datum_statusa_konkursa);
+            $imaDatumStatusa = ! empty($record->datum_ishoda_konkursa);
 
-            if (in_array((int) $record->status_konkursa, $terminalni, true) && $imaDatumStatusa) {
-                // ostaje izabrani terminalni status
+            if (in_array((int) $record->ishod_konkursa, $terminalni, true) && $imaDatumStatusa) {
+                // ostaje izabrani terminalni ishod
             } elseif ($imaResenje) {
-                $record->status_konkursa = 4; // У току
+                $record->ishod_konkursa = 4; // У току
             } else {
-                $record->status_konkursa = null;
+                $record->ishod_konkursa = null;
             }
         });
     }
@@ -225,11 +225,11 @@ class PodaciORadnomMestu extends Model
     }
 
     /**
-     * Relacija sa sifarnik_status_konkursa tabelom - jedinstveni status konkursa
+     * Relacija sa sifarnik_status_konkursa tabelom - ishod konkursa
      */
     public function statusKonkursaRelation()
     {
-        return $this->belongsTo(SifarnikStatusKonkursa::class, 'status_konkursa');
+        return $this->belongsTo(SifarnikStatusKonkursa::class, 'ishod_konkursa');
     }
 
     /**
@@ -292,8 +292,8 @@ class PodaciORadnomMestu extends Model
                 'zvanje',
                 // 'mesto_rada', // Uklonjeno - many-to-many se ne loguje ovako
                 'razlog_neuspelog_konkursa',
-                'status_konkursa',
-                'datum_statusa_konkursa',
+                'ishod_konkursa',
+                'datum_ishoda_konkursa',
                 // Datumi poступka
                 'datum_dobijanja_saglasnosti_vlade',
                 'konkurs_bez_saglasnosti_vlade',

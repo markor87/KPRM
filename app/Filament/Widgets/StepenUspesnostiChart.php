@@ -31,10 +31,10 @@ class StepenUspesnostiChart extends ApexChartWidget
         $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ');
 
         // "U toku" (4) se ne broji - grafikon meri ishode zavrsenih konkursa.
-        $uspesno = (clone $baseQuery)->where('status_konkursa', 1)->count();
-        $delimicnoUspesno = (clone $baseQuery)->where('status_konkursa', 5)->count();
-        $neuspeo = (clone $baseQuery)->where('status_konkursa', 2)->count();
-        $obustavljeno = (clone $baseQuery)->where('status_konkursa', 3)->count();
+        $uspesno = (clone $baseQuery)->where('ishod_konkursa', 1)->count();
+        $delimicnoUspesno = (clone $baseQuery)->where('ishod_konkursa', 5)->count();
+        $neuspeo = (clone $baseQuery)->where('ishod_konkursa', 2)->count();
+        $obustavljeno = (clone $baseQuery)->where('ishod_konkursa', 3)->count();
 
         return [
             'series' => [$uspesno, $delimicnoUspesno, $neuspeo, $obustavljeno],
