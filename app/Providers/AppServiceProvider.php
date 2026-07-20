@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Filament\Forms\Components\DatePicker;
+use Filament\Support\Facades\FilamentTimezone;
 use Filament\Auth\Notifications\ResetPassword as FilamentResetPassword;
 use App\Notifications\ResetPassword as CyrillicResetPassword;
 
@@ -26,6 +27,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Schema::defaultStringLength(191);
+
+        // Vremena se u bazi cuvaju u UTC, a prikazuju u lokalnoj zoni (DST-svesno).
+        // Postavlja default zonu za sve Filament dateTime kolone/entry-je/pickere.
+        FilamentTimezone::set(config('app.display_timezone'));
 
         if (config('app.env') === 'production') {
             // Генерисање URL-ова увек преко https

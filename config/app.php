@@ -71,6 +71,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Display Timezone
+    |--------------------------------------------------------------------------
+    |
+    | Vremena se u bazi cuvaju u UTC ('timezone' iznad). Ovo je zona u kojoj se
+    | vremena PRIKAZUJU korisniku (Filament dateTime kolone/entry-ji/pickeri).
+    | Named zona -> konverzija je DST-svesna (leti +2, zimi +1) automatski.
+    |
+    */
+
+    'display_timezone' => env('APP_DISPLAY_TIMEZONE', 'Europe/Belgrade'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     |
