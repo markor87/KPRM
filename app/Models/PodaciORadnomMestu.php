@@ -118,6 +118,18 @@ class PodaciORadnomMestu extends Model
                 $record->unos_zavrsen_by = $record->unos_zavrsen ? auth()->id() : null;
             }
 
+            // Bezbednost: „Орган" i „Врста органа" su u formi samo za prikaz (disabled),
+            // ali se dehidriraju, pa se na disable ne oslanjamo. Korisnik koji nije ovlašćen
+            // da vidi sve organe ne sme da upiše/promeni organ - prisilno ga vezujemo za
+            // njegov organ, bez obzira šta stigne iz zahteva (sprečava upis u tuđi organ i
+            // „prebacivanje" postojećeg zapisa). Isti kriterijum kao OrganFilterService.
+            // Bez ulogovanog korisnika (konzola, seeder, migracija) ne diramo ništa.
+            $user = auth()->user();
+            if ($user && $user->organ_id && ! $user->can('ViewAny:PodaciORadnomMestu')) {
+                $record->organ = $user->organ_id;
+                $record->vrsta_organa = $user->organ?->vrsta_organ_id;
+            }
+
             // Konkurs pokrenut bez saglasnosti Vlade: garantujemo da datum saglasnosti bude
             // null u bazi (disable-ovano polje se ne dehidrira, pa se na to ne oslanjamo).
             if ($record->konkurs_bez_saglasnosti_vlade) {
