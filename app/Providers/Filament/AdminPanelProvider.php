@@ -96,6 +96,26 @@ class AdminPanelProvider extends PanelProvider
                         }
                     });
                 </script>
+            HTML))
+            ->renderHook(PanelsRenderHook::STYLES_AFTER, fn (): HtmlString => new HtmlString(<<<'HTML'
+                <style>
+                    @keyframes kprm-hint-pulse {
+                        0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(251,191,36,.55); }
+                        50%      { transform: scale(1.15); box-shadow: 0 0 0 6px rgba(251,191,36,0); }
+                    }
+                    .kprm-hint-pulse {
+                        animation: kprm-hint-pulse 1.8s ease-in-out infinite;
+                        transform-origin: center;
+                        border-radius: 9999px;
+                    }
+                    /* иста боја иконице на обе теме (амбер са црне теме) */
+                    .kprm-hint-pulse svg { color: #fbbf24 !important; }
+                    /* мирна на прелаз миша да се лакше кликне */
+                    .kprm-hint-pulse:hover { animation-play-state: paused; }
+                    @media (prefers-reduced-motion: reduce) {
+                        .kprm-hint-pulse { animation: none; }
+                    }
+                </style>
             HTML));
     }
 }

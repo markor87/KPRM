@@ -21,6 +21,9 @@ use Filament\Forms\Components\Placeholder;
 use App\Models\SifarnikKodoviGradova;
 use Filament\Schemas\Components\Grid;
 use Filament\Actions\Action;
+use Filament\Schemas\Components\Actions;
+use Filament\Forms\Components\Textarea;
+use Filament\Notifications\Notification;
 use Illuminate\Support\HtmlString;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
@@ -161,6 +164,97 @@ class PodaciORadnomMestuResource extends Resource
             'datum_dostavljanja_liste_rukovodiocu_organa'   => 'Датум достављања листе руководиоцу органа',
             'datum_donosenja_resenja_o_izabranom_kandidatu' => 'Датум доношења решења о изабраном кандидату',
             'datum_stupanja_na_rad'                         => 'Датум ступања на рад',
+        ];
+    }
+
+    /**
+     * Пулсирајућа инфо-иконица уз поље (замена за сиви hintIconTooltip који корисници
+     * не примете). Клик отвара читљив модал са пуним текстом. CSS класа `kprm-hint-pulse`
+     * је дефинисана у AdminPanelProvider (renderHook STYLES_AFTER).
+     */
+    protected static function infoHintAction(string $name, string $tekst, string $heading = 'Објашњење'): Action
+    {
+        return Action::make($name)
+            ->icon('heroicon-m-information-circle')
+            ->label('')
+            ->color('warning')
+            ->extraAttributes([
+                'class' => 'kprm-hint-pulse',
+                'style' => 'padding:0;background:transparent;box-shadow:none;min-height:unset;',
+            ])
+            ->modalHeading($heading)
+            ->modalContent(new HtmlString('<div style="font-size:.875rem;line-height:1.5;white-space:pre-line;">'.e($tekst).'</div>'))
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel('Затвори')
+            ->modalWidth('md');
+    }
+
+    /**
+     * Рачуна старосну структуру из датума рођења (дд.мм.гггг, нови ред или зарез).
+     * Користи се и за живи преглед у калкулатору и за упис. Ништа се не чува.
+     * Враћа: ['ok'=>bool, 'greska'?, 'n','avg','mladji','pct','preskoceni'].
+     */
+    protected static function izracunajStarosnuStrukturu(?string $refRaw, ?string $datumiRaw): array
+    {
+        $parse = function (?string $s): ?Carbon {
+            $s = trim((string) $s);
+            if (preg_match('/^(\d{1,2})\.(\d{1,2})\.(\d{4})\.?$/', $s, $m)) {
+                [$d, $mo, $y] = [(int) $m[1], (int) $m[2], (int) $m[3]];
+            } elseif (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $s, $m)) {
+                [$y, $mo, $d] = [(int) $m[1], (int) $m[2], (int) $m[3]];
+            } else {
+                return null;
+            }
+            return checkdate($mo, $d, $y) ? Carbon::create($y, $mo, $d) : null;
+        };
+
+        $ref = $parse($refRaw);
+        if (! $ref) {
+            return ['ok' => false, 'greska' => 'Унесите датум оглашавања конкурса (дд.мм.гггг).', 'preskoceni' => []];
+        }
+
+        $stavke = array_filter(array_map('trim', preg_split('/[\n,]+/', (string) $datumiRaw)));
+
+        $validni = [];
+        $preskoceni = [];
+        foreach ($stavke as $s) {
+            $b = $parse($s);
+            if (! $b || $b->gt($ref)) {
+                $preskoceni[] = $s;
+                continue;
+            }
+            // Санити границе: старост на датум оглашавања између 18 и 90 година
+            $starost = $b->diffInYears($ref);
+            if ($starost < 18 || $starost > 90) {
+                $preskoceni[] = $s;
+                continue;
+            }
+            $validni[] = $b;
+        }
+
+        $n = count($validni);
+        if ($n === 0) {
+            return ['ok' => false, 'greska' => 'Нема исправних датума рођења (или су сви после датума оглашавања).', 'preskoceni' => $preskoceni];
+        }
+
+        $zbirStarosti = 0.0;
+        $mladji = 0;
+        $granica = $ref->copy()->subYears(30);
+        foreach ($validni as $b) {
+            // Прецизна старост на датум оглашавања (година + месец + дан)
+            $zbirStarosti += $b->floatDiffInYears($ref);
+            if ($b->gt($granica)) {
+                $mladji++;
+            }
+        }
+
+        return [
+            'ok' => true,
+            'n' => $n,
+            'avg' => round($zbirStarosti / $n, 2),
+            'mladji' => $mladji,
+            'pct' => round($mladji / $n * 100, 2),
+            'preskoceni' => $preskoceni,
         ];
     }
 
@@ -549,8 +643,8 @@ class PodaciORadnomMestuResource extends Resource
                                 Action::make('info_datum_ishoda')
                                     ->icon('heroicon-m-information-circle')
                                     ->label('')
-                                    ->color('gray')
-                                    ->extraAttributes(['style' => 'padding:0;background:transparent;box-shadow:none;min-height:unset;color:rgb(156,163,175);'])
+                                    ->color('warning')
+                                    ->extraAttributes(['class' => 'kprm-hint-pulse', 'style' => 'padding:0;background:transparent;box-shadow:none;min-height:unset;'])
                                     ->modalHeading('Датум по исходу конкурса')
                                     ->modalContent(new HtmlString('<div style="font-size:0.875rem;"><p style="margin-bottom:10px;">Који датум се уписује у поље „Датум", у зависности од исхода конкурса:</p><table style="width:100%;border-collapse:collapse;"><thead><tr><th style="text-align:left;padding:6px 10px;border:1px solid rgba(156,163,175,0.4);font-weight:600;">Исход конкурса</th><th style="text-align:left;padding:6px 10px;border:1px solid rgba(156,163,175,0.4);font-weight:600;">Датум који се уписује</th></tr></thead><tbody><tr><td style="padding:6px 10px;border:1px solid rgba(156,163,175,0.4);vertical-align:top;">Успешно завршен конкурс</td><td style="padding:6px 10px;border:1px solid rgba(156,163,175,0.4);vertical-align:top;">Датум доношења Решења о ступању на рад</td></tr><tr><td style="padding:6px 10px;border:1px solid rgba(156,163,175,0.4);vertical-align:top;">Делимично успешно завршен конкурс</td><td style="padding:6px 10px;border:1px solid rgba(156,163,175,0.4);vertical-align:top;">Датум доношења Решења о ступању на рад изабраног кандидата који је први ступио на рад (од више оглашених извршилаца)</td></tr><tr><td style="padding:6px 10px;border:1px solid rgba(156,163,175,0.4);vertical-align:top;">Неуспео конкурс</td><td style="padding:6px 10px;border:1px solid rgba(156,163,175,0.4);vertical-align:top;">Датум доношења Решења о неуспелом конкурсу</td></tr><tr><td style="padding:6px 10px;border:1px solid rgba(156,163,175,0.4);vertical-align:top;">Обустављен конкурс</td><td style="padding:6px 10px;border:1px solid rgba(156,163,175,0.4);vertical-align:top;">Датум доношења Решења о обустави конкурса</td></tr></tbody></table></div>'))
                                     ->modalSubmitAction(false)
@@ -611,8 +705,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->numeric()->minValue(0)
                             ->lte('ukupan_broj_prijava')
                             ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
-                            ->hintIcon('heroicon-m-information-circle')
-                            ->hintIconTooltip('Не односи се на органе локалне самоуправе и органе аутономне покрајине')
+                            ->hintAction(self::infoHintAction('info_prijave_iz_organa', 'Не односи се на органе локалне самоуправе и органе аутономне покрајине'))
                             ->validationMessages([
                                 'lte' => 'Број пријава из других органа не може бити већи од укупног броја пријава.',
                             ])
@@ -653,6 +746,74 @@ class PodaciORadnomMestuResource extends Resource
                             ->modalWidth('lg'),
                     ])
                     ->schema([
+                        Actions::make([
+                            Action::make('kalkulator_starosti')
+                                ->label('Калкулатор старости')
+                                ->icon('heroicon-m-calculator')
+                                ->color('primary')
+                                ->modalHeading('Калкулатор старосне структуре')
+                                ->modalDescription('Датуми рођења се користе само за калкулацију и не чувају се у бази.')
+                                ->fillForm(fn (Get $get) => ['referentni_datum' => $get('datum_oglasavanja')])
+                                ->schema([
+                                    TextInput::make('referentni_datum')
+                                        ->label('Датум оглашавања конкурса')
+                                        ->helperText('Поље „Датум оглашавања конкурса" је информативне природе. Уколико је празно морате га унети у одговарајуће поље у апликацији.')
+                                        ->disabled()
+                                        ->dehydrated(),
+                                    Textarea::make('datumi_rodjenja')
+                                        ->label('Датуми рођења кандидата')
+                                        ->hintAction(self::infoHintAction('info_kalkulator', "Како се користи калкулатор:\n\n• Датум оглашавања се преузима из форме и служи као референтна тачка (ако је празан, унесите га прво у форми).\n• У поље испод унесите датуме рођења кандидата — сваки у нов ред или одвојене зарезом. Формат: дд.мм.гггг (нпр. 15.03.1990 или 5.5.1990).\n• „Резултат\" се сам освежава чим изађете из поља — приказује просечну старост и удео млађих од 30 година.\n• Неисправни уноси (погрешан формат, немогућ датум) се прескачу и наведени су под „Прескочено\".\n• Кликом на „Израчунај и упиши\" вредности се уписују у поља Просечна старост и Удео млађих од 30.\n\nНапомена: унети датуми се нигде не чувају — користе се само за израчунавање.", 'Упутство за калкулатор'))
+                                        ->rows(8)
+                                        ->required()
+                                        ->live(onBlur: true)
+                                        ->helperText('Унесите датуме рођења (дд.мм.гггг) — сваки у нов ред или одвојене зарезом (може и мешано). Пример: 15.03.1990, 22.11.1985.'),
+                                    Placeholder::make('pregled_rezultata')
+                                        ->label('Резултат')
+                                        ->content(function (Get $get): HtmlString {
+                                            $r = static::izracunajStarosnuStrukturu($get('referentni_datum'), $get('datumi_rodjenja'));
+                                            if (! ($r['ok'] ?? false)) {
+                                                return new HtmlString('<span style="color:rgb(120,120,120);">'.e($r['greska'] ?? 'Унесите податке.').'</span>');
+                                            }
+                                            $html = '<div style="font-size:1rem;line-height:1.6;">'
+                                                .'<div><strong>Кандидата:</strong> '.$r['n'].'</div>'
+                                                .'<div><strong>Просечна старост:</strong> '.$r['avg'].' год.</div>'
+                                                .'<div><strong>Млађи од 30:</strong> '.$r['mladji'].'/'.$r['n'].' ('.$r['pct'].'%)</div>';
+                                            if (! empty($r['preskoceni'])) {
+                                                $ukupno = count($r['preskoceni']);
+                                                $lista = array_slice($r['preskoceni'], 0, 10);
+                                                $jos = $ukupno - count($lista);
+                                                $tekst = e(implode(', ', $lista)).($jos > 0 ? ' … и још '.$jos : '');
+                                                $html .= '<div style="margin-top:6px;color:rgb(180,120,0);"><strong>Прескочено ('.$ukupno.'):</strong>'
+                                                    .'<div style="max-height:90px;overflow-y:auto;margin-top:2px;word-break:break-word;">'.$tekst.'</div></div>';
+                                            }
+                                            return new HtmlString($html.'</div>');
+                                        }),
+                                ])
+                                ->modalSubmitActionLabel('Израчунај и упиши')
+                                ->modalWidth('lg')
+                                ->action(function (array $data, Set $set) {
+                                    $r = static::izracunajStarosnuStrukturu($data['referentni_datum'] ?? null, $data['datumi_rodjenja'] ?? null);
+                                    if (! ($r['ok'] ?? false)) {
+                                        Notification::make()
+                                            ->title('Није могуће израчунати')
+                                            ->body($r['greska'] ?? '')
+                                            ->danger()->send();
+                                        return;
+                                    }
+
+                                    $set('prosecna_starost_kandidata', $r['avg']);
+                                    $set('udeo_kandidata_mladjih_od_30', $r['pct']);
+
+                                    $telo = "Кандидата: {$r['n']} · Просечна старост: {$r['avg']} год. · Млађи од 30: {$r['mladji']}/{$r['n']} ({$r['pct']}%)";
+                                    if (! empty($r['preskoceni'])) {
+                                        $telo .= ' · Прескочено: '.count($r['preskoceni']);
+                                    }
+                                    Notification::make()
+                                        ->title('Израчунато и уписано')
+                                        ->body($telo)
+                                        ->success()->send();
+                                }),
+                        ])->columnSpanFull(),
                         TextInput::make('prosecna_starost_kandidata')
                             ->label('Просечна старост кандидата у изборном поступку')
                             ->numeric()
@@ -665,8 +826,8 @@ class PodaciORadnomMestuResource extends Resource
                                 Action::make('info_prosecna_starost')
                                     ->icon('heroicon-m-information-circle')
                                     ->label('')
-                                    ->color('gray')
-                                    ->extraAttributes(['style' => 'padding:0;background:transparent;box-shadow:none;min-height:unset;color:rgb(156,163,175);'])
+                                    ->color('warning')
+                                    ->extraAttributes(['class' => 'kprm-hint-pulse', 'style' => 'padding:0;background:transparent;box-shadow:none;min-height:unset;'])
                                     ->modalHeading('Просечна старост кандидата у изборном поступку')
                                     ->modalContent(new HtmlString('<div class="space-y-3 text-sm"><div><p class="font-semibold">Шта представља?</p><p>Просечан број година свих кандидата који су се пријавили за конкретно радно место.</p></div><div><p class="font-semibold">Како се рачуна?</p><ol class="list-decimal list-inside space-y-2 mt-1"><li>Из матичног броја (ЈМБГ) издвојити датум рођења кандидата.</li><li>За сваког кандидата израчунати старост: Старост кандидата = Година оглашавања конкурса − Година рођења кандидата</li><li>Израчунава се просек:<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin:10px 0;flex-wrap:nowrap;"><em>Просечна старост</em> = <span style="display:inline-flex;flex-direction:column;text-align:center;"><span style="border-bottom:1px solid currentColor;padding:2px 12px;font-style:italic;">Збир година свих кандидата</span><span style="padding:2px 12px;font-style:italic;">Укупан број кандидата</span></span></div></li></ol></div></div>'))
                                     ->modalSubmitAction(false)
@@ -685,8 +846,8 @@ class PodaciORadnomMestuResource extends Resource
                                 Action::make('info_udeo_mladjih')
                                     ->icon('heroicon-m-information-circle')
                                     ->label('')
-                                    ->color('gray')
-                                    ->extraAttributes(['style' => 'padding:0;background:transparent;box-shadow:none;min-height:unset;color:rgb(156,163,175);'])
+                                    ->color('warning')
+                                    ->extraAttributes(['class' => 'kprm-hint-pulse', 'style' => 'padding:0;background:transparent;box-shadow:none;min-height:unset;'])
                                     ->modalHeading('Удео кандидата млађих од 30 година')
                                     ->modalContent(new HtmlString('<div class="space-y-3 text-sm"><div><p class="font-semibold">Шта представља?</p><p>Проценат кандидата који у тренутку расписивања конкурса (датум оглашавања конкурса) имају мање од 30 година.</p></div><div><p class="font-semibold">Како се рачуна?</p><ol class="list-decimal list-inside space-y-2 mt-1"><li>На основу датума рођења утврдити који кандидати су млађи од 30 година.</li><li>Применити формулу:<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin:10px 0;flex-wrap:nowrap;"><em>Удео млађих од 30</em> = <span style="display:inline-flex;flex-direction:column;text-align:center;"><span style="border-bottom:1px solid currentColor;padding:2px 12px;font-style:italic;">Број кандидата млађих од 30 година</span><span style="padding:2px 12px;font-style:italic;">Укупан број кандидата</span></span><span style="white-space:nowrap;">× 100</span></div></li></ol></div><p>Резултат се исказује у процентима (%).</p></div>'))
                                     ->modalSubmitAction(false)
@@ -731,8 +892,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->numeric()->minValue(0)
                             ->lte('broj_validnih_prijava')
                             ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
-                            ->hintIcon('heroicon-m-information-circle')
-                            ->hintIconTooltip('Не односи се на органе локалне самоуправе и органе аутономне покрајине')
+                            ->hintAction(self::infoHintAction('info_validne_iz_organa', 'Не односи се на органе локалне самоуправе и органе аутономне покрајине'))
                             ->validationMessages([
                                 'lte' => 'Број валидних пријава из другог органа не може бити већи од укупног броја валидних пријава.',
                             ])
@@ -815,8 +975,7 @@ class PodaciORadnomMestuResource extends Resource
                                 $livewire->validateOnly('data.broj_kandidata_za_koje_se_zakazuju_pfk');
                             })
                             ->helperText('Укључујући и кандидате којима су се оцене признале')
-                            ->hintIcon('heroicon-m-information-circle')
-                            ->hintIconTooltip('Укупан број кандидата се може пронаћи у извештају СУК-а')
+                            ->hintAction(self::infoHintAction('info_broj_kandidata_pfk', 'Укупан број кандидата се може пронаћи у извештају СУК-а'))
                             ->rules([
                                 fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
                                     $zakazani = (int) $get('broj_kandidata_za_koje_se_zakazuju_ofk');
@@ -848,8 +1007,7 @@ class PodaciORadnomMestuResource extends Resource
                         static::makeDateField('datum_pocetka_provere_pfk', 'Датум почетка провере ПФК', 'datum_ofk_izvestaja', 'ОФК извештаја')
                             ->helperText('Уколико је било више дана провере, унети први датум'),
                         static::makeDateField('datum_pfk_izvestaja', 'Датум ПФК извештаја', 'datum_pocetka_provere_pfk', 'почетка провере ПФК')
-                            ->hintIcon('heroicon-m-information-circle')
-                            ->hintIconTooltip('Иако се ова форма извештаја тренутно не израђује, њено увођење омогућава праћење времена вредновања одговора кандидата и представља важан показатељ ефикасности изборног поступка.'),
+                            ->hintAction(self::infoHintAction('info_pfk_izvestaj', 'Иако се ова форма извештаја тренутно не израђује, њено увођење омогућава праћење времена вредновања одговора кандидата и представља важан показатељ ефикасности изборног поступка.')),
                         TextInput::make('broj_kandidata_koji_su_ispunlii_merila_pfk')
                             ->label('Број кандидата који су испунили мерила ПФК')
                             ->numeric()->minValue(0)
@@ -968,8 +1126,7 @@ class PodaciORadnomMestuResource extends Resource
                                 }
                             }),
                         static::makeDateField('datum_izvestaja_sa_zavrsnog_intervjua', 'Датум извештаја са завршног интервјуа', 'datum_pocetka_sprovodjenja_intervjua', 'спровођења завршног интервјуа')
-                            ->hintIcon('heroicon-m-information-circle')
-                            ->hintIconTooltip('Иако се ова форма извештаја тренутно не израђује, њено увођење омогућава праћење времена вредновања одговора кандидата и представља важан показатељ ефикасности изборног поступка.'),
+                            ->hintAction(self::infoHintAction('info_zavrsni_izvestaj', 'Иако се ова форма извештаја тренутно не израђује, њено увођење омогућава праћење времена вредновања одговора кандидата и представља важан показатељ ефикасности изборног поступка.')),
                         TextInput::make('broj_odazvanih_kandidata_na_zavrsnom_razgovoru')
                             ->label('Број одазваних кандидата на завршном разговору')
                             ->numeric()->minValue(0)
@@ -1020,8 +1177,7 @@ class PodaciORadnomMestuResource extends Resource
                         Section::make('Листа кандидата који су испунили мерила за избор')
                             ->schema([
                         static::makeDateField('datum_formiranja_liste_kandidata', 'Дан објављивања листе кандидата који су испунили мерила у изборном поступку')
-                            ->hintIcon('heroicon-m-information-circle')
-                            ->hintIconTooltip('Члан 57, став 7, Закона о државним службеницима каже: На интернет презентацији органа државне управе који је огласио конкурс и Службе за управљање кадровима објављује се листа кандидата под шифром њихове пријаве и име и презиме кандидата који је изабран у конкурсном поступку.')
+                            ->hintAction(self::infoHintAction('info_lista_kandidata', 'Члан 57, став 7, Закона о државним службеницима каже: На интернет презентацији органа државне управе који је огласио конкурс и Службе за управљање кадровима објављује се листа кандидата под шифром њихове пријаве и име и презиме кандидата који је изабран у конкурсном поступку.'))
                             ->columnSpanFull(),
                         TextInput::make('broj_kandidata_na_listi')
                             ->label('Број кандидата на листи')
@@ -1239,8 +1395,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број извршилаца за које је оглашавање поновљено након неуспелог поступка')
                             ->numeric()->minValue(0)
                             ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
-                            ->hintIcon('heroicon-m-information-circle')
-                            ->hintIconTooltip('Односи се на број извршилаца за радна места која су у току исте календарске године поново оглашена, услед чињенице да претходним огласом није попуњен планирани број извршилаца.'),
+                            ->hintAction(self::infoHintAction('info_ponovno_oglasavanje', 'Односи се на број извршилаца за радна места која су у току исте календарске године поново оглашена, услед чињенице да претходним огласом није попуњен планирани број извршилаца.')),
 
                         Section::make('Завршетак уноса')
                             ->schema([
