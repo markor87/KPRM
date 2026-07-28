@@ -10,7 +10,7 @@ class KorisnickoUputstvoController extends Controller
 {
     protected string $pdfPath = 'uputstvo/КПРМ корисничко упутство.pdf';
 
-    protected string $videoPath = 'uputstvo/КПРМ корисничко упутство.mp4';
+    protected string $videoPath = 'uputstvo/Обука о коришћењу платформе за унос података о конкурсним поступцима.mp4';
 
     /**
      * Преузимање PDF упутства.
@@ -24,12 +24,17 @@ class KorisnickoUputstvoController extends Controller
 
     /**
      * Преузимање видео упутства (.mp4).
+     * response()->download (BinaryFileResponse) шаље фајл директно — без учитавања
+     * целог видеа у меморију (важно за велике фајлове).
      */
-    public function videoDownload(): StreamedResponse
+    public function videoDownload(): BinaryFileResponse
     {
         abort_unless(Storage::disk('local')->exists($this->videoPath), 404);
 
-        return Storage::disk('local')->download($this->videoPath, 'КПРМ корисничко упутство.mp4');
+        return response()->download(
+            Storage::disk('local')->path($this->videoPath),
+            'Обука о коришћењу платформе за унос података о конкурсним поступцима.mp4'
+        );
     }
 
     /**

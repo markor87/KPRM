@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Storage;
 
@@ -17,7 +18,23 @@ class KorisnickoUputstvo extends Page
 
     protected string $view = 'filament.pages.korisnicko-uputstvo';
 
-    protected string $videoPath = 'uputstvo/КПРМ корисничко упутство.mp4';
+    protected string $videoPath = 'uputstvo/Обука о коришћењу платформе за унос података о конкурсним поступцима.mp4';
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('preuzmiPdf')
+                ->label('Преузми PDF')
+                ->icon('heroicon-o-document-arrow-down')
+                ->url(fn (): string => $this->pdfUrl()),
+            Action::make('preuzmiVideo')
+                ->label('Преузми видео')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('gray')
+                ->url(fn (): string => $this->videoDownloadUrl())
+                ->visible(fn (): bool => $this->videoPostoji()),
+        ];
+    }
 
     public function videoPostoji(): bool
     {
