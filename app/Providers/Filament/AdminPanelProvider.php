@@ -9,7 +9,6 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Navigation\NavigationItem;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -51,13 +50,6 @@ class AdminPanelProvider extends PanelProvider
             ->pages([
                 Dashboard::class,
             ])
-            ->navigationItems([
-                NavigationItem::make('Корисничко упутство')
-                    ->url(fn (): string => route('filament.admin.korisnicko-uputstvo'))
-                    ->icon('heroicon-o-book-open')
-                    ->sort(99)
-                    ->isActiveWhen(fn (): bool => false),
-            ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 // Widgets će biti automatski otkriveni kroz discoverWidgets()
@@ -78,8 +70,12 @@ class AdminPanelProvider extends PanelProvider
                     ->name('two-factor-challenge');
             })
             ->authenticatedRoutes(function () {
-                Route::get('/korisnicko-uputstvo', KorisnickoUputstvoController::class)
-                    ->name('korisnicko-uputstvo');
+                Route::get('/korisnicko-uputstvo/pdf', [KorisnickoUputstvoController::class, 'pdf'])
+                    ->name('korisnicko-uputstvo.pdf');
+                Route::get('/korisnicko-uputstvo/video', [KorisnickoUputstvoController::class, 'videoStream'])
+                    ->name('korisnicko-uputstvo.video');
+                Route::get('/korisnicko-uputstvo/video/preuzmi', [KorisnickoUputstvoController::class, 'videoDownload'])
+                    ->name('korisnicko-uputstvo.video.preuzmi');
             })
             ->authMiddleware([
                 Authenticate::class,
