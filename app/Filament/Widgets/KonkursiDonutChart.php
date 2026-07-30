@@ -24,7 +24,7 @@ class KonkursiDonutChart extends ApexChartWidget
     protected function getOptions(): array
     {
         $organFilterService = app(OrganFilterService::class);
-        $godina = $this->godina;
+        $godina = $this->getGodina();
 
         $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina);
         $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ');

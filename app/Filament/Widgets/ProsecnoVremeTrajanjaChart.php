@@ -27,7 +27,7 @@ class ProsecnoVremeTrajanjaChart extends ApexChartWidget
     protected function getOptions(): array
     {
         $organFilterService = app(OrganFilterService::class);
-        $godina = $this->godina;
+        $godina = $this->getGodina();
 
         $intervals = [
             [
