@@ -63,7 +63,9 @@ class ActivityResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasRole('Super Admin') ?? false;
+        return auth()->user()?->can('View:Activity')
+            || auth()->user()?->can('ViewAny:Activity')
+            || false;
     }
 
     public static function form(Schema $schema): Schema
