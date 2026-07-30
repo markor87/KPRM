@@ -752,7 +752,6 @@ class PodaciORadnomMestuResource extends Resource
                                 ->icon('heroicon-m-calculator')
                                 ->color('primary')
                                 ->modalHeading('Калкулатор старосне структуре')
-                                ->modalDescription('Датуми рођења се користе само за калкулацију и не чувају се у бази.')
                                 ->fillForm(fn (Get $get) => ['referentni_datum' => $get('datum_oglasavanja')])
                                 ->schema([
                                     TextInput::make('referentni_datum')
