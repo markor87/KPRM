@@ -81,17 +81,44 @@ class PodaciORadnomMestuResource extends Resource
     ): Closure {
         return function ($get) use ($totalField, $sumFields, $errorMessage) {
             return function (string $attribute, $value, $fail) use ($get, $totalField, $sumFields, $errorMessage) {
-                $ukupan = $get($totalField) ?? 0;
-                $sum = 0;
+                $ukupan = $get($totalField);
 
-                foreach ($sumFields as $field) {
-                    $sum += $get($field) ?? 0;
+                // Не проверавај збир док укупан број није унет (и већи од 0).
+                if ($ukupan === null || $ukupan === '' || (int) $ukupan <= 0) {
+                    return;
                 }
 
-                if ($ukupan > 0 && $sum != $ukupan) {
+                // Проверу приказуј тек када су сва три поља попуњена.
+                $sum = 0;
+                foreach ($sumFields as $field) {
+                    $val = $get($field);
+                    if ($val === null || $val === '') {
+                        return;
+                    }
+                    $sum += (int) $val;
+                }
+
+                if ($sum != (int) $ukupan) {
                     $fail($errorMessage);
                 }
             };
+        };
+    }
+
+    /**
+     * afterStateUpdated хендлер за поља збир-групе: при промени било ког поља
+     * ревалидира цео сет (укупно + сабирке) да застареле поруке нестану са
+     * осталих поља кад збир постане исправан.
+     */
+    protected static function revalidateSumGroup(string $totalField, array $sumFields): Closure
+    {
+        return function ($livewire) use ($totalField, $sumFields) {
+            // Прво сабирке (да застареле поруке нестану кад збир постане исправан),
+            // па укупно поље. Кад је све исправно ниједно не баца изузетак и све се
+            // очисти; ако збир није исправан, прво неисправно поље прикаже поруку.
+            foreach (array_merge($sumFields, [$totalField]) as $field) {
+                $livewire->validateOnly("data.{$field}");
+            }
         };
     }
 
@@ -691,12 +718,12 @@ class PodaciORadnomMestuResource extends Resource
                         TextInput::make('ukupan_broj_prijava')
                             ->label('Укупан број пристиглих пријава')
                             ->numeric()->minValue(0)
-                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath())),
+                            ->live(onBlur: true)->afterStateUpdated(self::revalidateSumGroup('ukupan_broj_prijava', ['broj_prijava_iz_organa', 'broj_prijava_iz_drugih_organa', 'broj_prijava_van_drzavnih_organa'])),
                         TextInput::make('broj_prijava_iz_organa')
                             ->label('Број пристиглих пријава кандидата из органа')
                             ->numeric()->minValue(0)
                             ->lte('ukupan_broj_prijava')
-                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
+                            ->live(onBlur: true)->afterStateUpdated(self::revalidateSumGroup('ukupan_broj_prijava', ['broj_prijava_iz_organa', 'broj_prijava_iz_drugih_organa', 'broj_prijava_van_drzavnih_organa']))
                             ->validationMessages([
                                 'lte' => 'Број пријава из органа не може бити већи од укупног броја пријава.',
                             ])
@@ -711,7 +738,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број пристиглих пријава кандидата из других државних органа')
                             ->numeric()->minValue(0)
                             ->lte('ukupan_broj_prijava')
-                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
+                            ->live(onBlur: true)->afterStateUpdated(self::revalidateSumGroup('ukupan_broj_prijava', ['broj_prijava_iz_organa', 'broj_prijava_iz_drugih_organa', 'broj_prijava_van_drzavnih_organa']))
                             ->hintAction(self::infoHintAction('info_prijave_iz_organa', 'Не односи се на органе локалне самоуправе и органе аутономне покрајине'))
                             ->validationMessages([
                                 'lte' => 'Број пријава из других органа не може бити већи од укупног броја пријава.',
@@ -727,7 +754,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број пристиглих пријава кандидата ван државних органа, укључујући незапослена лица')
                             ->numeric()->minValue(0)
                             ->lte('ukupan_broj_prijava')
-                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
+                            ->live(onBlur: true)->afterStateUpdated(self::revalidateSumGroup('ukupan_broj_prijava', ['broj_prijava_iz_organa', 'broj_prijava_iz_drugih_organa', 'broj_prijava_van_drzavnih_organa']))
                             ->validationMessages([
                                 'lte' => 'Број пријава ван државних органа не може бити већи од укупног броја пријава.',
                             ])
@@ -868,7 +895,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број валидних пријава')
                             ->numeric()->minValue(0)
                             ->lte('ukupan_broj_prijava')
-                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
+                            ->live(onBlur: true)->afterStateUpdated(self::revalidateSumGroup('broj_validnih_prijava', ['broj_validnih_prijava_iz_organa', 'broj_validnih_prijava_iz_drugog_organa', 'broj_validnih_prijava_van_drzavnih_organa']))
                             ->validationMessages([
                                 'lte' => 'Број валидних пријава не може бити већи од укупног броја пријава.',
                             ]),
@@ -876,7 +903,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број валидних пријава кандидата из органа')
                             ->numeric()->minValue(0)
                             ->lte('broj_validnih_prijava')
-                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
+                            ->live(onBlur: true)->afterStateUpdated(self::revalidateSumGroup('broj_validnih_prijava', ['broj_validnih_prijava_iz_organa', 'broj_validnih_prijava_iz_drugog_organa', 'broj_validnih_prijava_van_drzavnih_organa']))
                             ->validationMessages([
                                 'lte' => 'Број валидних пријава из органа не може бити већи од укупног броја валидних пријава.',
                             ])
@@ -897,7 +924,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број валидних пријава кандидата из другог државног органа')
                             ->numeric()->minValue(0)
                             ->lte('broj_validnih_prijava')
-                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
+                            ->live(onBlur: true)->afterStateUpdated(self::revalidateSumGroup('broj_validnih_prijava', ['broj_validnih_prijava_iz_organa', 'broj_validnih_prijava_iz_drugog_organa', 'broj_validnih_prijava_van_drzavnih_organa']))
                             ->hintAction(self::infoHintAction('info_validne_iz_organa', 'Не односи се на органе локалне самоуправе и органе аутономне покрајине'))
                             ->validationMessages([
                                 'lte' => 'Број валидних пријава из другог органа не може бити већи од укупног броја валидних пријава.',
@@ -919,7 +946,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број валидних пријава кандидата ван државних органа, укључујући незапослена лица')
                             ->numeric()->minValue(0)
                             ->lte('broj_validnih_prijava')
-                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
+                            ->live(onBlur: true)->afterStateUpdated(self::revalidateSumGroup('broj_validnih_prijava', ['broj_validnih_prijava_iz_organa', 'broj_validnih_prijava_iz_drugog_organa', 'broj_validnih_prijava_van_drzavnih_organa']))
                             ->validationMessages([
                                 'lte' => 'Број валидних пријава ван државних органа не може бити већи од укупног броја валидних пријава.',
                             ])
@@ -1188,12 +1215,7 @@ class PodaciORadnomMestuResource extends Resource
                         TextInput::make('broj_kandidata_na_listi')
                             ->label('Број кандидата на листи')
                             ->numeric()->minValue(0)
-                            ->live(onBlur: true)->afterStateUpdated(function ($component, $livewire) {
-                                $livewire->validateOnly($component->getStatePath());
-                                $livewire->validateOnly('data.broj_kandidata_iz_organa_na_listi');
-                                $livewire->validateOnly('data.broj_kandidata_iz_drugog_drzavnog_organa_na_listi');
-                                $livewire->validateOnly('data.broj_kandidata_van_drzavnih_organa_na_listi');
-                            })
+                            ->live(onBlur: true)->afterStateUpdated(self::revalidateSumGroup('broj_kandidata_na_listi', ['broj_kandidata_iz_organa_na_listi', 'broj_kandidata_iz_drugog_drzavnog_organa_na_listi', 'broj_kandidata_van_drzavnih_organa_na_listi']))
                             ->rules([
                                 fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
                                     $odazvani = (int) $get('broj_odazvanih_kandidata_na_zavrsnom_razgovoru');
@@ -1206,12 +1228,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број кандидата из органа који расписује конкурс на листи')
                             ->numeric()->minValue(0)
                             ->lte('broj_kandidata_na_listi')
-                            ->live(onBlur: true)->afterStateUpdated(function ($component, $livewire) {
-                                $livewire->validateOnly($component->getStatePath());
-                                $livewire->validateOnly('data.broj_kandidata_iz_organa_na_listi');
-                                $livewire->validateOnly('data.broj_kandidata_iz_drugog_drzavnog_organa_na_listi');
-                                $livewire->validateOnly('data.broj_kandidata_van_drzavnih_organa_na_listi');
-                            })
+                            ->live(onBlur: true)->afterStateUpdated(self::revalidateSumGroup('broj_kandidata_na_listi', ['broj_kandidata_iz_organa_na_listi', 'broj_kandidata_iz_drugog_drzavnog_organa_na_listi', 'broj_kandidata_van_drzavnih_organa_na_listi']))
                             ->validationMessages([
                                 'lte' => 'Број кандидата из органа не може бити већи од укупног броја кандидата на листи.',
                             ])
@@ -1232,12 +1249,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број кандидата из других органа државне управе на листи')
                             ->numeric()->minValue(0)
                             ->lte('broj_kandidata_na_listi')
-                            ->live(onBlur: true)->afterStateUpdated(function ($component, $livewire) {
-                                $livewire->validateOnly($component->getStatePath());
-                                $livewire->validateOnly('data.broj_kandidata_iz_organa_na_listi');
-                                $livewire->validateOnly('data.broj_kandidata_iz_drugog_drzavnog_organa_na_listi');
-                                $livewire->validateOnly('data.broj_kandidata_van_drzavnih_organa_na_listi');
-                            })
+                            ->live(onBlur: true)->afterStateUpdated(self::revalidateSumGroup('broj_kandidata_na_listi', ['broj_kandidata_iz_organa_na_listi', 'broj_kandidata_iz_drugog_drzavnog_organa_na_listi', 'broj_kandidata_van_drzavnih_organa_na_listi']))
                             ->validationMessages([
                                 'lte' => 'Број кандидата из другог државног органа не може бити већи од укупног броја кандидата на листи.',
                             ])
@@ -1258,12 +1270,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Број кандидата ван органа државне управе и/или незапослена лица на листи')
                             ->numeric()->minValue(0)
                             ->lte('broj_kandidata_na_listi')
-                            ->live(onBlur: true)->afterStateUpdated(function ($component, $livewire) {
-                                $livewire->validateOnly($component->getStatePath());
-                                $livewire->validateOnly('data.broj_kandidata_iz_organa_na_listi');
-                                $livewire->validateOnly('data.broj_kandidata_iz_drugog_drzavnog_organa_na_listi');
-                                $livewire->validateOnly('data.broj_kandidata_van_drzavnih_organa_na_listi');
-                            })
+                            ->live(onBlur: true)->afterStateUpdated(self::revalidateSumGroup('broj_kandidata_na_listi', ['broj_kandidata_iz_organa_na_listi', 'broj_kandidata_iz_drugog_drzavnog_organa_na_listi', 'broj_kandidata_van_drzavnih_organa_na_listi']))
                             ->validationMessages([
                                 'lte' => 'Број кандидата ван државних органа не може бити већи од укупног броја кандидата на листи.',
                             ])
