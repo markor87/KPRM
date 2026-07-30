@@ -15,6 +15,7 @@ use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Forms\Components\Select;
 use App\Models\SifarnikOrgani;
 use App\Models\SifarnikZvanje;
+use App\Models\Setting;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Placeholder;
@@ -438,9 +439,15 @@ class PodaciORadnomMestuResource extends Resource
                             ->label('Назив радног места')
                             ->maxLength(1000)
                             ->required()
-                            ->regex('/^[А-Ша-шЂЈЉЊЋЏђјљњћџ0-9\s.,\-–—():;\/\*\"\']+$/u')
-                            ->validationMessages([
-                                'regex' => 'Назив радног места може садржати само ћирилична слова.',
+                            // Ћириличну валидацију примени само када је укључено у Подешавањима.
+                            // Провера у тренутку валидације да прати тренутну вредност подешавања.
+                            ->rules([
+                                fn (): Closure => function (string $attribute, $value, Closure $fail): void {
+                                    if (Setting::get('cirilica_naziv_radnog_mesta', '1') === '1'
+                                        && ! preg_match('/^[А-Ша-шЂЈЉЊЋЏђјљњћџ0-9\s.,\-–—():;\/\*\"\']+$/u', (string) $value)) {
+                                        $fail('Назив радног места може садржати само ћирилична слова.');
+                                    }
+                                },
                             ])
                             ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
                             ->columnSpanFull(),

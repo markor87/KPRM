@@ -33,6 +33,7 @@ class Podesavanja extends Page
     {
         $this->form->fill([
             'two_factor_enabled_global' => Setting::get('two_factor_enabled_global', '0') === '1',
+            'cirilica_naziv_radnog_mesta' => Setting::get('cirilica_naziv_radnog_mesta', '1') === '1',
         ]);
     }
 
@@ -53,6 +54,23 @@ class Podesavanja extends Page
                                 Notification::make()
                                     ->title('Глобална 2ФА ' . ($state ? 'Омогућена' : 'Онемогућена'))
                                     ->body($state ? 'Сви корисници сада морају да користе 2ФА за пријаву.' : '2ФА више није потребна за пријаву.')
+                                    ->success()
+                                    ->send();
+                            }),
+                    ])->columnSpanFull(),
+                Section::make('Унос података')
+                    ->description('Подешавања везана за унос података о радним местима')
+                    ->schema([
+                        Toggle::make('cirilica_naziv_radnog_mesta')
+                            ->label('Дозволи само ћирилицу у пољу „Назив радног места“')
+                            ->helperText('Када је укључено, поље „Назив радног места“ прихвата само ћирилична слова (и бројеве/интерпункцију). Када је искључено, прихвата сва слова.')
+                            ->live()
+                            ->afterStateUpdated(function ($state) {
+                                Setting::set('cirilica_naziv_radnog_mesta', $state ? '1' : '0');
+
+                                Notification::make()
+                                    ->title('Ћирилична провера ' . ($state ? 'укључена' : 'искључена'))
+                                    ->body($state ? 'Поље „Назив радног места“ сада прихвата само ћирилицу.' : 'Поље „Назив радног места“ сада прихвата сва слова.')
                                     ->success()
                                     ->send();
                             }),
