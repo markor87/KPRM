@@ -1,7 +1,7 @@
 <x-filament-panels::page>
     <p class="text-sm text-gray-600 dark:text-gray-400">
-        Погледајте видео упутство директно у апликацији, или преузмите упутство (PDF и видео)
-        помоћу дугмади у горњем десном углу.
+        Погледајте видео упутство директно у апликацији, или преузмите PDF упутство
+        помоћу дугмета у горњем десном углу.
     </p>
 
     {{-- Видео --}}
@@ -12,6 +12,9 @@
         @if ($this->videoPostoji())
             <video
                 controls
+                controlslist="nodownload"
+                disablepictureinpicture
+                oncontextmenu="return false;"
                 preload="metadata"
                 class="w-full rounded-lg border border-gray-200 dark:border-gray-700"
                 style="max-width: 100%;"

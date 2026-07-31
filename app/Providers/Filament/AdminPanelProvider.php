@@ -74,8 +74,6 @@ class AdminPanelProvider extends PanelProvider
                     ->name('korisnicko-uputstvo.pdf');
                 Route::get('/korisnicko-uputstvo/video', [KorisnickoUputstvoController::class, 'videoStream'])
                     ->name('korisnicko-uputstvo.video');
-                Route::get('/korisnicko-uputstvo/video/preuzmi', [KorisnickoUputstvoController::class, 'videoDownload'])
-                    ->name('korisnicko-uputstvo.video.preuzmi');
             })
             ->authMiddleware([
                 Authenticate::class,

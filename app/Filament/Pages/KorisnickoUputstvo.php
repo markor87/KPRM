@@ -27,12 +27,6 @@ class KorisnickoUputstvo extends Page
                 ->label('Преузми PDF')
                 ->icon('heroicon-o-document-arrow-down')
                 ->url(fn (): string => $this->pdfUrl()),
-            Action::make('preuzmiVideo')
-                ->label('Преузми видео')
-                ->icon('heroicon-o-arrow-down-tray')
-                ->color('gray')
-                ->url(fn (): string => $this->videoDownloadUrl())
-                ->visible(fn (): bool => $this->videoPostoji()),
         ];
     }
 
@@ -49,10 +43,5 @@ class KorisnickoUputstvo extends Page
     public function videoStreamUrl(): string
     {
         return route('filament.admin.korisnicko-uputstvo.video');
-    }
-
-    public function videoDownloadUrl(): string
-    {
-        return route('filament.admin.korisnicko-uputstvo.video.preuzmi');
     }
 }
