@@ -30,14 +30,19 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Actions\ActionGroup;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Actions\ViewAction;
 use Filament\Actions\ReplicateAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\RestoreBulkAction;
+use Filament\Actions\ForceDeleteBulkAction;
 use App\Filament\Resources\PodaciORadnomMestuResource\Pages\ListPodaciORadnomMestus;
 use App\Filament\Resources\PodaciORadnomMestuResource\Pages\CreatePodaciORadnomMestu;
 use App\Filament\Resources\PodaciORadnomMestuResource\Pages\EditPodaciORadnomMestu;
@@ -433,14 +438,16 @@ class PodaciORadnomMestuResource extends Resource
      */
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()->with([
-            'mestaRada',
-            'vrstaOrganaRelation',
-            'organRelation',
-            'zvanjeRelation',
-            'unosZavrsioKorisnik',
-            'statusKonkursaRelation',
-        ]);
+        $query = parent::getEloquentQuery()
+            ->withoutGlobalScopes([SoftDeletingScope::class])
+            ->with([
+                'mestaRada',
+                'vrstaOrganaRelation',
+                'organRelation',
+                'zvanjeRelation',
+                'unosZavrsioKorisnik',
+                'statusKonkursaRelation',
+            ]);
         return app(OrganFilterService::class)->applyOrganFilter($query, 'organ');
     }
 
@@ -1419,7 +1426,7 @@ class PodaciORadnomMestuResource extends Resource
                                 TextEntry::make('unos_zavrsen_info')
                                     ->label('Означио')
                                     ->state(fn ($record) => $record?->unos_zavrsen && $record->unos_zavrsen_at
-                                        ? ($record->unosZavrsioKorisnik?->name ?? '—') . ', ' . $record->unos_zavrsen_at->format('d.m.Y. у H:i')
+                                        ? ($record->unosZavrsioKorisnik?->name ?? '—') . ', ' . $record->unos_zavrsen_at->copy()->timezone(config('app.display_timezone'))->format('d.m.Y. у H:i')
                                         : '—')
                                     ->visible(fn ($record) => (bool) $record?->unos_zavrsen),
                             ])->columns(2)->columnSpanFull(),
@@ -1473,7 +1480,7 @@ class PodaciORadnomMestuResource extends Resource
                     ->onColor('success')
                     ->disabled(fn ($record) => ! auth()->user()?->can('update', $record))
                     ->tooltip(fn ($record) => $record->unos_zavrsen && $record->unos_zavrsen_at
-                        ? 'Означио: ' . ($record->unosZavrsioKorisnik?->name ?? '—') . ', ' . $record->unos_zavrsen_at->format('d.m.Y. H:i')
+                        ? 'Означио: ' . ($record->unosZavrsioKorisnik?->name ?? '—') . ', ' . $record->unos_zavrsen_at->copy()->timezone(config('app.display_timezone'))->format('d.m.Y. H:i')
                         : null),
             ])
             ->filters([
@@ -1529,6 +1536,8 @@ class PodaciORadnomMestuResource extends Resource
                         ),
                         blank: fn (Builder $query) => $query,
                     ),
+                TrashedFilter::make()
+                    ->label('Обрисани'),
             ])
             ->recordActions([
                 ActionGroup::make([
@@ -1722,12 +1731,20 @@ class PodaciORadnomMestuResource extends Resource
                         ->label('Измени'),
                     DeleteAction::make()
                         ->label('Обриши'),
+                    RestoreAction::make()
+                        ->label('Врати'),
+                    ForceDeleteAction::make()
+                        ->label('Обриши трајно'),
                 ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->label('Обриши означене'),
+                    RestoreBulkAction::make()
+                        ->label('Врати означене'),
+                    ForceDeleteBulkAction::make()
+                        ->label('Трајно обриши означене'),
                 ]),
             ])
             ->defaultSort('id', 'desc')

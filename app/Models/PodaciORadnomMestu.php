@@ -4,12 +4,14 @@ namespace App\Models;
 
 use Spatie\Activitylog\Contracts\Activity;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
 class PodaciORadnomMestu extends Model
 {
     use LogsActivity;
+    use SoftDeletes;
 
     protected $table = 'podaci_o_radnom_mestu';
 
