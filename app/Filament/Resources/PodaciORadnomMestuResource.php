@@ -699,6 +699,7 @@ class PodaciORadnomMestuResource extends Resource
                             ->preload()
                             ->searchable()
                             ->disabled(fn (Get $get) => $get('ishod_konkursa') != 2)
+                            ->required(fn (Get $get) => $get('ishod_konkursa') == 2)
                             ->dehydrated(),
                     ])->columns(3),
 
