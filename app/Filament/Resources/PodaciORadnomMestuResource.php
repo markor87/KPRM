@@ -1472,6 +1472,8 @@ class PodaciORadnomMestuResource extends Resource
                 TextColumn::make('statusKonkursaRelation.status_konkursa')
                     ->label('Исход конкурса')
                     ->badge()
+                    ->wrap()
+                    ->extraAttributes(['class' => 'kprm-badge-wrap'])
                     ->placeholder('—')
                     ->sortable(),
                 ToggleColumn::make('unos_zavrsen')

@@ -109,6 +109,11 @@ class AdminPanelProvider extends PanelProvider
                     @media (prefers-reduced-motion: reduce) {
                         .kprm-hint-pulse { animation: none; }
                     }
+                    /* Дозволи преламање дугог badge-а у колони „Исход конкурса" */
+                    .kprm-badge-wrap .fi-badge {
+                        white-space: normal;
+                        text-align: left;
+                    }
                 </style>
             HTML));
     }
