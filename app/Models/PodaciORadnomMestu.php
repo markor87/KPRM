@@ -114,6 +114,17 @@ class PodaciORadnomMestu extends Model
      */
     protected static function booted(): void
     {
+        // Сигурносна мрежа: током импресонације (преглед туђе улоге) никакав упис,
+        // брисање ни враћање није дозвољен, чак ни програмски. Конзола/сидери су изузети.
+        $blokirajAkoImpersonira = function (): void {
+            if (! app()->runningInConsole() && app('impersonate')->isImpersonating()) {
+                abort(403, 'Измена није дозвољена током прегледа туђе улоге (импресонација).');
+            }
+        };
+        static::saving($blokirajAkoImpersonira);
+        static::deleting($blokirajAkoImpersonira);
+        static::restoring($blokirajAkoImpersonira);
+
         static::saving(function (self $record) {
             if ($record->isDirty('unos_zavrsen')) {
                 $record->unos_zavrsen_at = $record->unos_zavrsen ? now() : null;

@@ -115,6 +115,23 @@ class AdminPanelProvider extends PanelProvider
                         text-align: left;
                     }
                 </style>
-            HTML));
+            HTML))
+            ->renderHook(PanelsRenderHook::BODY_START, function (): string {
+                if (! app('impersonate')->isImpersonating()) {
+                    return '';
+                }
+
+                $user = auth()->user();
+                $ime = e($user?->name);
+                $email = e($user?->email);
+                $leave = route('impersonate.leave');
+
+                return <<<HTML
+                    <div style="position:sticky;top:0;z-index:9999;background:#b45309;color:#fff;padding:8px 16px;display:flex;align-items:center;justify-content:center;gap:16px;font-size:.875rem;flex-wrap:wrap;">
+                        <span>🔍 Прегледаш као <strong>{$ime}</strong> ({$email}) — <strong>само за преглед</strong></span>
+                        <a href="{$leave}" style="background:#fff;color:#b45309;padding:4px 12px;border-radius:6px;font-weight:600;text-decoration:none;white-space:nowrap;">Изађи из прегледа</a>
+                    </div>
+                HTML;
+            });
     }
 }

@@ -13,10 +13,11 @@ use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use Lab404\Impersonate\Models\Impersonate;
 
 class User extends Authenticatable implements FilamentUser
 {
-    use HasFactory, Notifiable, HasRoles, LogsActivity;
+    use HasFactory, Notifiable, HasRoles, LogsActivity, Impersonate;
 
     protected $fillable = [
         'name',
@@ -60,6 +61,22 @@ class User extends Authenticatable implements FilamentUser
     public function isSuperAdmin(): bool
     {
         return $this->hasRole('Super Admin');
+    }
+
+    /**
+     * Само Super Admin може да импресонира (уђе у улогу другог корисника).
+     */
+    public function canImpersonate(): bool
+    {
+        return $this->isSuperAdmin();
+    }
+
+    /**
+     * У Super Admina се не сме улазити (ни у самог себе — то lab404 већ спречава).
+     */
+    public function canBeImpersonated(): bool
+    {
+        return ! $this->isSuperAdmin();
     }
 
     /**

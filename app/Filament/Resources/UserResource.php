@@ -6,6 +6,7 @@ use Filament\Schemas\Schema;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\ViewAction;
 use Filament\Actions\EditAction;
@@ -109,6 +110,22 @@ class UserResource extends Resource
             ])
             ->recordActions([
                 ActionGroup::make([
+                    Action::make('impersonate')
+                        ->label('Уђи као корисник')
+                        ->icon('heroicon-o-user-circle')
+                        ->color('warning')
+                        ->visible(fn (User $record): bool =>
+                            auth()->user()?->isSuperAdmin()
+                            && $record->isNot(auth()->user())
+                            && $record->canBeImpersonated())
+                        ->requiresConfirmation()
+                        ->modalHeading('Уђи у преглед као овај корисник?')
+                        ->modalDescription('Видећеш апликацију онако како је види овај корисник. Режим је само за преглед — измене нису могуће.')
+                        ->modalSubmitActionLabel('Уђи')
+                        ->action(fn (User $record) => redirect()->route('impersonate', [
+                            'id' => $record->getKey(),
+                            'guardName' => 'web',
+                        ])),
                     ViewAction::make()
                         ->label('Преглед'),
                     EditAction::make()
