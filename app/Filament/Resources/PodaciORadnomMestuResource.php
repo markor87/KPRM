@@ -793,6 +793,8 @@ class PodaciORadnomMestuResource extends Resource
                                 ->label('Калкулатор старости')
                                 ->icon('heroicon-m-calculator')
                                 ->color('primary')
+                                // Сакривен током импресонације (преглед туђе улоге) — само за преглед.
+                                ->visible(fn (): bool => ! app('impersonate')->isImpersonating())
                                 ->modalHeading('Калкулатор старосне структуре')
                                 ->fillForm(fn (Get $get) => ['referentni_datum' => $get('datum_oglasavanja')])
                                 ->schema([

@@ -124,7 +124,6 @@ class UserResource extends Resource
                         ->modalSubmitActionLabel('Уђи')
                         ->action(fn (User $record) => redirect()->route('impersonate', [
                             'id' => $record->getKey(),
-                            'guardName' => 'web',
                         ])),
                     ViewAction::make()
                         ->label('Преглед'),
