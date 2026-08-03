@@ -81,55 +81,44 @@ class CreatePodaciORadnomMestu extends CreateRecord
             $this->record->mestaRada()->sync($syncData);
         }
 
-        // Затим логирај релације
-        // Pronađi sve belongsToMany relacije na modelu
-        $reflection = new ReflectionClass($this->record);
-        foreach ($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
-            if ($method->class === get_class($this->record) &&
-                $method->getNumberOfParameters() === 0 &&
-                !in_array($method->name, ['getKey', 'getMorphClass', 'getTable'])) {
+        // Затим логирај belongsToMany релације.
+        // ВАЖНО: ЕКСПЛИЦИТНА листа релација, а НЕ рефлексија преко свих метода модела
+        // — рефлексија би позвала и деструктивне методе без параметара (нпр.
+        // forceDelete()/delete() из SoftDeletes trait-а) и обрисала тек креиран запис.
+        foreach (['mestaRada', 'oblastiRada'] as $relationName) {
+            try {
+                $relation = $this->record->{$relationName}();
 
-                try {
-                    $relation = $this->record->{$method->name}();
-
-                    // Proveravamo da li je belongsToMany relacija
-                    if ($relation instanceof BelongsToMany) {
-                        $relationName = $method->name;
-
-                        // Učitaj nove vrednosti sa nazivima
-                        $newValues = $this->record->{$relationName}()
-                            ->pluck($this->getRelationDisplayColumn($relation))
-                            ->toArray();
-
-                        // Logiraj ako ima vrednosti
-                        if (!empty($newValues)) {
-                            $newNames = array_values($newValues);
-
-                            // Konvertuj array u string za prikaz
-                            $newNamesString = implode(', ', $newNames);
-
-                            activity('podaci_o_radnom_mestu')
-                                ->performedOn($this->record)
-                                ->causedBy(auth()->user())
-                                ->withProperties([
-                                    'relation' => $relationName,
-                                    'attributes' => [$relationName => $newNamesString],
-                                ])
-                                ->tap(function ($activity) {
-                                    $activity->ip_address = request()->ip();
-                                })
-                                ->log('Dodato ' . $this->getRelationLabel($relationName));
-                        }
-                    }
-                } catch (Throwable $e) {
-                    // Logiraj greške umesto tihog ignorisanja
-                    Log::warning('Greška pri logiranju relacije u CreatePodaciORadnomMestu', [
-                        'method' => $method->name,
-                        'record_id' => $this->record->id ?? null,
-                        'error' => $e->getMessage(),
-                    ]);
+                if (! $relation instanceof BelongsToMany) {
                     continue;
                 }
+
+                $newValues = $this->record->{$relationName}()
+                    ->pluck($this->getRelationDisplayColumn($relation))
+                    ->toArray();
+
+                if (!empty($newValues)) {
+                    $newNamesString = implode(', ', array_values($newValues));
+
+                    activity('podaci_o_radnom_mestu')
+                        ->performedOn($this->record)
+                        ->causedBy(auth()->user())
+                        ->withProperties([
+                            'relation' => $relationName,
+                            'attributes' => [$relationName => $newNamesString],
+                        ])
+                        ->tap(function ($activity) {
+                            $activity->ip_address = request()->ip();
+                        })
+                        ->log('Dodato ' . $this->getRelationLabel($relationName));
+                }
+            } catch (Throwable $e) {
+                Log::warning('Greška pri logiranju relacije u CreatePodaciORadnomMestu', [
+                    'relation' => $relationName,
+                    'record_id' => $this->record->id ?? null,
+                    'error' => $e->getMessage(),
+                ]);
+                continue;
             }
         }
     }

@@ -81,35 +81,27 @@ class EditPodaciORadnomMestu extends EditRecord
 
         $this->previousUrl = url()->previous();
 
-        // Pronađi sve belongsToMany relacije na modelu
-        $reflection = new ReflectionClass($this->record);
-        foreach ($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
-            if ($method->class === get_class($this->record) &&
-                $method->getNumberOfParameters() === 0 &&
-                !in_array($method->name, ['getKey', 'getMorphClass', 'getTable'])) {
+        // Сачувај старе вредности belongsToMany релација (за лог измена у afterSave).
+        // ВАЖНО: користимо ЕКСПЛИЦИТНУ листу релација, а НЕ рефлексију преко свих
+        // метода модела — рефлексија би позвала и деструктивне методе без параметара
+        // (нпр. forceDelete()/delete()/restore() из SoftDeletes trait-а), што је
+        // брисало запис на само отварање edit странице.
+        foreach (['mestaRada', 'oblastiRada'] as $relationName) {
+            try {
+                $relation = $this->record->{$relationName}();
 
-                try {
-                    $relation = $this->record->{$method->name}();
-
-                    // Proveravamo da li je belongsToMany relacija
-                    if ($relation instanceof BelongsToMany) {
-                        $relationName = $method->name;
-
-                        // Sačuvaj stare vrednosti sa nazivima
-                        $oldValues = $this->record->{$relationName}
-                            ->pluck($this->getRelationDisplayColumn($relation))
-                            ->toArray();
-
-                        $this->oldRelationships[$relationName] = $oldValues;
-                    }
-                } catch (Throwable $e) {
-                    Log::warning('Greška pri učitavanju relacije u EditPodaciORadnomMestu::mount', [
-                        'method' => $method->name,
-                        'record_id' => $this->record->id ?? null,
-                        'error' => $e->getMessage(),
-                    ]);
-                    continue;
+                if ($relation instanceof BelongsToMany) {
+                    $this->oldRelationships[$relationName] = $this->record->{$relationName}
+                        ->pluck($this->getRelationDisplayColumn($relation))
+                        ->toArray();
                 }
+            } catch (Throwable $e) {
+                Log::warning('Greška pri učitavanju relacije u EditPodaciORadnomMestu::mount', [
+                    'relation' => $relationName,
+                    'record_id' => $this->record->id ?? null,
+                    'error' => $e->getMessage(),
+                ]);
+                continue;
             }
         }
     }
