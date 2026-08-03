@@ -24,6 +24,14 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Infolists;
 use Illuminate\Database\Eloquent\Builder;
+use App\Models\SifarnikVrstaOrgana;
+use App\Models\SifarnikOrgani;
+use App\Models\SifarnikTipKonkursa;
+use App\Models\SifarnikZvanje;
+use App\Models\SifarnikStatusKonkursa;
+use App\Models\SifarnikRazlogNeuspelihKonkursa;
+use App\Models\SifarnikProveraPfk;
+use App\Models\SifarnikIzabraniKandidat;
 
 class ActivityResource extends Resource
 {
@@ -187,6 +195,58 @@ class ActivityResource extends Resource
             ]);
     }
 
+    /**
+     * Мапа FK поља -> [шифарник модел, колона са називом]. Користи се да се
+     * уз ID прикаже и његово значење у логу старих/нових вредности.
+     */
+    protected static function fkMapa(): array
+    {
+        return [
+            'vrsta_organa'              => [SifarnikVrstaOrgana::class, 'vrsta_organa'],
+            'organ'                     => [SifarnikOrgani::class, 'organ'],
+            'tip_konkursa'             => [SifarnikTipKonkursa::class, 'tip_konkursa'],
+            'zvanje'                    => [SifarnikZvanje::class, 'zvanje'],
+            'ishod_konkursa'           => [SifarnikStatusKonkursa::class, 'status_konkursa'],
+            'razlog_neuspelog_konkursa' => [SifarnikRazlogNeuspelihKonkursa::class, 'razlog'],
+            'provera_pfk'              => [SifarnikProveraPfk::class, 'provera_pfk'],
+            'izabrani_kandidat'        => [SifarnikIzabraniKandidat::class, 'izabrani_kandidat'],
+            'drugoplasirani_kandidat'  => [SifarnikIzabraniKandidat::class, 'izabrani_kandidat'],
+        ];
+    }
+
+    /**
+     * Значење ID-а за FK поље (нпр. organ=6 -> „Управа за спречавање прања новца").
+     * За поља која нису FK враћа празан стринг.
+     */
+    protected static function znacenjeVrednosti(string $polje, $vrednost): string
+    {
+        $mapa = self::fkMapa();
+        if (! isset($mapa[$polje]) || $vrednost === null || $vrednost === '') {
+            return '';
+        }
+        [$model, $kolona] = $mapa[$polje];
+        return (string) ($model::where('id', $vrednost)->value($kolona) ?? '(непознат ID)');
+    }
+
+    /**
+     * Припрема мапу поље => вредност за KeyValueEntry, при чему се за FK поља
+     * уз ID допише и значење из шифарника (нпр. „73 — Национална академија…").
+     */
+    protected static function vrednostiSaZnacenjem($props): array
+    {
+        $props = is_iterable($props) ? (array) $props : [];
+
+        $out = [];
+        foreach ($props as $polje => $vrednost) {
+            $znacenje = self::znacenjeVrednosti((string) $polje, $vrednost);
+            $out[(string) $polje] = ($znacenje !== '')
+                ? $vrednost . ' — ' . $znacenje
+                : $vrednost;
+        }
+
+        return $out;
+    }
+
     public static function infolist(Schema $schema): Schema
     {
         return $schema
@@ -243,20 +303,22 @@ class ActivityResource extends Resource
 
                 Section::make('Старе вредности')
                     ->schema([
-                        KeyValueEntry::make('properties.old')
+                        KeyValueEntry::make('stare_vrednosti')
                             ->label('')
                             ->keyLabel('Поље')
                             ->valueLabel('Вредност')
+                            ->state(fn ($record) => self::vrednostiSaZnacenjem($record->properties['old'] ?? []))
                             ->columnSpanFull(),
                     ])
                     ->visible(fn ($record) => !empty($record->properties['old'] ?? null)),
 
                 Section::make('Нове вредности')
                     ->schema([
-                        KeyValueEntry::make('properties.attributes')
+                        KeyValueEntry::make('nove_vrednosti')
                             ->label('')
                             ->keyLabel('Поље')
                             ->valueLabel('Вредност')
+                            ->state(fn ($record) => self::vrednostiSaZnacenjem($record->properties['attributes'] ?? []))
                             ->columnSpanFull(),
                     ])
                     ->visible(fn ($record) => !empty($record->properties['attributes'] ?? null)),
