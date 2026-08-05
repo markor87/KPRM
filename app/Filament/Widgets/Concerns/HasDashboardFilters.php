@@ -2,11 +2,19 @@
 
 namespace App\Filament\Widgets\Concerns;
 
+use App\Services\OrganFilterService;
 use Livewire\Attributes\On;
 
 trait HasDashboardFilters
 {
     public int $tipKonkursa = 1;
+
+    /**
+     * Орган изабран у падајућој листи на контролној табли. Null знаци „није биран" →
+     * важи сопствени орган корисника. Избор поштујемо само ако корисник има дозволу
+     * (проверу ради OrganFilterService, не веруј вредности која стиже са фронта).
+     */
+    public ?int $organ = null;
 
     /**
      * Null знаци „није постављено" → подразумевано прошла година. Не може се ставити
@@ -20,7 +28,19 @@ trait HasDashboardFilters
     {
         $this->tipKonkursa = request()->query('activeTab', 'javni') === 'interni' ? 2 : 1;
         $this->godina = (int) request()->query('godina', now()->year - 1);
+
+        $organ = request()->query('organ');
+        $this->organ = is_numeric($organ) ? (int) $organ : null;
+
         parent::mount();
+    }
+
+    /**
+     * Орган по коме виџет филтрира податке — изабрани (ако корисник сме) или сопствени.
+     */
+    public function getOrganId(): ?int
+    {
+        return app(OrganFilterService::class)->resolveChartOrganId($this->organ);
     }
 
     /**
@@ -43,6 +63,13 @@ trait HasDashboardFilters
     public function godinaChanged(int $godina): void
     {
         $this->godina = $godina;
+        $this->updateOptions();
+    }
+
+    #[On('organChanged')]
+    public function organChanged(?int $organ): void
+    {
+        $this->organ = $organ;
         $this->updateOptions();
     }
 }

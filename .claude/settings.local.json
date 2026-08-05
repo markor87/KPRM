@@ -12,7 +12,17 @@
       "Bash(mkdir:*)",
       "Bash(cp:*)",
       "Bash(php -l:*)",
-      "Bash(xargs rm -rf)"
+      "Bash(xargs rm -rf)",
+      "WebFetch(domain:filamentglow.com)",
+      "WebFetch(domain:filamentexamples.com)",
+      "Bash(composer remove filament/upgrade --dev)",
+      "mcp__claude-in-chrome__computer",
+      "Bash(python -c \"import zipfile; z=zipfile.ZipFile\\(r'C:\\\\Users\\\\marko.radovanovic\\\\Desktop\\\\Aplikacije\\\\KPRM\\\\storage\\\\app\\\\private\\\\uputstvo\\\\КПРМ корисничко упутство.docx'\\); m=[n for n in z.namelist\\(\\) if n.startswith\\('word/media/'\\)]; print\\('media fajlova:', len\\(m\\)\\); print\\('bad zip:', z.testzip\\(\\)\\)\")"
     ]
+  },
+  "enabledPlugins": {
+    "code-simplifier@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+    "playwright@claude-plugins-official": true
   }
 }

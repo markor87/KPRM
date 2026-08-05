@@ -28,7 +28,7 @@ class InteresovanjeZaRadnaMestaChart extends ApexChartWidget
 
         $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina)
             ->where('tip_konkursa', $this->tipKonkursa);
-        $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ');
+        $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ', $this->getOrganId());
 
         $podaci = $baseQuery->get();
 

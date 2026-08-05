@@ -30,7 +30,7 @@ class OglasenaRadnaMestaPoRegionimaChart extends ApexChartWidget
             ->join('mesto_rada_podaci_o_radnom_mestu', 'podaci_o_radnom_mestu.id', '=', 'mesto_rada_podaci_o_radnom_mestu.podaci_o_radnom_mestu_id')
             ->whereNotNull('mesto_rada_podaci_o_radnom_mestu.region')
             ->where('mesto_rada_podaci_o_radnom_mestu.region', '!=', '');
-        $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ');
+        $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ', $this->getOrganId());
 
         $podaci = (clone $baseQuery)
             ->selectRaw('mesto_rada_podaci_o_radnom_mestu.region as naziv, COUNT(DISTINCT podaci_o_radnom_mestu.id) as ukupno')

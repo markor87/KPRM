@@ -23,7 +23,7 @@ return [
             'pages' => true,
             'widgets' => true,
             'resources' => true,
-            'custom_permissions' => false,
+            'custom_permissions' => true,
         ],
     ],
 
@@ -228,7 +228,11 @@ return [
     |
     */
 
-    'custom_permissions' => [],
+    'custom_permissions' => [
+        // Кључ постаје назив дозволе (pascal): IzborOrganaNaKontrolnojTabli.
+        // Омогућава падајућу листу органа изнад графикона на контролној табли.
+        'izbor_organa_na_kontrolnoj_tabli' => 'Избор органа на контролној табли',
+    ],
 
     /*
     |--------------------------------------------------------------------------

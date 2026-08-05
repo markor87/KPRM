@@ -28,7 +28,7 @@ class KonkursiPoZvanjuChart extends ApexChartWidget
         $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina)
             ->where('tip_konkursa', $this->tipKonkursa)
             ->whereNotNull('podaci_o_radnom_mestu.zvanje');
-        $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ');
+        $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ', $this->getOrganId());
 
         $podaci = (clone $baseQuery)
             ->join('sifarnik_zvanje', 'podaci_o_radnom_mestu.zvanje', '=', 'sifarnik_zvanje.id')

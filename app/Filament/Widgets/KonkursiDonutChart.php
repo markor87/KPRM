@@ -27,7 +27,7 @@ class KonkursiDonutChart extends ApexChartWidget
         $godina = $this->getGodina();
 
         $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina);
-        $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ');
+        $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ', $this->getOrganId());
 
         $tipCount = (clone $baseQuery)->where('tip_konkursa', $this->tipKonkursa)->count();
         $total = (clone $baseQuery)->count();

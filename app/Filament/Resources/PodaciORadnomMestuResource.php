@@ -1066,16 +1066,7 @@ class PodaciORadnomMestuResource extends Resource
                         TextInput::make('broj_neodazvanih_kandidata_pfk')
                             ->label('Број кандидата који се није одазвао позиву на ПФК')
                             ->numeric()
-                            ->minValue(0)
-                            ->live(onBlur: true)->afterStateUpdated(fn ($component, $livewire) => $livewire->validateOnly($component->getStatePath()))
-                            ->rules([
-                                fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
-                                    $pfk = (int) $get('broj_kandidata_koji_su_ispunlii_merila_pfk');
-                                    if ($value !== null && $value !== '' && $pfk && (int)$value > $pfk) {
-                                        $fail('Број кандидата који се није одазвао позиву на ПФК не сме бити већи од броја кандидата који су испунили мерила ПФК.');
-                                    }
-                                },
-                            ]),
+                            ->minValue(0),
                         Select::make('provera_pfk')
                             ->label('Провера ПФК')
                             ->relationship('proveraPfkRelation', 'provera_pfk', fn($query) => $query->orderBy('id', 'asc'))

@@ -34,7 +34,7 @@ class RazloziNeuspehaChart extends ApexChartWidget
             ->where('ishod_konkursa', 2)
             ->whereNotNull('razlog_neuspelog_konkursa')
             ->join('sifarnik_razlog_neuspelih_konkursa', 'podaci_o_radnom_mestu.razlog_neuspelog_konkursa', '=', 'sifarnik_razlog_neuspelih_konkursa.id');
-        $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'podaci_o_radnom_mestu.organ');
+        $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'podaci_o_radnom_mestu.organ', $this->getOrganId());
 
         $rows = $baseQuery
             ->selectRaw('sifarnik_razlog_neuspelih_konkursa.razlog as naziv, COUNT(*) as ukupno')

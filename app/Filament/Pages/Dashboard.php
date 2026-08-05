@@ -21,9 +21,37 @@ class Dashboard extends BaseDashboard
     #[Url]
     public ?int $godina = null;
 
+    /**
+     * Орган изабран у падајућој листи. Види се само уз дозволу
+     * OrganFilterService::PERMISSION_IZBOR_ORGANA; иначе важи сопствени орган корисника.
+     */
+    #[Url]
+    public ?int $organ = null;
+
     public function getColumns(): int|array
     {
         return 12;
+    }
+
+    public function canSelectOrgan(): bool
+    {
+        return app(OrganFilterService::class)->canSelectOrgan();
+    }
+
+    /**
+     * Орган по коме се тренутно филтрирају графикони (изабрани или сопствени).
+     */
+    public function getOrganId(): ?int
+    {
+        return app(OrganFilterService::class)->resolveChartOrganId($this->organ);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function getOrgani(): array
+    {
+        return app(OrganFilterService::class)->getSelectableOrgani();
     }
 
     public function getGodina(): int
@@ -40,7 +68,7 @@ class Dashboard extends BaseDashboard
     public function getGodine(): array
     {
         $query = PodaciORadnomMestu::query()->whereNotNull('datum_oglasavanja');
-        $query = app(OrganFilterService::class)->applyOrganFilterForCharts($query, 'organ');
+        $query = app(OrganFilterService::class)->applyOrganFilterForCharts($query, 'organ', $this->organ);
 
         $godine = $query->selectRaw('YEAR(datum_oglasavanja) as g')
             ->distinct()
@@ -66,6 +94,9 @@ class Dashboard extends BaseDashboard
                 'activeTab' => $this->activeTab,
                 'godina' => $this->getGodina(),
                 'godine' => $this->getGodine(),
+                'mozeBiratiOrgan' => $this->canSelectOrgan(),
+                'organ' => $this->getOrganId(),
+                'organi' => $this->canSelectOrgan() ? $this->getOrgani() : [],
             ])->render()),
             $this->getWidgetsContentComponent(),
         ]);
@@ -81,5 +112,19 @@ class Dashboard extends BaseDashboard
     {
         $this->godina = $godina;
         $this->dispatch('godinaChanged', godina: $godina);
+    }
+
+    /**
+     * Долази са фронта као стринг ('' кад ништа није изабрано). Сама провера дозволе
+     * је у OrganFilterService — овде се вредност само нормализује.
+     */
+    public function setOrgan(string $organ): void
+    {
+        if (! $this->canSelectOrgan()) {
+            return;
+        }
+
+        $this->organ = $organ === '' ? null : (int) $organ;
+        $this->dispatch('organChanged', organ: $this->organ);
     }
 }

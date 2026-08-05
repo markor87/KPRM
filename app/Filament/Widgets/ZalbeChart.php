@@ -29,7 +29,7 @@ class ZalbeChart extends ApexChartWidget
 
         $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina)
             ->where('tip_konkursa', $this->tipKonkursa);
-        $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ');
+        $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ', $this->getOrganId());
 
         $result = (clone $baseQuery)->selectRaw('
             SUM(broj_zalbi_na_resenje_o_odbacaju_prijave) as zalbe_odbacaj,

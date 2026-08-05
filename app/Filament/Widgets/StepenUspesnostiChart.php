@@ -28,7 +28,7 @@ class StepenUspesnostiChart extends ApexChartWidget
 
         $baseQuery = PodaciORadnomMestu::whereYear('datum_oglasavanja', $godina)
             ->where('tip_konkursa', $this->tipKonkursa);
-        $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ');
+        $baseQuery = $organFilterService->applyOrganFilterForCharts($baseQuery, 'organ', $this->getOrganId());
 
         // "U toku" (4) se ne broji - grafikon meri ishode zavrsenih konkursa.
         $uspesno = (clone $baseQuery)->where('ishod_konkursa', 1)->count();
