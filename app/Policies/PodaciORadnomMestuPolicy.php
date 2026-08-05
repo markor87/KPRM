@@ -6,6 +6,7 @@ namespace App\Policies;
 
 use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\PodaciORadnomMestu;
+use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class PodaciORadnomMestuPolicy
@@ -48,13 +49,12 @@ class PodaciORadnomMestuPolicy
 
     public function forceDelete(AuthUser $authUser, PodaciORadnomMestu $podaciORadnomMestu): bool
     {
-        return $authUser->can('ForceDelete:PodaciORadnomMestu')
-            && $this->pripadaOrganuKorisnika($authUser, $podaciORadnomMestu);
+        return $this->jeSuperAdmin($authUser);
     }
 
     public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $authUser->can('ForceDeleteAny:PodaciORadnomMestu');
+        return $this->jeSuperAdmin($authUser);
     }
 
     public function restoreAny(AuthUser $authUser): bool
@@ -71,6 +71,16 @@ class PodaciORadnomMestuPolicy
     public function reorder(AuthUser $authUser): bool
     {
         return $authUser->can('Reorder:PodaciORadnomMestu');
+    }
+
+    /**
+     * Трајно брисање („Обриши трајно") намерно је резервисано САМО за Super Admina —
+     * дозволе ForceDelete/ForceDeleteAny из улога се овде свесно не узимају у обзир,
+     * јер тај запис после нема одакле да се врати.
+     */
+    private function jeSuperAdmin(AuthUser $authUser): bool
+    {
+        return $authUser instanceof User && $authUser->isSuperAdmin();
     }
 
     /**
