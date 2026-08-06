@@ -12,12 +12,6 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Registruj middleware aliase
-        $middleware->alias([
-            'permission' => \App\Http\Middleware\CheckPermission::class,
-            'super.admin' => \App\Http\Middleware\CheckSuperAdmin::class,
-        ]);
-
         // Aplikacija je iza reverse proxy-ja (10.2.39.21). Bez ovoga request()->ip()
         // vraca adresu proxy-ja za sve korisnike, pa svi u evidenciji aktivnosti
         // imaju isti IP. Verujemo iskljucivo toj adresi - sa 'at: *' bi bilo ko mogao

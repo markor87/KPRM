@@ -3,21 +3,28 @@
 namespace App\Filament\Resources\PodaciORadnomMestuResource\Pages;
 
 use Filament\Actions\DeleteAction;
-use ReflectionClass;
-use ReflectionMethod;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Throwable;
 use App\Filament\Resources\PodaciORadnomMestuResource;
+use App\Models\PodaciORadnomMestu;
 use App\Models\SifarnikKodoviGradova;
 use Filament\Actions;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Locked;
+use Spatie\Activitylog\Models\Activity;
 
 class EditPodaciORadnomMestu extends EditRecord
 {
     protected static string $resource = PodaciORadnomMestuResource::class;
+
+    /**
+     * Чување и `afterSave()` (где иде sync места рада) морају да буду у истој
+     * трансакцији — иначе пад sync-а оставља сачуван запис са старим местима рада.
+     */
+    protected ?bool $hasDatabaseTransactions = true;
 
     #[Locked]
     public array $oldRelationships = [];
@@ -26,6 +33,14 @@ class EditPodaciORadnomMestu extends EditRecord
 
     #[Locked]
     public ?string $previousUrl = null;
+
+    /**
+     * Отисак записа у тренутку отварања форме. Служи за оптимистичко закључавање:
+     * ако се отисак у бази у међувремену промени, значи да је неко други сачувао
+     * измене и чување се зауставља уместо да их тихо прегази.
+     */
+    #[Locked]
+    public ?string $ucitanaVerzija = null;
 
     protected function getHeaderActions(): array
     {
@@ -80,6 +95,7 @@ class EditPodaciORadnomMestu extends EditRecord
         parent::mount($record);
 
         $this->previousUrl = url()->previous();
+        $this->ucitanaVerzija = $this->trenutnaVerzija();
 
         // Сачувај старе вредности belongsToMany релација (за лог измена у afterSave).
         // ВАЖНО: користимо ЕКСПЛИЦИТНУ листу релација, а НЕ рефлексију преко свих
@@ -104,6 +120,79 @@ class EditPodaciORadnomMestu extends EditRecord
                 continue;
             }
         }
+    }
+
+    /**
+     * Оптимистичко закључавање: ако је неко други сачувао измене док је ова форма била
+     * отворена, заустави чување уместо да прегазимо туђи рад. Нема правог закључавања
+     * записа — сукоб се открива тек при чувању, па нема брава које остају да висе.
+     */
+    protected function beforeSave(): void
+    {
+        $verzijaUBazi = $this->trenutnaVerzija();
+
+        if ($this->ucitanaVerzija === null
+            || $verzijaUBazi === null
+            || $verzijaUBazi === $this->ucitanaVerzija) {
+            return;
+        }
+
+        Notification::make()
+            ->warning()
+            ->title('Измене нису сачуване')
+            ->body($this->porukaOSukobu())
+            ->persistent()
+            ->send();
+
+        $this->halt(shouldRollbackDatabaseTransaction: true);
+    }
+
+    /**
+     * Ко је и када последњи мењао запис — за поруку о сукобу.
+     */
+    private function porukaOSukobu(): string
+    {
+        $poslednja = Activity::query()
+            ->where('subject_type', $this->record->getMorphClass())
+            ->where('subject_id', $this->record->getKey())
+            ->latest('id')
+            ->first();
+
+        $ko = $poslednja?->causer?->name;
+        $kada = $poslednja?->created_at
+            ?->timezone(config('app.display_timezone'))
+            ->format('H:i');
+
+        $detalj = ($ko && $kada)
+            ? "Запис је у међувремену изменио корисник {$ko} у {$kada}."
+            : 'Запис је у међувремену изменио други корисник.';
+
+        return "{$detalj} Освежите страницу да видите нову верзију, па поновите своје измене — "
+            . 'у супротном би туђе измене биле обрисане.';
+    }
+
+    /**
+     * Отисак тренутног стања записа у бази — свих 88 колона плус везана места рада
+     * са бројем извршилаца. Табела `podaci_o_radnom_mestu` нема `updated_at` колону
+     * (модел ради са `$timestamps = false`), па се верзија рачуна из самих података.
+     */
+    private function trenutnaVerzija(): ?string
+    {
+        $zapis = PodaciORadnomMestu::withTrashed()
+            ->whereKey($this->record->getKey())
+            ->first();
+
+        if ($zapis === null) {
+            return null;
+        }
+
+        $mesta = $zapis->mestaRada()
+            ->orderBy('sifarnik_kodovi_gradova.id')
+            ->get()
+            ->map(fn ($mesto): string => $mesto->getKey() . ':' . ($mesto->pivot->broj_izvrsilaca ?? ''))
+            ->implode(',');
+
+        return md5(json_encode($zapis->getAttributes()) . '|' . $mesta);
     }
 
     /**
@@ -172,6 +261,10 @@ class EditPodaciORadnomMestu extends EditRecord
                 continue;
             }
         }
+
+        // Нова полазна верзија (после sync-а места рада), да поновно чување исте
+        // отворене форме не пријави сукоб са сопственим изменама
+        $this->ucitanaVerzija = $this->trenutnaVerzija();
     }
 
     /**

@@ -2,8 +2,6 @@
 
 namespace App\Filament\Resources\PodaciORadnomMestuResource\Pages;
 
-use ReflectionClass;
-use ReflectionMethod;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Throwable;
 use App\Filament\Resources\PodaciORadnomMestuResource;
@@ -15,6 +13,12 @@ use Illuminate\Support\Facades\Log;
 class CreatePodaciORadnomMestu extends CreateRecord
 {
     protected static string $resource = PodaciORadnomMestuResource::class;
+
+    /**
+     * Креирање и `afterCreate()` (где иде sync места рада) морају да буду у истој
+     * трансакцији — иначе пад sync-а оставља креиран запис без места рада.
+     */
+    protected ?bool $hasDatabaseTransactions = true;
 
     public array $mestaRadaData = [];
 
