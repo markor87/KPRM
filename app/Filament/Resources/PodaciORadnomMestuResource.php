@@ -995,7 +995,7 @@ class PodaciORadnomMestuResource extends Resource
                                 },
                             ]),
                         static::makeDateField('datum_pocetka_provere_ofk', 'Датум спровођења провере ОФК', 'datum_pregleda_prijava', 'прегледа пријава')
-                            ->helperText('Уколико је било више дана провере, унети први датум'),
+                            ->helperText('Уколико је било више дана провере, унети први датум (не односи се на кандидате чије су оцене преузете)'),
                         TextInput::make('broj_neodazvanih_kandidata_ofk')
                             ->label('Број кандидата који се није одазвао позиву на ОФК')
                             ->numeric()
@@ -1090,7 +1090,7 @@ class PodaciORadnomMestuResource extends Resource
                                 },
                             ]),
                         static::makeDateField('datum_pocetka_provere_pk', 'Датум почетка провере ПК', 'datum_pfk_izvestaja', 'ПФК извештаја')
-                            ->helperText('Уколико је било више дана провере, унети први датум.'),
+                            ->helperText('Уколико је било више дана провере, унети први датум (не односи се на кандидате чије су оцене преузете)'),
                         static::makeDateField('datum_pk_izvestaja', 'Датум ПК извештаја', 'datum_pocetka_provere_pk', 'почетка провере ПК')
                             ->helperText('Датум креирања извештаја СУКа'),
                         TextInput::make('broj_kandidata_ispunili_merila_pk')
