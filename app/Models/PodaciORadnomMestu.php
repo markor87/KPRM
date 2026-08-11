@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Services\OrganFilterService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Spatie\Activitylog\Contracts\Activity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -131,16 +133,37 @@ class PodaciORadnomMestu extends Model
                 $record->unos_zavrsen_by = $record->unos_zavrsen ? auth()->id() : null;
             }
 
-            // Bezbednost: „Орган" i „Врста органа" su u formi samo za prikaz (disabled),
-            // ali se dehidriraju, pa se na disable ne oslanjamo. Korisnik koji nije ovlašćen
-            // da vidi sve organe ne sme da upiše/promeni organ - prisilno ga vezujemo za
-            // njegov organ, bez obzira šta stigne iz zahteva (sprečava upis u tuđi organ i
-            // „prebacivanje" postojećeg zapisa). Isti kriterijum kao OrganFilterService.
+            // Bezbednost: polje „Орган" je u formi zaključano, ali se dehidrira, pa se na
+            // prikaz ne oslanjamo. Ovde se odbija snimanje u organ koji korisniku ne pripada.
+            //
+            // Namerno se ODBIJA umesto da se vrednost ćutke prepiše na sopstveni organ, kako
+            // je ranije radilo: prepisivanje je nastalo dok je korisnik imao tačno jedan organ
+            // i sad bi pravilo netačne podatke (npr. dupliranje zapisa uprave u sastavu bi
+            // završilo u ministarstvu). Ili se snimi tačno, ili se ne snimi uopšte.
+            //
             // Bez ulogovanog korisnika (konzola, seeder, migracija) ne diramo ništa.
             $user = auth()->user();
             if ($user && $user->organ_id && ! $user->can('ViewAny:PodaciORadnomMestu')) {
-                $record->organ = $user->organ_id;
-                $record->vrsta_organa = $user->organ?->vrsta_organ_id;
+                $trazeni = $record->organ === null ? null : (int) $record->organ;
+
+                $dozvoljen = $record->exists
+                    // Postojećem zapisu se organ ne menja — svaka promena može stići samo
+                    // podmetanjem, jer je polje zaključano.
+                    ? $trazeni === (int) $record->getOriginal('organ')
+                    // Nov zapis (unos ili dupliranje) sme samo u organ koji korisniku pripada.
+                    : in_array($trazeni, app(OrganFilterService::class)->dostupniOrganiIds(), true);
+
+                if (! $dozvoljen) {
+                    throw new AuthorizationException(
+                        'Немате право да сачувате радно место у изабраном органу.'
+                    );
+                }
+            }
+
+            // „Врста органа" je strogo određena šifarnikom - izvodimo je iz izabranog organa
+            // umesto da je primamo iz zahteva, za sve korisnike.
+            if ($record->organ !== null) {
+                $record->vrsta_organa = SifarnikOrgani::find($record->organ)?->vrsta_organ_id;
             }
 
             // Konkurs pokrenut bez saglasnosti Vlade: garantujemo da datum saglasnosti bude

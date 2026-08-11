@@ -461,6 +461,31 @@ class PodaciORadnomMestuResource extends Resource
             || false;
     }
 
+    /**
+     * Органи понуђени у пољу „Орган". Корисник који види све органе бира из целог шифарника;
+     * остали само из органа у којима им је унос дозвољен (сопствени плус изричито додељени
+     * подређени органи). Орган постојећег записа се увек додаје, да се назив прикаже и кад у
+     * њему нема права уноса.
+     *
+     * @return array<int, string> [id => назив органа]
+     */
+    protected static function organiZaFormu(?PodaciORadnomMestu $record = null): array
+    {
+        $organi = auth()->user()?->can('ViewAny:PodaciORadnomMestu')
+            ? SifarnikOrgani::query()
+                ->orderBy('organ')
+                ->pluck('organ', 'id')
+                ->map(fn ($naziv): string => (string) $naziv)
+                ->all()
+            : app(OrganFilterService::class)->organiZaUnos();
+
+        if ($record?->organ && ! array_key_exists((int) $record->organ, $organi)) {
+            $organi[(int) $record->organ] = (string) ($record->organRelation?->organ ?? $record->organ);
+        }
+
+        return $organi;
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema
@@ -500,17 +525,13 @@ class PodaciORadnomMestuResource extends Resource
                             }),
                         Select::make('organ')
                             ->label('Орган')
-                            ->options(function (callable $get) {
-                                $vrstaOrganaId = $get('vrsta_organa');
-                                if (!$vrstaOrganaId) {
-                                    return SifarnikOrgani::pluck('organ', 'id');
-                                }
-                                return SifarnikOrgani::where('vrsta_organ_id', $vrstaOrganaId)
-                                    ->pluck('organ', 'id');
-                            })
+                            ->options(fn (?PodaciORadnomMestu $record): array => static::organiZaFormu($record))
                             ->required()
                             ->searchable()
                             ->preload()
+                            // Свесно закључано за све, и при уносу: нови записи увек иду у
+                            // сопствени орган корисника. Радна места се на продукцији уносе
+                            // увозом, кадровици их само мењају.
                             ->disabled()
                             ->dehydrated()
                             ->default(function () {
@@ -540,8 +561,11 @@ class PodaciORadnomMestuResource extends Resource
                             }),
                         Select::make('zvanje')
                             ->label('Звање')
-                            ->relationship('zvanjeRelation', 'zvanje', function ($query) {
-                                $organId = auth()->user()?->organ_id;
+                            // Звања прате орган изабран у форми, а не орган корисника — кадровик
+                            // министарства који уноси за управу у саставу мора да добије звања
+                            // те управе.
+                            ->relationship('zvanjeRelation', 'zvanje', function ($query, Get $get) {
+                                $organId = $get('organ') ?: auth()->user()?->organ_id;
                                 if (!$organId) {
                                     return $query->orderBy('id');
                                 }
@@ -1482,11 +1506,24 @@ class PodaciORadnomMestuResource extends Resource
             ->filters([
                 SelectFilter::make('organ')
                     ->label('Орган')
-                    ->relationship('organRelation', 'organ')
+                    // Понуђени су само органи које корисник уопште види; ко види све
+                    // (Super Admin, Admin) добија цео шифарник.
+                    ->relationship('organRelation', 'organ', function ($query) {
+                        if (auth()->user()?->can('ViewAny:PodaciORadnomMestu')) {
+                            return $query->orderBy('organ');
+                        }
+
+                        return $query
+                            ->whereIn('id', app(OrganFilterService::class)->dostupniOrganiIds())
+                            ->orderBy('organ');
+                    })
                     ->searchable()
                     ->preload()
                     ->multiple()
-                    ->visible(fn () => auth()->user()?->hasAnyRole(['Super Admin', 'Admin']) ?? false),
+                    // Улогама које виде све органе, али и кадровику коме је поред сопственог
+                    // додељен још неки орган.
+                    ->visible(fn (): bool => (auth()->user()?->hasAnyRole(['Super Admin', 'Admin']) ?? false)
+                        || count(app(OrganFilterService::class)->dostupniOrganiIds()) > 1),
                 SelectFilter::make('zvanje')
                     ->label('Звање')
                     ->relationship('zvanjeRelation', 'zvanje', fn ($query) => $query->orderBy('id', 'asc'))

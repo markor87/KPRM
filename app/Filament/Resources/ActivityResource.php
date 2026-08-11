@@ -102,12 +102,14 @@ class ActivityResource extends Resource
                         'auth' => 'primary',
                         'users' => 'success',
                         'podaci_o_radnom_mestu' => 'warning',
+                        'organ_pristupi' => 'info',
                         default => 'danger',
                     })
                     ->formatStateUsing(fn ($state) => match($state) {
                         'auth' => 'Аутентификација',
                         'users' => 'Корисници',
                         'podaci_o_radnom_mestu' => 'Радна места',
+                        'organ_pristupi' => 'Органи у саставу',
                         default => ucfirst($state),
                     }),
 
@@ -149,6 +151,7 @@ class ActivityResource extends Resource
                         'auth' => 'Аутентификација',
                         'users' => 'Корисници',
                         'podaci_o_radnom_mestu' => 'Радна места',
+                        'organ_pristupi' => 'Органи у саставу',
                     ])
                     ->multiple(),
 
@@ -204,6 +207,8 @@ class ActivityResource extends Resource
         return [
             'vrsta_organa'              => [SifarnikVrstaOrgana::class, 'vrsta_organa'],
             'organ'                     => [SifarnikOrgani::class, 'organ'],
+            'nadredjeni_organ_id'      => [SifarnikOrgani::class, 'organ'],
+            'podredjeni_organ_id'      => [SifarnikOrgani::class, 'organ'],
             'tip_konkursa'             => [SifarnikTipKonkursa::class, 'tip_konkursa'],
             'zvanje'                    => [SifarnikZvanje::class, 'zvanje'],
             'ishod_konkursa'           => [SifarnikStatusKonkursa::class, 'status_konkursa'],
@@ -238,6 +243,12 @@ class ActivityResource extends Resource
 
         $out = [];
         foreach ($props as $polje => $vrednost) {
+            // Логичке вредности иначе стижу као „1" односно празно поље.
+            if (is_bool($vrednost)) {
+                $out[(string) $polje] = $vrednost ? 'Да' : 'Не';
+                continue;
+            }
+
             $znacenje = self::znacenjeVrednosti((string) $polje, $vrednost);
             $out[(string) $polje] = ($znacenje !== '')
                 ? $vrednost . ' — ' . $znacenje
@@ -262,6 +273,7 @@ class ActivityResource extends Resource
                                 'auth' => 'primary',
                                 'users' => 'success',
                                 'podaci_o_radnom_mestu' => 'warning',
+                                'organ_pristupi' => 'info',
                                 default => 'danger',
                             })
                             ->formatStateUsing(function ($state) {
@@ -269,6 +281,7 @@ class ActivityResource extends Resource
                                     'auth' => 'Аутентификација',
                                     'users' => 'Корисници',
                                     'podaci_o_radnom_mestu' => 'Радна места',
+                                    'organ_pristupi' => 'Органи у саставу',
                                     default => ucfirst($state),
                                 };
                             }),
@@ -304,7 +317,7 @@ class ActivityResource extends Resource
                 Section::make('Старе вредности')
                     ->schema([
                         KeyValueEntry::make('stare_vrednosti')
-                            ->label('')
+                            ->hiddenLabel()
                             ->keyLabel('Поље')
                             ->valueLabel('Вредност')
                             ->state(fn ($record) => self::vrednostiSaZnacenjem($record->properties['old'] ?? []))
@@ -315,7 +328,7 @@ class ActivityResource extends Resource
                 Section::make('Нове вредности')
                     ->schema([
                         KeyValueEntry::make('nove_vrednosti')
-                            ->label('')
+                            ->hiddenLabel()
                             ->keyLabel('Поље')
                             ->valueLabel('Вредност')
                             ->state(fn ($record) => self::vrednostiSaZnacenjem($record->properties['attributes'] ?? []))
