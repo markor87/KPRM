@@ -163,6 +163,17 @@ class PodaciORadnomMestuResource extends Resource
                 unset($requiredDates['datum_pocetka_provere_pfk'], $requiredDates['datum_pfk_izvestaja']);
             }
 
+            // Preuzete ocene: provera nije sprovedena u ovom postupku, pa ti datumi ne postoje
+            // i ne smeju se traziti. Ocene vaze dve godine, pa kandidat moze traziti da mu se
+            // priznaju sa ranije sprovedene provere.
+            if ($get('ofk_ocene_preuzete')) {
+                unset($requiredDates['datum_pocetka_provere_ofk'], $requiredDates['datum_ofk_izvestaja']);
+            }
+
+            if ($get('pk_ocene_preuzete')) {
+                unset($requiredDates['datum_pocetka_provere_pk'], $requiredDates['datum_pk_izvestaja']);
+            }
+
             $missing = [];
             foreach ($requiredDates as $field => $label) {
                 if (empty($get($field))) {
@@ -1005,6 +1016,26 @@ class PodaciORadnomMestuResource extends Resource
                         Section::make('ОФК провера')
                             ->hidden(fn (Get $get) => $get('tip_konkursa') == 2)
                             ->schema([
+                        Toggle::make('ofk_ocene_preuzete')
+                            ->label('Оцене ОФК преузете са раније спроведених провера')
+                            ->helperText('Означите ако кандидатима нису спроведене провере ОФК јер су им признате оцене са раније спроведених провера. Датуми ОФК се тада не попуњавају.')
+                            ->live()
+                            ->afterStateUpdated(function (Set $set, $state, $livewire): void {
+                                if ($state) {
+                                    $set('datum_pocetka_provere_ofk', null);
+                                    $set('datum_ofk_izvestaja', null);
+
+                                    // Поља су сад празна и закључана — затечене поруке о
+                                    // редоследу датума више не важе.
+                                    $livewire->resetValidation('data.datum_pocetka_provere_ofk');
+                                    $livewire->resetValidation('data.datum_ofk_izvestaja');
+                                }
+
+                                // Порука код „Исход конкурса" набраја датуме који недостају,
+                                // па мора одмах да се освежи кад се преузимање укључи/искључи.
+                                $livewire->validateOnly('data.ishod_konkursa');
+                            })
+                            ->columnSpanFull(),
                         TextInput::make('broj_kandidata_za_koje_se_zakazuju_ofk')
                             ->label('Број кандидата за које се заказују ОФК')
                             ->numeric()
@@ -1019,7 +1050,8 @@ class PodaciORadnomMestuResource extends Resource
                                 },
                             ]),
                         static::makeDateField('datum_pocetka_provere_ofk', 'Датум спровођења провере ОФК', 'datum_pregleda_prijava', 'прегледа пријава')
-                            ->helperText('Уколико је било више дана провере, унети први датум (не односи се на кандидате чије су оцене преузете)'),
+                            ->helperText('Уколико је било више дана провере, унети први датум')
+                            ->disabled(fn (Get $get): bool => (bool) $get('ofk_ocene_preuzete')),
                         TextInput::make('broj_neodazvanih_kandidata_ofk')
                             ->label('Број кандидата који се није одазвао позиву на ОФК')
                             ->numeric()
@@ -1053,7 +1085,8 @@ class PodaciORadnomMestuResource extends Resource
                                 },
                             ]),
                         static::makeDateField('datum_ofk_izvestaja', 'Датум ОФК извештаја', 'datum_pocetka_provere_ofk', 'спровођења провере ОФК')
-                            ->helperText('Датум креирања извештаја СУКа'),
+                            ->helperText('Датум креирања извештаја СУКа')
+                            ->disabled(fn (Get $get): bool => (bool) $get('ofk_ocene_preuzete')),
                     ])->columns(2),
 
                         Section::make('ПФК провера')
@@ -1100,6 +1133,26 @@ class PodaciORadnomMestuResource extends Resource
 
                         Section::make('ПК провера')
                             ->schema([
+                        Toggle::make('pk_ocene_preuzete')
+                            ->label('Оцене ПК преузете са раније спроведених провера')
+                            ->helperText('Означите ако кандидатима нису спроведене провере ПК јер су им признате оцене са раније спроведених провера. Датуми ПК се тада не попуњавају.')
+                            ->live()
+                            ->afterStateUpdated(function (Set $set, $state, $livewire): void {
+                                if ($state) {
+                                    $set('datum_pocetka_provere_pk', null);
+                                    $set('datum_pk_izvestaja', null);
+
+                                    // Поља су сад празна и закључана — затечене поруке о
+                                    // редоследу датума више не важе.
+                                    $livewire->resetValidation('data.datum_pocetka_provere_pk');
+                                    $livewire->resetValidation('data.datum_pk_izvestaja');
+                                }
+
+                                // Порука код „Исход конкурса" набраја датуме који недостају,
+                                // па мора одмах да се освежи кад се преузимање укључи/искључи.
+                                $livewire->validateOnly('data.ishod_konkursa');
+                            })
+                            ->columnSpanFull(),
                         TextInput::make('broj_kandidata_za_koje_se_zakazuju_pk')
                             ->label('Број кандидата за које се заказују ПК')
                             ->numeric()
@@ -1114,9 +1167,11 @@ class PodaciORadnomMestuResource extends Resource
                                 },
                             ]),
                         static::makeDateField('datum_pocetka_provere_pk', 'Датум почетка провере ПК', 'datum_pfk_izvestaja', 'ПФК извештаја')
-                            ->helperText('Уколико је било више дана провере, унети први датум (не односи се на кандидате чије су оцене преузете)'),
+                            ->helperText('Уколико је било више дана провере, унети први датум')
+                            ->disabled(fn (Get $get): bool => (bool) $get('pk_ocene_preuzete')),
                         static::makeDateField('datum_pk_izvestaja', 'Датум ПК извештаја', 'datum_pocetka_provere_pk', 'почетка провере ПК')
-                            ->helperText('Датум креирања извештаја СУКа'),
+                            ->helperText('Датум креирања извештаја СУКа')
+                            ->disabled(fn (Get $get): bool => (bool) $get('pk_ocene_preuzete')),
                         TextInput::make('broj_kandidata_ispunili_merila_pk')
                             ->label('Број кандидата који су испунили мерила на ПК')
                             ->numeric()->minValue(0)

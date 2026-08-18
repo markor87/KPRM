@@ -43,6 +43,7 @@ class PodaciORadnomMestu extends Model
         'broj_kandidata_za_koje_se_zakazuju_ofk',
         'datum_pocetka_provere_ofk',
         'datum_ofk_izvestaja',
+        'ofk_ocene_preuzete',
         'datum_slanja_zahteva_za_sprovodjenje_pfk_provera',
         'broj_kandidata_za_koje_se_zakazuju_pfk',
         'datum_pocetka_provere_pfk',
@@ -52,6 +53,7 @@ class PodaciORadnomMestu extends Model
         'datum_pocetka_provere_pk',
         'broj_dana_sprovodjenja_pk_provera',
         'datum_pk_izvestaja',
+        'pk_ocene_preuzete',
         'datum_predaje_dokumentacije',
         'datum_pocetka_sprovodjenja_intervjua',
         'datum_izvestaja_sa_zavrsnog_intervjua',
@@ -108,6 +110,8 @@ class PodaciORadnomMestu extends Model
         'unos_zavrsen' => 'boolean',
         'unos_zavrsen_at' => 'datetime',
         'konkurs_bez_saglasnosti_vlade' => 'boolean',
+        'ofk_ocene_preuzete' => 'boolean',
+        'pk_ocene_preuzete' => 'boolean',
     ];
 
     /**
@@ -170,6 +174,19 @@ class PodaciORadnomMestu extends Model
             // null u bazi (disable-ovano polje se ne dehidrira, pa se na to ne oslanjamo).
             if ($record->konkurs_bez_saglasnosti_vlade) {
                 $record->datum_dobijanja_saglasnosti_vlade = null;
+            }
+
+            // Preuzete ocene: provera nije sprovedena u ovom postupku, pa datumi te faze ne
+            // smeju ostati upisani. Ista logika kao gore - polja su u formi disable-ovana,
+            // ali se na to ne oslanjamo.
+            if ($record->ofk_ocene_preuzete) {
+                $record->datum_pocetka_provere_ofk = null;
+                $record->datum_ofk_izvestaja = null;
+            }
+
+            if ($record->pk_ocene_preuzete) {
+                $record->datum_pocetka_provere_pk = null;
+                $record->datum_pk_izvestaja = null;
             }
 
             // Status konkursa: „У току" (id 4) se cuva automatski dok se ne izabere terminalni
@@ -342,6 +359,7 @@ class PodaciORadnomMestu extends Model
                 'broj_kandidata_za_koje_se_zakazuju_ofk',
                 'datum_pocetka_provere_ofk',
                 'datum_ofk_izvestaja',
+                'ofk_ocene_preuzete',
                 'datum_slanja_zahteva_za_sprovodjenje_pfk_provera',
                 'broj_kandidata_za_koje_se_zakazuju_pfk',
                 'datum_pocetka_provere_pfk',
@@ -351,6 +369,7 @@ class PodaciORadnomMestu extends Model
                 'datum_pocetka_provere_pk',
                 'broj_dana_sprovodjenja_pk_provera',
                 'datum_pk_izvestaja',
+                'pk_ocene_preuzete',
                 'datum_predaje_dokumentacije',
                 'datum_pocetka_sprovodjenja_intervjua',
                 'datum_izvestaja_sa_zavrsnog_intervjua',
