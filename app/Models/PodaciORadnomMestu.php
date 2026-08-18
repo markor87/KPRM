@@ -176,17 +176,16 @@ class PodaciORadnomMestu extends Model
                 $record->datum_dobijanja_saglasnosti_vlade = null;
             }
 
-            // Preuzete ocene: provera nije sprovedena u ovom postupku, pa datumi te faze ne
-            // smeju ostati upisani. Ista logika kao gore - polja su u formi disable-ovana,
-            // ali se na to ne oslanjamo.
+            // Preuzete ocene: sama provera nije sprovedena u ovom postupku, pa taj datum ne
+            // sme ostati upisan. Datumi izvestaja se NE diraju - izvestaj se izradjuje i kada
+            // su ocene preuzete, pa se unosi normalno, u hijerarhijskom toku.
+            // Ista logika kao gore - polje je u formi disable-ovano, ali se na to ne oslanjamo.
             if ($record->ofk_ocene_preuzete) {
                 $record->datum_pocetka_provere_ofk = null;
-                $record->datum_ofk_izvestaja = null;
             }
 
             if ($record->pk_ocene_preuzete) {
                 $record->datum_pocetka_provere_pk = null;
-                $record->datum_pk_izvestaja = null;
             }
 
             // Status konkursa: „У току" (id 4) se cuva automatski dok se ne izabere terminalni
