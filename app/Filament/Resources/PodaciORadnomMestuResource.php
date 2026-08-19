@@ -1384,10 +1384,11 @@ class PodaciORadnomMestuResource extends Resource
                             ->options(static::zavrsniScoreOptions()),
                     ])->columns(3),
 
-                        Section::make('Другопласирани кандидат')
+                        // Назив у бази остаје drugoplasirani_* — мења се само оно што корисник види.
+                        Section::make('Следеће рангирани кандидат')
                             ->schema([
                         Select::make('drugoplasirani_kandidat')
-                            ->label('Другопласирани кандидат је из:')
+                            ->label('Следеће рангирани кандидат је из:')
                             ->relationship('drugoplasiraniKandidatRelation', 'izabrani_kandidat')
                             ->searchable()
                             ->preload(),
