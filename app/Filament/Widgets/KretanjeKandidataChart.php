@@ -114,7 +114,7 @@ class KretanjeKandidataChart extends ApexChartWidget
                     'Валидне пријаве',
                     'Изборна листа',
                     'Изабрани кандидат',
-                    'Другопласирани кандидат',
+                    'Следеће рангирани кандидат',
                 ],
                 'labels' => ['style' => ['fontSize' => '11px']],
             ],
