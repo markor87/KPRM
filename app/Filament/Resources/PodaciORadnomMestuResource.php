@@ -150,7 +150,7 @@ class PodaciORadnomMestuResource extends Resource
             'datum_dostavljanja_liste_rukovodiocu_organa'     => 'Датум достављања листе руководиоцу органа',
             'datum_donosenja_resenja_o_izabranom_kandidatu'   => 'Датум доношења решења о изабраном кандидату',
             'datum_stupanja_na_rad'                           => 'Датум ступања на рад',
-            'datum_formiranja_liste_kandidata'                => 'Дан формирања листе кандидата',
+            'datum_formiranja_liste_kandidata'                => 'Дан објављивања листе кандидата',
         ];
 
         return fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get, $requiredDates) {

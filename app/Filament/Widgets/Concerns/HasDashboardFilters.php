@@ -7,6 +7,20 @@ use Livewire\Attributes\On;
 
 trait HasDashboardFilters
 {
+    /**
+     * Без lazy учитавања. Виџет који још није ушао у видно поље добије догађај филтера
+     * (organChanged, godinaChanged…) пре него што је mount() икад позван — Livewire га
+     * тада исцрта без mount-а, readyToLoad остаје false и графикон се врти док се
+     * страница не освежи.
+     *
+     * Метода, а не својство $isLazy: trait не сме поново да декларише својство које
+     * Widget већ има из CanBeLazy (PHP fatal „define the same property").
+     */
+    public static function isLazy(): bool
+    {
+        return false;
+    }
+
     public int $tipKonkursa = 1;
 
     /**
