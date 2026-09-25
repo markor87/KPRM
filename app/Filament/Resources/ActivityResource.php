@@ -237,6 +237,43 @@ class ActivityResource extends Resource
      * Припрема мапу поље => вредност за KeyValueEntry, при чему се за FK поља
      * уз ID допише и значење из шифарника (нпр. „73 — Национална академија…").
      */
+    /**
+     * Свака вредност из дневника мора изаћи као ниска.
+     *
+     * KeyValueEntry вредност провлачи кроз e(), а htmlspecialchars() пуца на низу
+     * („Argument #1 must be of type string, array given"). Низови у properties нису
+     * реткост — увоз радних места ту уписује спискове ид-ова, а и сам модел би их
+     * уписао да неко поље икада понесе низ.
+     */
+    protected static function uTekst($vrednost): string
+    {
+        if ($vrednost === null) {
+            return '';
+        }
+
+        if (is_bool($vrednost)) {
+            return $vrednost ? 'Да' : 'Не';
+        }
+
+        if (is_scalar($vrednost)) {
+            return (string) $vrednost;
+        }
+
+        $niz = is_iterable($vrednost) ? (array) $vrednost : [$vrednost];
+
+        // Прост списак (ид-ови, називи) чита се као „1, 2, 3"; све сложеније иде као JSON,
+        // да се ништа не изгуби.
+        $prost = array_reduce(
+            $niz,
+            static fn (bool $nosi, $stavka): bool => $nosi && (is_scalar($stavka) || $stavka === null),
+            true,
+        );
+
+        return $prost
+            ? implode(', ', array_map(static fn ($s): string => (string) $s, $niz))
+            : (json_encode($vrednost, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '');
+    }
+
     protected static function vrednostiSaZnacenjem($props): array
     {
         $props = is_iterable($props) ? (array) $props : [];
@@ -249,10 +286,15 @@ class ActivityResource extends Resource
                 continue;
             }
 
+            if (! is_scalar($vrednost) && $vrednost !== null) {
+                $out[(string) $polje] = self::uTekst($vrednost);
+                continue;
+            }
+
             $znacenje = self::znacenjeVrednosti((string) $polje, $vrednost);
             $out[(string) $polje] = ($znacenje !== '')
                 ? $vrednost . ' — ' . $znacenje
-                : $vrednost;
+                : self::uTekst($vrednost);
         }
 
         return $out;
@@ -341,7 +383,11 @@ class ActivityResource extends Resource
                         KeyValueEntry::make('properties')
                             ->label('')
                             ->columnSpanFull()
-                            ->hiddenLabel(),
+                            ->hiddenLabel()
+                            // Без овога поглед пуца на било којој вредности која није ниска.
+                            ->state(fn ($record): array => collect($record->properties ?? [])
+                                ->mapWithKeys(fn ($v, $k): array => [(string) $k => self::uTekst($v)])
+                                ->all()),
                     ])
                     ->visible(fn ($record) =>
                         empty($record->properties['old'] ?? null) &&

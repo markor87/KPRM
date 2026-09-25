@@ -935,6 +935,7 @@ class PodaciORadnomMestuResource extends Resource
                     ])->columns(2),
 
                         Section::make('Валидне пријаве')
+                            ->extraAttributes(['class' => 'kprm-validne-prijave'])
                             ->schema([
                         TextInput::make('broj_validnih_prijava')
                             ->label('Број валидних пријава')
@@ -1210,6 +1211,7 @@ class PodaciORadnomMestuResource extends Resource
                 Tab::make('Завршетак поступка и кандидати')
                     ->schema([
                         Section::make('Завршна фаза поступка')
+                            ->extraAttributes(['class' => 'kprm-zavrsna-faza'])
                             ->schema([
                         static::makeDateField('datum_predaje_dokumentacije', 'Датум предаје документације', 'datum_pocetka_provere_pk', 'почетка провере ПК')
                             ->helperText('Докази које прилажу кандидати који су успешно прошли фазе изборног поступка.'),

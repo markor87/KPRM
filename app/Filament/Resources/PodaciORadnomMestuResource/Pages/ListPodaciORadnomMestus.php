@@ -6,6 +6,7 @@ use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use App\Filament\Resources\PodaciORadnomMestuResource;
 use App\Exports\PodaciORadnomMestuExport;
+use App\Filament\Pages\UvozRadnihMesta;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 use Maatwebsite\Excel\Facades\Excel;
@@ -29,6 +30,12 @@ class ListPodaciORadnomMestus extends ListRecords
                         'radna-mesta-' . now()->format('Y-m-d-His') . '.xlsx'
                     );
                 }),
+            Action::make('uvoz')
+                ->label('Увоз из Excel-а')
+                ->icon('heroicon-o-arrow-up-tray')
+                ->color('warning')
+                ->visible(fn (): bool => UvozRadnihMesta::canAccess())
+                ->url(fn (): string => UvozRadnihMesta::getUrl()),
             CreateAction::make()
                 ->label('Ново радно место'),
         ];

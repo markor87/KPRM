@@ -114,6 +114,28 @@ class AdminPanelProvider extends PanelProvider
                         white-space: normal;
                         text-align: left;
                     }
+                    /* Share label/content rows at Filament's multi-column breakpoint. */
+                    @media (min-width: 64rem) {
+                        @supports (grid-template-rows: subgrid) {
+                            :is(.kprm-validne-prijave, .kprm-zavrsna-faza) .fi-section-content {
+                                row-gap: 0.5rem;
+                            }
+                            :is(.kprm-validne-prijave, .kprm-zavrsna-faza) .fi-section-content > .fi-grid-col,
+                            :is(.kprm-validne-prijave, .kprm-zavrsna-faza) .fi-section-content > .fi-grid-col > .fi-sc-component,
+                            :is(.kprm-validne-prijave, .kprm-zavrsna-faza) .fi-section-content > .fi-grid-col > .fi-sc-component > .fi-fo-field {
+                                display: grid;
+                                grid-row: span 2;
+                                grid-template-rows: subgrid;
+                            }
+                            .kprm-validne-prijave .fi-section-content > .fi-grid-col:not(:nth-last-child(-n + 2)),
+                            .kprm-zavrsna-faza .fi-section-content > .fi-grid-col:not(:nth-last-child(-n + 3)) {
+                                padding-bottom: 1rem;
+                            }
+                            :is(.kprm-validne-prijave, .kprm-zavrsna-faza) .fi-fo-field-content-col {
+                                align-content: start;
+                            }
+                        }
+                    }
                 </style>
             HTML))
             ->renderHook(PanelsRenderHook::BODY_START, function (): string {
