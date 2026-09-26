@@ -24,78 +24,82 @@ class ProsecnoVremeTrajanjaChart extends ApexChartWidget
         return "Просечно време трајања фаза {$tipLabel} конкурсних поступака изражено у данима";
     }
 
+    /**
+     * Фазе поступка — исте користи и извоз радних места (број дана по фази за свако место).
+     */
+    public const INTERVALI = [
+        [
+            'label' => 'Од добијања сагласности Владе до доношења решења о покретању поступка',
+            'from' => 'datum_dobijanja_saglasnosti_vlade',
+            'to' => 'datum_donosenja_resenja_o_pokretanju_postupka',
+        ],
+        [
+            'label' => 'Од доношења решења о покретању до добијања обавештења СУКа',
+            'from' => 'datum_donosenja_resenja_o_pokretanju_postupka',
+            'to' => 'datum_dobijanja_obavestenja_od_suka',
+        ],
+        [
+            'label' => 'Од добијања обавештења СУКа до одржавања Првог састанка',
+            'from' => 'datum_dobijanja_obavestenja_od_suka',
+            'to' => 'datum_odrzavanja_prvog_sastanka',
+        ],
+        [
+            'label' => 'Од одржавања Првог састанка до оглашавања',
+            'from' => 'datum_odrzavanja_prvog_sastanka',
+            'to' => 'datum_oglasavanja',
+        ],
+        [
+            'label' => 'Од оглашавања до прегледа пријава',
+            'from' => 'datum_oglasavanja',
+            'to' => 'datum_pregleda_prijava',
+        ],
+        [
+            'label' => 'Од прегледа пријава до ОФК',
+            'from' => 'datum_pregleda_prijava',
+            'to' => 'datum_pocetka_provere_ofk',
+        ],
+        [
+            'label' => 'Од ОФК до ПФК',
+            'from' => 'datum_pocetka_provere_ofk',
+            'to' => 'datum_pocetka_provere_pfk',
+        ],
+        [
+            'label' => 'Од ПФК до ПК',
+            'from' => 'datum_pocetka_provere_pfk',
+            'to' => 'datum_pocetka_provere_pk',
+        ],
+        [
+            'label' => 'Од ПК до предаје документације',
+            'from' => 'datum_pocetka_provere_pk',
+            'to' => 'datum_predaje_dokumentacije',
+        ],
+        [
+            'label' => 'Од предаје документације до завршног разговора',
+            'from' => 'datum_predaje_dokumentacije',
+            'to' => 'datum_pocetka_sprovodjenja_intervjua',
+        ],
+        [
+            'label' => 'Од завршног разговора до достављања листе руководиоцу',
+            'from' => 'datum_pocetka_sprovodjenja_intervjua',
+            'to' => 'datum_dostavljanja_liste_rukovodiocu_organa',
+        ],
+        [
+            'label' => 'Од достављања листе руководиоцу до достављања решења о изабраном кандидату',
+            'from' => 'datum_dostavljanja_liste_rukovodiocu_organa',
+            'to' => 'datum_donosenja_resenja_o_izabranom_kandidatu',
+        ],
+        [
+            'label' => 'Од доношења решења о изабраном кандидату до ступања на рад',
+            'from' => 'datum_donosenja_resenja_o_izabranom_kandidatu',
+            'to' => 'datum_stupanja_na_rad',
+        ],
+    ];
+
     protected function getOptions(): array
     {
         $organFilterService = app(OrganFilterService::class);
         $godina = $this->getGodina();
-
-        $intervals = [
-            [
-                'label' => 'Од добијања сагласности Владе до доношења решења о покретању поступка',
-                'from' => 'datum_dobijanja_saglasnosti_vlade',
-                'to' => 'datum_donosenja_resenja_o_pokretanju_postupka',
-            ],
-            [
-                'label' => 'Од доношења решења о покретању до добијања обавештења СУКа',
-                'from' => 'datum_donosenja_resenja_o_pokretanju_postupka',
-                'to' => 'datum_dobijanja_obavestenja_od_suka',
-            ],
-            [
-                'label' => 'Од добијања обавештења СУКа до одржавања Првог састанка',
-                'from' => 'datum_dobijanja_obavestenja_od_suka',
-                'to' => 'datum_odrzavanja_prvog_sastanka',
-            ],
-            [
-                'label' => 'Од одржавања Првог састанка до оглашавања',
-                'from' => 'datum_odrzavanja_prvog_sastanka',
-                'to' => 'datum_oglasavanja',
-            ],
-            [
-                'label' => 'Од оглашавања до прегледа пријава',
-                'from' => 'datum_oglasavanja',
-                'to' => 'datum_pregleda_prijava',
-            ],
-            [
-                'label' => 'Од прегледа пријава до ОФК',
-                'from' => 'datum_pregleda_prijava',
-                'to' => 'datum_pocetka_provere_ofk',
-            ],
-            [
-                'label' => 'Од ОФК до ПФК',
-                'from' => 'datum_pocetka_provere_ofk',
-                'to' => 'datum_pocetka_provere_pfk',
-            ],
-            [
-                'label' => 'Од ПФК до ПК',
-                'from' => 'datum_pocetka_provere_pfk',
-                'to' => 'datum_pocetka_provere_pk',
-            ],
-            [
-                'label' => 'Од ПК до предаје документације',
-                'from' => 'datum_pocetka_provere_pk',
-                'to' => 'datum_predaje_dokumentacije',
-            ],
-            [
-                'label' => 'Од предаје документације до завршног разговора',
-                'from' => 'datum_predaje_dokumentacije',
-                'to' => 'datum_pocetka_sprovodjenja_intervjua',
-            ],
-            [
-                'label' => 'Од завршног разговора до достављања листе руководиоцу',
-                'from' => 'datum_pocetka_sprovodjenja_intervjua',
-                'to' => 'datum_dostavljanja_liste_rukovodiocu_organa',
-            ],
-            [
-                'label' => 'Од достављања листе руководиоцу до достављања решења о изабраном кандидату',
-                'from' => 'datum_dostavljanja_liste_rukovodiocu_organa',
-                'to' => 'datum_donosenja_resenja_o_izabranom_kandidatu',
-            ],
-            [
-                'label' => 'Од доношења решења о изабраном кандидату до ступања на рад',
-                'from' => 'datum_donosenja_resenja_o_izabranom_kandidatu',
-                'to' => 'datum_stupanja_na_rad',
-            ],
-        ];
+        $intervals = self::INTERVALI;
 
         $selectExpressions = [];
         foreach ($intervals as $index => $interval) {

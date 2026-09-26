@@ -2,6 +2,8 @@
 
 namespace App\Exports;
 
+use App\Filament\Widgets\ProsecnoVremeTrajanjaChart;
+use App\Filament\Widgets\TrajanjePostupakaChart;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -99,7 +101,26 @@ class PodaciORadnomMestuExport implements FromQuery, WithHeadings, WithMapping
             'Област рада',
             'Просечна старост кандидата у изборном поступку',
             'Удео кандидата млађих од 30 година (%)',
+            'Трајање конкурсног поступка у данима (од решења о покретању до ступања на рад)',
+            'Трајање изборног поступка у данима (од прегледа пријава до достављања листе руководиоцу)',
+            ...array_map(
+                fn (array $interval): string => 'Број дана: ' . $interval['label'],
+                ProsecnoVremeTrajanjaChart::INTERVALI,
+            ),
         ];
+    }
+
+    /**
+     * Број дана између два датума, као DATEDIFF на контролној табли — може бити и
+     * негативан ако су датуми погрешно унети. Празно кад неки датум недостаје.
+     */
+    protected function brojDana($od, $do): ?int
+    {
+        if (! $od || ! $do) {
+            return null;
+        }
+
+        return (int) Carbon::parse($od)->startOfDay()->diffInDays(Carbon::parse($do)->startOfDay());
     }
 
     public function map($row): array
@@ -179,6 +200,12 @@ class PodaciORadnomMestuExport implements FromQuery, WithHeadings, WithMapping
             $row->oblastiRada->map(fn($o) => $o->oblast_rada)->join(', '),
             $row->prosecna_starost_kandidata,
             $row->udeo_kandidata_mladjih_od_30,
+            $this->brojDana(...array_map(fn (string $polje) => $row->{$polje}, TrajanjePostupakaChart::KONKURSNI_POSTUPAK)),
+            $this->brojDana(...array_map(fn (string $polje) => $row->{$polje}, TrajanjePostupakaChart::IZBORNI_POSTUPAK)),
+            ...array_map(
+                fn (array $interval): ?int => $this->brojDana($row->{$interval['from']}, $row->{$interval['to']}),
+                ProsecnoVremeTrajanjaChart::INTERVALI,
+            ),
         ];
     }
 }

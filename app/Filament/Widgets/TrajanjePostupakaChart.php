@@ -17,6 +17,13 @@ class TrajanjePostupakaChart extends ApexChartWidget
 
     protected int|string|array $columnSpan = 12;
 
+    /**
+     * Почетак и крај сваког поступка — исте користи и извоз радних места.
+     */
+    public const KONKURSNI_POSTUPAK = ['datum_donosenja_resenja_o_pokretanju_postupka', 'datum_stupanja_na_rad'];
+
+    public const IZBORNI_POSTUPAK = ['datum_pregleda_prijava', 'datum_dostavljanja_liste_rukovodiocu_organa'];
+
     protected function getHeading(): ?string
     {
         $tipLabel = $this->tipKonkursa === 1 ? 'јавних' : 'интерних';
@@ -37,15 +44,18 @@ class TrajanjePostupakaChart extends ApexChartWidget
         $javniDurations = [];
         $izborniDurations = [];
 
+        [$javniOd, $javniDo] = self::KONKURSNI_POSTUPAK;
+        [$izborniOd, $izborniDo] = self::IZBORNI_POSTUPAK;
+
         foreach ($podaci as $konkurs) {
-            if ($konkurs->datum_donosenja_resenja_o_pokretanju_postupka && $konkurs->datum_stupanja_na_rad) {
-                $javniDurations[] = Carbon::parse($konkurs->datum_donosenja_resenja_o_pokretanju_postupka)
-                    ->diffInDays(Carbon::parse($konkurs->datum_stupanja_na_rad));
+            if ($konkurs->{$javniOd} && $konkurs->{$javniDo}) {
+                $javniDurations[] = Carbon::parse($konkurs->{$javniOd})
+                    ->diffInDays(Carbon::parse($konkurs->{$javniDo}));
             }
 
-            if ($konkurs->datum_pregleda_prijava && $konkurs->datum_dostavljanja_liste_rukovodiocu_organa) {
-                $izborniDurations[] = Carbon::parse($konkurs->datum_pregleda_prijava)
-                    ->diffInDays(Carbon::parse($konkurs->datum_dostavljanja_liste_rukovodiocu_organa));
+            if ($konkurs->{$izborniOd} && $konkurs->{$izborniDo}) {
+                $izborniDurations[] = Carbon::parse($konkurs->{$izborniOd})
+                    ->diffInDays(Carbon::parse($konkurs->{$izborniDo}));
             }
         }
 
