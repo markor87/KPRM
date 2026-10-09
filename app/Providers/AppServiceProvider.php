@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Support\Facades\FilamentTimezone;
 use Filament\Auth\Notifications\ResetPassword as FilamentResetPassword;
 use App\Notifications\ResetPassword as CyrillicResetPassword;
@@ -109,5 +111,11 @@ class AppServiceProvider extends ServiceProvider
                 ->displayFormat('d/m/Y')  // dd/mm/yyyy format
                 ->format('Y-m-d');        // Baza koristi ISO format (yyyy-mm-dd)
         });
+
+        // Pretraživa padajuća lista podrazumevano prikazuje samo prvih 50 stavki, a ostale
+        // tek kroz pretragu - organa ima 118, gradova 181, korisnika 150+. Šifarnici su mali,
+        // pa se prikazuje sve.
+        Select::configureUsing(fn (Select $select) => $select->optionsLimit(1000));
+        SelectFilter::configureUsing(fn (SelectFilter $filter) => $filter->optionsLimit(1000));
     }
 }

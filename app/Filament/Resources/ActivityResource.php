@@ -7,6 +7,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\TextInput;
 use Carbon\Carbon;
 use Filament\Actions\ViewAction;
 use Filament\Schemas\Components\Section;
@@ -15,6 +16,7 @@ use Filament\Infolists\Components\KeyValueEntry;
 use App\Filament\Resources\ActivityResource\Pages\ListActivities;
 use App\Filament\Resources\ActivityResource\Pages\ViewActivity;
 use App\Filament\Resources\ActivityResource\Pages;
+use App\Models\PodaciORadnomMestu;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Spatie\Activitylog\Models\Activity;
@@ -111,7 +113,12 @@ class ActivityResource extends Resource
                         'podaci_o_radnom_mestu' => 'Радна места',
                         'organ_pristupi' => 'Органи у саставу',
                         default => ucfirst($state),
-                    }),
+                    })
+                    // ID радног места испод беџа, а не у засебној колони: табела је фиксне
+                    // ширине и свака нова колона ломи „Акцију" у два-три реда.
+                    ->description(fn ($record): ?string => $record->subject_type === PodaciORadnomMestu::class
+                        ? 'Радно место ' . $record->subject_id
+                        : null),
 
                 TextColumn::make('description')
                     ->label('Акција')
@@ -159,6 +166,41 @@ class ActivityResource extends Resource
                     ->label('Корисник')
                     ->options(fn () => Cache::remember('activity_users_filter', 3600, fn () => User::pluck('email', 'id')->toArray()))
                     ->searchable(),
+
+                // Филтер, а не општа претрага: тамо би се мешало са ID-јем активности
+                // (LIKE „%12%" хвата и 120, 312…). Хвата и ставку увоза из Excel-а која у
+                // properties носи списак ид-ова нових и ажурираних радних места.
+                Filter::make('radno_mesto')
+                    ->schema([
+                        TextInput::make('radno_mesto_id')
+                            ->label('ID радног места')
+                            ->integer()
+                            ->minValue(1),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        $id = trim((string) ($data['radno_mesto_id'] ?? ''));
+
+                        if ($id === '') {
+                            return $query;
+                        }
+
+                        if (! ctype_digit($id)) {
+                            return $query->whereRaw('1 = 0');
+                        }
+
+                        return $query->where(fn (Builder $q) => $q
+                            ->where(fn (Builder $q) => $q
+                                ->where('subject_type', PodaciORadnomMestu::class)
+                                ->where('subject_id', (int) $id))
+                            ->orWhere(fn (Builder $q) => $q
+                                ->where('log_name', 'uvoz')
+                                ->where(fn (Builder $q) => $q
+                                    ->whereJsonContains('properties->id_novih', (int) $id)
+                                    ->orWhereJsonContains('properties->id_azuriranih', (int) $id))));
+                    })
+                    ->indicateUsing(fn (array $data): ?string => filled($data['radno_mesto_id'] ?? null)
+                        ? 'Радно место: ' . $data['radno_mesto_id']
+                        : null),
 
                 Filter::make('created_at')
                     ->schema([
