@@ -36,6 +36,8 @@ class OglasenaRadnaMestaPoRegionimaChart extends ApexChartWidget
             ->selectRaw('mesto_rada_podaci_o_radnom_mestu.region as naziv, COUNT(DISTINCT podaci_o_radnom_mestu.id) as ukupno')
             ->groupBy('mesto_rada_podaci_o_radnom_mestu.region')
             ->orderByDesc('ukupno')
+            // Стабилан редослед при истом броју — види KonkursiPoZvanjuChart.
+            ->orderBy('mesto_rada_podaci_o_radnom_mestu.region')
             ->get();
 
         return [

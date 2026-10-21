@@ -40,6 +40,8 @@ class RazloziNeuspehaChart extends ApexChartWidget
             ->selectRaw('sifarnik_razlog_neuspelih_konkursa.razlog as naziv, COUNT(*) as ukupno')
             ->groupBy('sifarnik_razlog_neuspelih_konkursa.id', 'sifarnik_razlog_neuspelih_konkursa.razlog')
             ->orderByDesc('ukupno')
+            // Стабилан редослед при истом броју — види KonkursiPoZvanjuChart.
+            ->orderBy('sifarnik_razlog_neuspelih_konkursa.id')
             ->get();
 
         $labels = $rows->pluck('naziv')->toArray();

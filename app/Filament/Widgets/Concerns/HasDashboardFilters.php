@@ -21,6 +21,16 @@ trait HasDashboardFilters
         return false;
     }
 
+    /**
+     * Без аутоматског освежавања (Filament подразумевано пита сервер на 5 s). Подаци се
+     * мењају ретко, а сваки отворен дешборд је слао 11 захтева на 5 s и поново анимирао
+     * графиконе. Освежава се при промени филтера и при поновном учитавању странице.
+     */
+    protected function getPollingInterval(): ?string
+    {
+        return null;
+    }
+
     public int $tipKonkursa = 1;
 
     /**

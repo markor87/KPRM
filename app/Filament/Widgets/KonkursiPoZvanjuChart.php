@@ -35,6 +35,9 @@ class KonkursiPoZvanjuChart extends ApexChartWidget
             ->selectRaw('sifarnik_zvanje.zvanje as naziv, COUNT(*) as ukupno')
             ->groupBy('sifarnik_zvanje.id', 'sifarnik_zvanje.zvanje')
             ->orderByDesc('ukupno')
+            // Стабилан редослед кад два звања имају исти број: иначе MySQL може сваки пут
+            // да их врати другачије, polling на 5 s то види као нове податке и анимира круг.
+            ->orderBy('sifarnik_zvanje.id')
             ->get();
 
         return [
